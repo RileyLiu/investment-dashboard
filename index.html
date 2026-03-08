@@ -404,6 +404,7 @@ const DEFAULT_SHEET_ID = '1wSie_fKvkfJKXT6WSQh3VSsyzdnCJKRv10DrJMU5F80';
 const COLS = { ticker:5, fullCode:6, name:7, shares:10, cost:11, price:13 };
 const ETF_TICKERS = ['006208','SMH','QQQ','TQQQ','0050'];
 const TW_TICKERS  = ['2330','6669','5871','006208','IX0001','新立資訊'];
+const TW_NAMES = {'2330':'台積電','6669':'緯穎','5871':'中租KY','006208':'富邦台50','0050':'元大台灣50'};
 
 // === WATCHLIST ===
 const WATCHLIST = [
@@ -622,7 +623,7 @@ function computeAndRenderPnL() {
   };
   const pct = (pnl, cost) => cost > 0 ? ((pnl / cost) * 100).toFixed(1) : '0.0';
 
-  const col = (n) => n >= 0 ? 'var(--green)' : 'var(--red)';
+  const col = (n) => n >= 0 ? 'var(--red)' : 'var(--green)';
 
   const card = document.getElementById('total-pnl-card');
   card.style.display = 'flex';
@@ -647,7 +648,17 @@ function renderCharts(growthVal, etfVal, stockValues) {
     responsive: true, maintainAspectRatio: false,
     plugins: {
       legend: { position: 'bottom', labels: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 11 }, padding: 10, boxWidth: 10 } },
-      tooltip: { bodyFont: { family: 'IBM Plex Mono' }, titleFont: { family: 'IBM Plex Mono' } }
+      tooltip: {
+        bodyFont: { family: 'IBM Plex Mono' },
+        titleFont: { family: 'IBM Plex Mono' },
+        callbacks: {
+          label: function(ctx) {
+            const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+            const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+            return ` ${ctx.label}: ${pct}%`;
+          }
+        }
+      }
     }
   };
 
@@ -668,7 +679,7 @@ function renderCharts(growthVal, etfVal, stockValues) {
   chartStocks = new Chart(document.getElementById('chart-stocks'), {
     type: 'doughnut',
     data: {
-      labels: sorted.map(s => s.ticker),
+      labels: sorted.map(s => TW_NAMES[s.ticker] || s.ticker),
       datasets: [{ data: sorted.map(s => Math.round(s.val)), backgroundColor: CHART_COLORS.slice(0, sorted.length), borderColor: '#0d1526', borderWidth: 2 }]
     },
     options: { ...opts, cutout: '55%' }
@@ -684,10 +695,15 @@ function renderHoldings() {
     c.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">尚無持股資料</div><div class="empty-sub">請在設定中連結 Google 帳號<br>然後點擊右上角「同步試算表」</div></div>`;
     return;
   }
-  c.innerHTML=holdingsData.map((h)=>{
+  const sorted=[...holdingsData].sort((a,b)=>{
+    const pnlA=(a.price-a.cost)*a.shares*(a.currency==='USD'?USD_TWD:1);
+    const pnlB=(b.price-b.cost)*b.shares*(b.currency==='USD'?USD_TWD:1);
+    return pnlB-pnlA;
+  });
+  c.innerHTML=sorted.map((h,i)=>{
     const pnl=(h.price-h.cost)*h.shares;
     const pct=h.cost>0?((h.price-h.cost)/h.cost*100).toFixed(1):0;
-    const col=pnl>=0?'var(--green)':'var(--red)';
+    const col=pnl>=0?'var(--red)':'var(--green)';
     const sign=pnl>=0?'+':'';
     const curr=h.currency==='TWD'?'NT$':'$';
     const thesis=getThesisDisplay(h.ticker);
