@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>投資儀錶板</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -17,7 +18,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;z-index:0;}
-nav{position:sticky;top:0;z-index:100;background:#080c14ee;backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:52px;gap:0;}
+nav{position:sticky;top:0;z-index:100;background:#080c14ee;backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;height:52px;gap:0;}
 .nav-brand{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-right:32px;display:flex;align-items:center;gap:8px;}
 .nav-brand::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
@@ -31,17 +32,26 @@ nav{position:sticky;top:0;z-index:100;background:#080c14ee;backdrop-filter:blur(
 .status-dot.on{background:var(--green);box-shadow:0 0 6px var(--green);}
 .btn-nav{padding:5px 12px;font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
 .btn-nav:hover{border-color:var(--accent);color:var(--accent);}
-main{position:relative;z-index:1;padding:24px;max-width:1400px;margin:0 auto;}
+main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 auto;}
 .page{display:none;}.page.active{display:block;animation:fadeIn 0.3s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
 .section-label{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
 .section-line{flex:1;height:1px;background:var(--border);}
-.overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;}
-.alloc-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.alloc-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
 .alloc-label{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
-.alloc-value{font-family:var(--font-mono);font-size:22px;font-weight:600;margin-bottom:4px;}
-.alloc-sub{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);}
+.alloc-value{font-family:var(--font-mono);font-size:24px;font-weight:600;margin-bottom:4px;}
+.alloc-sub{font-size:12px;color:var(--text-muted);font-family:var(--font-mono);}
+.total-pnl-card{background:var(--bg-card);border:1px solid var(--border-bright);border-radius:8px;padding:18px 24px;margin-bottom:20px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+.total-pnl-label{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
+.total-pnl-value{font-family:var(--font-mono);font-size:28px;font-weight:600;}
+.total-pnl-sub{font-family:var(--font-mono);font-size:13px;color:var(--text-muted);margin-top:4px;}
+.pnl-divider{width:1px;height:52px;background:var(--border);}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.chart-title{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+.chart-wrap{position:relative;height:200px;}
 .progress-bar{height:4px;background:var(--bg-elevated);border-radius:2px;margin-top:10px;overflow:hidden;}
 .progress-fill{height:100%;border-radius:2px;transition:width 0.6s ease;}
 .watchlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
@@ -50,15 +60,15 @@ main{position:relative;z-index:1;padding:24px;max-width:1400px;margin:0 auto;}
 .stock-card:hover{border-color:var(--accent);background:var(--bg-card-hover);transform:translateY(-1px);}
 .stock-card:hover::before{opacity:1;background:var(--accent);}
 .stock-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
-.stock-ticker{font-family:var(--font-mono);font-size:16px;font-weight:600;}
-.stock-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.stock-ticker{font-family:var(--font-mono);font-size:17px;font-weight:600;}
+.stock-name{font-size:12px;color:var(--text-muted);margin-top:2px;}
 .type-badge{font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px;}
 .badge-value{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-dim);}
 .badge-etf{background:#a78bfa20;color:var(--purple);border:1px solid #a78bfa40;}
 .badge-wave{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow-dim);}
 .stock-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-.metric-label{font-family:var(--font-mono);font-size:9px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;}
-.metric-value{font-family:var(--font-mono);font-size:13px;font-weight:500;}
+.metric-label{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;}
+.metric-value{font-family:var(--font-mono);font-size:14px;font-weight:500;}
 .stock-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
 .cache-info{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);}
 .analyze-btn{font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-glow);border:1px solid var(--accent-dim);padding:4px 10px;border-radius:3px;cursor:pointer;transition:all 0.2s;}
@@ -94,11 +104,11 @@ main{position:relative;z-index:1;padding:24px;max-width:1400px;margin:0 auto;}
 .holding-ticker{font-family:var(--font-mono);font-size:15px;font-weight:600;}
 .holding-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
 .holding-metrics{display:flex;gap:20px;flex-wrap:wrap;}
-.h-metric-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;}
-.h-metric-value{font-family:var(--font-mono);font-size:12px;margin-top:2px;}
+.h-metric-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;}
+.h-metric-value{font-family:var(--font-mono);font-size:13px;margin-top:2px;}
 .holding-pnl{text-align:right;font-family:var(--font-mono);}
-.pnl-value{font-size:15px;font-weight:600;}
-.pnl-pct{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.pnl-value{font-size:16px;font-weight:600;}
+.pnl-pct{font-size:12px;color:var(--text-muted);margin-top:2px;}
 .thesis-box{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px;}
 .thesis-label{font-family:var(--font-mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:8px;}
 .thesis-input{width:100%;background:var(--bg-base);border:1px solid var(--border);border-radius:5px;padding:10px 12px;color:var(--text-primary);font-family:var(--font-sans);font-size:13px;line-height:1.6;resize:vertical;min-height:72px;transition:border-color 0.2s;}
@@ -135,6 +145,69 @@ main{position:relative;z-index:1;padding:24px;max-width:1400px;margin:0 auto;}
 .empty-sub{font-size:12px;line-height:1.8;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg-base);}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:3px;}
 .text-green{color:var(--green)}.text-red{color:var(--red)}.text-yellow{color:var(--yellow)}.text-accent{color:var(--accent)}.text-purple{color:var(--purple)}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 640px) {
+  /* NAV — stack brand + tabs vertically, hide status pills */
+  nav{height:auto;padding:8px 12px;flex-wrap:wrap;gap:6px;}
+  .nav-brand{font-size:12px;margin-right:0;width:100%;}
+  .nav-tabs{flex:1;}
+  .nav-tab{padding:5px 10px;font-size:10px;}
+  .nav-right{gap:6px;}
+  .status-pill{display:none;} /* hide on mobile to save space */
+  .btn-nav{padding:5px 10px;font-size:10px;}
+
+  /* MAIN padding */
+  main{padding:12px;}
+
+  /* OVERVIEW GRID — single col on very small, 3-col otherwise needs shrink */
+  .overview-grid{grid-template-columns:1fr;gap:8px;margin-bottom:14px;}
+  .alloc-value{font-size:20px;}
+  .alloc-sub{font-size:11px;}
+
+  /* TOTAL PNL CARD — stack vertically */
+  .total-pnl-card{flex-direction:column;gap:14px;padding:14px;}
+  .total-pnl-value{font-size:22px !important;}
+  .pnl-divider{width:100%;height:1px;}
+
+  /* CHARTS — single column */
+  .charts-row{grid-template-columns:1fr !important;}
+  .chart-wrap{height:180px;}
+
+  /* WATCHLIST GRID */
+  .watchlist-grid{grid-template-columns:1fr;gap:10px;}
+  .stock-ticker{font-size:16px;}
+  .metric-label{font-size:10px;}
+  .metric-value{font-size:13px;}
+
+  /* RISK GRID — single col */
+  .risk-grid{grid-template-columns:1fr !important;gap:8px;}
+
+  /* HOLDING ENTRY — restructure for mobile */
+  .holding-entry{grid-template-columns:1fr auto;gap:10px;padding:12px;}
+  .holding-entry > div:nth-child(2){grid-column:1/-1;order:3;}
+  .holding-metrics{gap:12px;}
+  .holding-ticker{font-size:15px;}
+  .h-metric-label{font-size:9px;}
+  .h-metric-value{font-size:12px;}
+  .pnl-value{font-size:15px;}
+  .pnl-pct{font-size:11px;}
+
+  /* SECTION HEADER */
+  .section-header{margin-bottom:10px;}
+  .section-label{font-size:10px;}
+
+  /* MODAL full screen */
+  .modal-overlay{padding:0;}
+  .modal{max-width:100%;max-height:100vh;border-radius:0;margin:0;}
+  .settings-modal{max-width:100%;border-radius:0;max-height:100vh;}
+}
+
+@media (min-width:641px) and (max-width:900px) {
+  .overview-grid{grid-template-columns:repeat(3,1fr);}
+  .holding-entry{grid-template-columns:120px 1fr auto;}
+  .charts-row{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
@@ -183,6 +256,37 @@ main{position:relative;z-index:1;padding:24px;max-width:1400px;margin:0 auto;}
 <!-- HOLDINGS PAGE -->
 <div class="page" id="page-holdings">
   <div id="sync-status"></div>
+  <!-- Total P&L Banner -->
+  <div class="total-pnl-card" id="total-pnl-card" style="display:none">
+    <div>
+      <div class="total-pnl-label">總損益（台幣）</div>
+      <div class="total-pnl-value" id="total-pnl-twd">—</div>
+      <div class="total-pnl-sub" id="total-pnl-twd-pct">—</div>
+    </div>
+    <div class="pnl-divider"></div>
+    <div>
+      <div class="total-pnl-label">美股損益（USD）</div>
+      <div class="total-pnl-value" id="total-pnl-usd" style="font-size:22px">—</div>
+      <div class="total-pnl-sub" id="total-pnl-usd-pct">—</div>
+    </div>
+    <div class="pnl-divider"></div>
+    <div>
+      <div class="total-pnl-label">台股損益（TWD）</div>
+      <div class="total-pnl-value" id="total-pnl-tw" style="font-size:22px">—</div>
+      <div class="total-pnl-sub" id="total-pnl-tw-pct">—</div>
+    </div>
+  </div>
+  <!-- Charts Row -->
+  <div class="charts-row" id="charts-row" style="display:none">
+    <div class="chart-card">
+      <div class="chart-title">大類資產分布</div>
+      <div class="chart-wrap"><canvas id="chart-category"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">個股持倉分布</div>
+      <div class="chart-wrap"><canvas id="chart-stocks"></canvas></div>
+    </div>
+  </div>
   <div class="section-header"><span class="section-label">風險監控</span><div class="section-line"></div></div>
   <div class="risk-grid" style="margin-bottom:28px">
     <div class="risk-card">
@@ -476,10 +580,106 @@ async function loadHoldings() {
   }
 }
 
+// === TOTAL P&L + CHARTS ===
+const USD_TWD = 32; // approximate exchange rate
+let chartCategory = null;
+let chartStocks = null;
+
+function computeAndRenderPnL() {
+  if (!holdingsData.length) {
+    document.getElementById('total-pnl-card').style.display = 'none';
+    document.getElementById('charts-row').style.display = 'none';
+    return;
+  }
+
+  let twdPnl = 0, twdCost = 0;
+  let usdPnl = 0, usdCost = 0;
+  let twPnl = 0, twCost = 0;
+
+  // Category totals (by market value)
+  let growthVal = 0, etfVal = 0;
+  const stockValues = [];
+
+  for (const h of holdingsData) {
+    const pnl = (h.price - h.cost) * h.shares;
+    const cost = h.cost * h.shares;
+    const val = h.price * h.shares;
+    if (h.currency === 'TWD') {
+      twdPnl += pnl; twdCost += cost;
+      twPnl += pnl; twCost += cost;
+    } else {
+      twdPnl += pnl * USD_TWD; twdCost += cost * USD_TWD;
+      usdPnl += pnl; usdCost += cost;
+    }
+    if (h.type === 'etf' || h.type === 'wave') etfVal += (h.currency === 'TWD' ? val : val * USD_TWD);
+    else growthVal += (h.currency === 'TWD' ? val : val * USD_TWD);
+    stockValues.push({ ticker: h.ticker, val: h.currency === 'TWD' ? val : val * USD_TWD });
+  }
+
+  const fmt = (n, curr) => {
+    const sign = n >= 0 ? '+' : '';
+    return sign + (curr === 'USD' ? '$' : 'NT$') + Math.abs(n).toLocaleString(undefined, {maximumFractionDigits: 0});
+  };
+  const pct = (pnl, cost) => cost > 0 ? ((pnl / cost) * 100).toFixed(1) : '0.0';
+
+  const col = (n) => n >= 0 ? 'var(--green)' : 'var(--red)';
+
+  const card = document.getElementById('total-pnl-card');
+  card.style.display = 'flex';
+  document.getElementById('total-pnl-twd').style.color = col(twdPnl);
+  document.getElementById('total-pnl-twd').textContent = fmt(twdPnl, 'TWD');
+  document.getElementById('total-pnl-twd-pct').textContent = (twdPnl >= 0 ? '+' : '') + pct(twdPnl, twdCost) + '%（台幣換算）';
+  document.getElementById('total-pnl-usd').style.color = col(usdPnl);
+  document.getElementById('total-pnl-usd').textContent = usdCost > 0 ? fmt(usdPnl, 'USD') : '—';
+  document.getElementById('total-pnl-usd-pct').textContent = usdCost > 0 ? (usdPnl >= 0 ? '+' : '') + pct(usdPnl, usdCost) + '% 美股' : '—';
+  document.getElementById('total-pnl-tw').style.color = col(twPnl);
+  document.getElementById('total-pnl-tw').textContent = twCost > 0 ? fmt(twPnl, 'TWD') : '—';
+  document.getElementById('total-pnl-tw-pct').textContent = twCost > 0 ? (twPnl >= 0 ? '+' : '') + pct(twPnl, twCost) + '% 台股' : '—';
+
+  // Charts
+  document.getElementById('charts-row').style.display = 'grid';
+  renderCharts(growthVal, etfVal, stockValues);
+}
+
+function renderCharts(growthVal, etfVal, stockValues) {
+  const CHART_COLORS = ['#38bdf8','#a78bfa','#34d399','#fbbf24','#f87171','#818cf8','#6ee7b7','#fca5a5','#60a5fa','#c084fc','#4ade80','#fb923c'];
+  const opts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 11 }, padding: 10, boxWidth: 10 } },
+      tooltip: { bodyFont: { family: 'IBM Plex Mono' }, titleFont: { family: 'IBM Plex Mono' } }
+    }
+  };
+
+  // Category chart
+  if (chartCategory) chartCategory.destroy();
+  chartCategory = new Chart(document.getElementById('chart-category'), {
+    type: 'doughnut',
+    data: {
+      labels: ['成長型股票', '持有ETF'],
+      datasets: [{ data: [growthVal, etfVal], backgroundColor: ['#38bdf8', '#a78bfa'], borderColor: '#0d1526', borderWidth: 2 }]
+    },
+    options: { ...opts, cutout: '60%' }
+  });
+
+  // Stock chart
+  if (chartStocks) chartStocks.destroy();
+  const sorted = stockValues.sort((a, b) => b.val - a.val);
+  chartStocks = new Chart(document.getElementById('chart-stocks'), {
+    type: 'doughnut',
+    data: {
+      labels: sorted.map(s => s.ticker),
+      datasets: [{ data: sorted.map(s => Math.round(s.val)), backgroundColor: CHART_COLORS.slice(0, sorted.length), borderColor: '#0d1526', borderWidth: 2 }]
+    },
+    options: { ...opts, cutout: '55%' }
+  });
+}
+
 // === RENDER HOLDINGS ===
 function renderHoldings() {
   const c=document.getElementById('holdings-list');
   if(!c) return;
+  computeAndRenderPnL();
   if(!holdingsData.length){
     c.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">尚無持股資料</div><div class="empty-sub">請在設定中連結 Google 帳號<br>然後點擊右上角「同步試算表」</div></div>`;
     return;
