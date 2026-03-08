@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投資儀錶板</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-base:#080c14;--bg-surface:#0d1526;--bg-card:#111d30;--bg-card-hover:#162238;--bg-elevated:#1a2840;
+  --border:#1e3050;--border-bright:#2a4570;--accent:#38bdf8;--accent-dim:#0ea5e940;--accent-glow:#38bdf820;
+  --green:#34d399;--green-dim:#34d39920;--red:#f87171;--red-dim:#f8717120;--yellow:#fbbf24;--yellow-dim:#fbbf2420;
+  --purple:#a78bfa;--text-primary:#e2eaf4;--text-secondary:#7a9abf;--text-muted:#3d5875;
+  --font-mono:'IBM Plex Mono',monospace;--font-sans:'IBM Plex Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;z-index:0;}
+nav{position:sticky;top:0;z-index:100;background:#080c14ee;backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:52px;gap:0;}
+.nav-brand{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-right:32px;display:flex;align-items:center;gap:8px;}
+.nav-brand::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.nav-tabs{display:flex;gap:2px;}
+.nav-tab{padding:6px 16px;font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;border:1px solid transparent;border-radius:4px;transition:all 0.2s;background:none;}
+.nav-tab:hover{color:var(--text-secondary);border-color:var(--border);}
+.nav-tab.active{color:var(--accent);border-color:var(--accent-dim);background:var(--accent-glow);}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.status-pill{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);padding:4px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--red);}
+.status-dot.on{background:var(--green);box-shadow:0 0 6px var(--green);}
+.btn-nav{padding:5px 12px;font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
+.btn-nav:hover{border-color:var(--accent);color:var(--accent);}
+main{position:relative;z-index:1;padding:24px;max-width:1400px;margin:0 auto;}
+.page{display:none;}.page.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.section-label{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
+.section-line{flex:1;height:1px;background:var(--border);}
+.overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;}
+.alloc-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.alloc-label{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+.alloc-value{font-family:var(--font-mono);font-size:22px;font-weight:600;margin-bottom:4px;}
+.alloc-sub{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);}
+.progress-bar{height:4px;background:var(--bg-elevated);border-radius:2px;margin-top:10px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:2px;transition:width 0.6s ease;}
+.watchlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.stock-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.stock-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.2s;}
+.stock-card:hover{border-color:var(--accent);background:var(--bg-card-hover);transform:translateY(-1px);}
+.stock-card:hover::before{opacity:1;background:var(--accent);}
+.stock-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.stock-ticker{font-family:var(--font-mono);font-size:16px;font-weight:600;}
+.stock-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.type-badge{font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px;}
+.badge-value{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-dim);}
+.badge-etf{background:#a78bfa20;color:var(--purple);border:1px solid #a78bfa40;}
+.badge-wave{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow-dim);}
+.stock-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.metric-label{font-family:var(--font-mono);font-size:9px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;}
+.metric-value{font-family:var(--font-mono);font-size:13px;font-weight:500;}
+.stock-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.cache-info{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);}
+.analyze-btn{font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-glow);border:1px solid var(--accent-dim);padding:4px 10px;border-radius:3px;cursor:pointer;transition:all 0.2s;}
+.analyze-btn:hover{background:var(--accent-dim);}
+.val-badge{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.06em;}
+.val-low{background:var(--green-dim);color:var(--green);border:1px solid var(--green-dim);}
+.val-mid{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow-dim);}
+.val-high{background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim);}
+.ability-badge{font-family:var(--font-mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.06em;}
+.ability-know{background:var(--green-dim);color:var(--green);border:1px solid var(--green-dim);}
+.ability-partial{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow-dim);}
+.modal-overlay{position:fixed;inset:0;z-index:200;background:#000000cc;backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px;}
+.modal-overlay.open{display:flex;animation:fadeIn 0.2s ease;}
+.modal{background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:10px;width:100%;max-width:760px;max-height:85vh;overflow-y:auto;position:relative;}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;position:sticky;top:0;background:var(--bg-surface);z-index:1;}
+.modal-ticker{font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--accent);}
+.modal-name{font-size:13px;color:var(--text-secondary);margin-top:2px;}
+.modal-close{margin-left:auto;width:28px;height:28px;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-muted);font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.modal-close:hover{border-color:var(--red);color:var(--red);}
+.modal-body{padding:24px;}
+.analysis-loading{display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:16px;}
+.loading-spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);letter-spacing:0.08em;}
+.analysis-section{margin-bottom:16px;padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;}
+.analysis-section-title{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.analysis-text{font-size:13px;line-height:1.7;color:var(--text-secondary);}
+.cache-badge{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);padding:2px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:3px;}
+.refresh-btn{font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-muted);background:none;border:1px solid var(--border);padding:3px 9px;border-radius:3px;cursor:pointer;transition:all 0.2s;}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
+.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:150px 1fr auto;gap:16px;align-items:center;cursor:pointer;transition:all 0.2s;}
+.holding-entry:hover{border-color:var(--border-bright);background:var(--bg-card-hover);}
+.holding-ticker{font-family:var(--font-mono);font-size:15px;font-weight:600;}
+.holding-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.holding-metrics{display:flex;gap:20px;flex-wrap:wrap;}
+.h-metric-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;}
+.h-metric-value{font-family:var(--font-mono);font-size:12px;margin-top:2px;}
+.holding-pnl{text-align:right;font-family:var(--font-mono);}
+.pnl-value{font-size:15px;font-weight:600;}
+.pnl-pct{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.thesis-box{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px;}
+.thesis-label{font-family:var(--font-mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:8px;}
+.thesis-input{width:100%;background:var(--bg-base);border:1px solid var(--border);border-radius:5px;padding:10px 12px;color:var(--text-primary);font-family:var(--font-sans);font-size:13px;line-height:1.6;resize:vertical;min-height:72px;transition:border-color 0.2s;}
+.thesis-input:focus{outline:none;border-color:var(--accent);}
+.thesis-input::placeholder{color:var(--text-muted);}
+.settings-modal{background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:10px;width:100%;max-width:500px;padding:28px;max-height:90vh;overflow-y:auto;}
+.settings-title{font-family:var(--font-mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:20px;}
+.settings-section{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.settings-section:last-of-type{border-bottom:none;}
+.settings-section-title{font-family:var(--font-mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:12px;}
+.settings-field{margin-bottom:12px;}
+.settings-label{font-family:var(--font-mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:5px;display:block;}
+.settings-input{width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:9px 12px;color:var(--text-primary);font-family:var(--font-mono);font-size:12px;transition:border-color 0.2s;}
+.settings-input:focus{outline:none;border-color:var(--accent);}
+.settings-note{font-size:11px;color:var(--text-muted);line-height:1.6;padding:10px 12px;background:var(--bg-card);border-radius:5px;border-left:2px solid var(--accent-dim);margin-bottom:12px;}
+.btn-save{width:100%;padding:10px;font-family:var(--font-mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--bg-base);background:var(--accent);border:none;border-radius:5px;cursor:pointer;transition:all 0.2s;margin-bottom:8px;}
+.btn-save:hover{background:#7dd3fc;}
+.btn-google{width:100%;padding:10px;font-family:var(--font-mono);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-primary);background:var(--bg-elevated);border:1px solid var(--border-bright);border-radius:5px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
+.btn-google:hover{border-color:var(--accent);color:var(--accent);}
+.btn-google.connected{border-color:var(--green);color:var(--green);}
+.btn-cancel{width:100%;padding:8px;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;margin-top:4px;}
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+.risk-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.risk-title{font-family:var(--font-mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:10px;}
+.risk-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.risk-item:last-child{border-bottom:none;}
+.risk-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sync-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;margin-bottom:20px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
+.sync-banner.synced{border-color:var(--green-dim);color:var(--green);}
+.sync-banner.error{border-color:var(--red-dim);color:var(--red);}
+.empty-state{text-align:center;padding:60px 24px;color:var(--text-muted);}
+.empty-icon{font-size:32px;margin-bottom:16px;opacity:0.5;}
+.empty-title{font-family:var(--font-mono);font-size:13px;margin-bottom:8px;}
+.empty-sub{font-size:12px;line-height:1.8;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg-base);}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:3px;}
+.text-green{color:var(--green)}.text-red{color:var(--red)}.text-yellow{color:var(--yellow)}.text-accent{color:var(--accent)}.text-purple{color:var(--purple)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">PORTFOLIO_OS</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
+    <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
+  </div>
+  <div class="nav-right">
+    <div class="status-pill"><div class="status-dot" id="dot-api"></div><span id="txt-api">API未設定</span></div>
+    <div class="status-pill"><div class="status-dot" id="dot-sheets"></div><span id="txt-sheets">未連結Sheets</span></div>
+    <button class="btn-nav" onclick="openSettings()">⚙ 設定</button>
+  </div>
+</nav>
+
+<main>
+<!-- WATCHLIST PAGE -->
+<div class="page active" id="page-watchlist">
+  <div class="section-header"><span class="section-label">配置進度</span><div class="section-line"></div></div>
+  <div class="overview-grid">
+    <div class="alloc-card">
+      <div class="alloc-label">成長型股票</div>
+      <div class="alloc-value text-accent">67.6%</div>
+      <div class="alloc-sub">目標執行進度 · 還差 NT$40萬</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:67.6%;background:var(--accent)"></div></div>
+    </div>
+    <div class="alloc-card">
+      <div class="alloc-label">持有ETF</div>
+      <div class="alloc-value text-purple">39.4%</div>
+      <div class="alloc-sub">目標執行進度 · 還差 NT$58萬</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:39.4%;background:var(--purple)"></div></div>
+    </div>
+    <div class="alloc-card">
+      <div class="alloc-label">可部署子彈</div>
+      <div class="alloc-value text-green">NT$99萬</div>
+      <div class="alloc-sub">現金 NT$154萬 · 保留 NT$55萬</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:64%;background:var(--green)"></div></div>
+    </div>
+  </div>
+  <div class="section-header"><span class="section-label">觀察清單</span><div class="section-line"></div></div>
+  <div class="watchlist-grid" id="watchlist-grid"></div>
+</div>
+
+<!-- HOLDINGS PAGE -->
+<div class="page" id="page-holdings">
+  <div id="sync-status"></div>
+  <div class="section-header"><span class="section-label">風險監控</span><div class="section-line"></div></div>
+  <div class="risk-grid" style="margin-bottom:28px">
+    <div class="risk-card">
+      <div class="risk-title">基本面風險</div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--yellow)"></div><span style="color:var(--text-secondary)">集中度偏高 — 前3大持股 > 60%</span></div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">地區分布正常 — 美股為主</span></div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">財務健全度 — 整體良好</span></div>
+    </div>
+    <div class="risk-card">
+      <div class="risk-title">估值位階警示</div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--yellow)"></div><span style="color:var(--text-secondary)">PE Band — 部分持股偏高估值區</span></div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--red)"></div><span style="color:var(--text-secondary)">安全邊際不足 — 距合理價 &lt; 20%</span></div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">護城河趨勢 — 整體穩定</span></div>
+    </div>
+    <div class="risk-card">
+      <div class="risk-title">集中度自查</div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">持股數量在能力圈範圍內</span></div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--yellow)"></div><span style="color:var(--text-secondary)">倉位分配 — 建議與信心程度對齊</span></div>
+    </div>
+    <div class="risk-card">
+      <div class="risk-title">Lollapalooza 共振</div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--accent)"></div><span style="color:var(--text-secondary)">AI需求 × 半導體週期 共振中</span></div>
+      <div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-secondary)">點擊個股分析查看詳情</span></div>
+    </div>
+  </div>
+  <div class="section-header">
+    <span class="section-label">持股列表</span>
+    <div class="section-line"></div>
+    <button class="btn-nav" style="font-size:9px;white-space:nowrap" onclick="syncSheets()">↻ 同步試算表</button>
+  </div>
+  <div id="holdings-list"></div>
+</div>
+</main>
+
+<!-- ANALYSIS MODAL -->
+<div class="modal-overlay" id="analysis-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-ticker" id="modal-ticker"></div><div class="modal-name" id="modal-name"></div></div>
+      <span id="modal-cache-badge" class="cache-badge" style="display:none"></span>
+      <button class="refresh-btn" onclick="refreshAnalysis()">↻ 刷新</button>
+      <button class="modal-close" onclick="closeModal('analysis-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- THESIS MODAL -->
+<div class="modal-overlay" id="thesis-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div><div class="modal-ticker" id="thesis-ticker"></div><div class="modal-name">買入論文</div></div>
+      <button class="modal-close" onclick="closeModal('thesis-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="thesis-box">
+        <div class="thesis-label">買入核心論點</div>
+        <textarea class="thesis-input" id="thesis-input" placeholder="為什麼買這支？護城河、成長邏輯、估值優勢..."></textarea>
+      </div>
+      <div class="thesis-box">
+        <div class="thesis-label">論點是否仍成立？</div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="ability-badge ability-know" id="ts-yes" onclick="setThesisStatus('yes')">✓ 成立</button>
+          <button class="ability-badge ability-partial" id="ts-partial" onclick="setThesisStatus('partial')">△ 部分</button>
+          <button class="ability-badge" id="ts-no" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim)" onclick="setThesisStatus('no')">✗ 不成立</button>
+        </div>
+      </div>
+      <div class="thesis-box">
+        <div class="thesis-label">賣出觸發條件</div>
+        <textarea class="thesis-input" id="sell-trigger-input" placeholder="哪些情況會讓你賣出？護城河消失、估值過高..."></textarea>
+      </div>
+      <button class="btn-save" onclick="saveThesis()">儲存買入論文</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="settings-modal">
+    <div class="settings-title">⚙ 系統設定</div>
+    <div class="settings-section">
+      <div class="settings-section-title">🤖 Anthropic API</div>
+      <div class="settings-note">API Key 僅存於本地瀏覽器，不會上傳至任何伺服器。請至 console.anthropic.com 申請。</div>
+      <div class="settings-field">
+        <label class="settings-label">API Key</label>
+        <input type="password" class="settings-input" id="input-apikey" placeholder="sk-ant-...">
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">📊 Google Sheets 連結</div>
+      <div class="settings-note">授權後自動從「持股資訊」分頁讀取持股，跨裝置同步。每台電腦需各授權一次。</div>
+      <div class="settings-field">
+        <label class="settings-label">試算表 ID</label>
+        <input type="text" class="settings-input" id="input-sheetid" placeholder="試算表網址中的長串ID">
+      </div>
+      <button class="btn-google" id="btn-google-auth" onclick="startGoogleAuth()">
+        <span>🔗</span><span id="google-auth-text">連結 Google 帳號</span>
+      </button>
+    </div>
+    <button class="btn-save" onclick="saveSettings()">儲存設定</button>
+    <button class="btn-cancel" onclick="closeModal('settings-modal')">取消</button>
+  </div>
+</div>
+
+<script>
+// === CONFIG ===
+const GOOGLE_CLIENT_ID = '956633966031-5sek3munlvoif3nbt0kr1qo52c5k8krk.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+const SHEET_NAME = '持股資訊';
+const DEFAULT_SHEET_ID = '1wSie_fKvkfJKXT6WSQh3VSsyzdnCJKRv10DrJMU5F80';
+
+// Column indices (0-based) from your sheet:
+// A=BX-0, B=配置比例, C=信用卡款, D=趨勢, E=KD, F=代號, G=代號全名, H=名稱
+// J=配置金額(9), K=配置股數(10), L=成本單價(11), M=現損益(12), N=現價(13)
+const COLS = { ticker:5, fullCode:6, name:7, shares:10, cost:11, price:13 };
+const ETF_TICKERS = ['006208','SMH','QQQ','TQQQ','0050'];
+const TW_TICKERS  = ['2330','6669','5871','006208','IX0001','新立資訊'];
+
+// === WATCHLIST ===
+const WATCHLIST = [
+  {ticker:'6669',name:'緯穎科技',type:'value',ability:'know',moat:'🟢',trend:'🔼',val:'mid',mos:'+18%'},
+  {ticker:'AMD', name:'Advanced Micro Devices',type:'value',ability:'know',moat:'🟢',trend:'➡️',val:'mid',mos:'+22%'},
+  {ticker:'MU',  name:'Micron Technology',type:'value',ability:'partial',moat:'🟡',trend:'➡️',val:'low',mos:'+35%'},
+  {ticker:'PLTR',name:'Palantir Technologies',type:'value',ability:'partial',moat:'🟢',trend:'🔼',val:'high',mos:'-5%'},
+  {ticker:'SMH', name:'VanEck Semiconductor ETF',type:'etf',ability:'know',moat:'—',trend:'—',val:'mid',mos:'+15%'},
+  {ticker:'TQQQ',name:'ProShares UltraPro QQQ',type:'wave',ability:'know',moat:'—',trend:'—',val:'mid',mos:'—'},
+];
+
+// === STATE ===
+let googleToken = null;
+let holdingsData = [];
+let currentTicker = null;
+let currentThesisTicker = null;
+let thesisStatus = 'yes';
+
+// === LOCALSTORAGE ===
+const ls = (k,v) => v===undefined ? localStorage.getItem(k) : (v===null ? localStorage.removeItem(k) : localStorage.setItem(k,v));
+const getApiKey = () => ls('anthropic_api_key')||'';
+const getSheetId = () => ls('sheet_id')||DEFAULT_SHEET_ID;
+
+// === INIT ===
+function init() {
+  const isPublic = new URLSearchParams(window.location.search).get('view')==='public';
+  if (!isPublic) document.getElementById('tab-holdings').style.display='block';
+  loadGoogleToken();
+  renderWatchlist();
+  updateStatusBar();
+}
+
+// === STATUS ===
+function updateStatusBar() {
+  const hasApi = !!getApiKey();
+  const hasG = !!googleToken;
+  document.getElementById('dot-api').className='status-dot'+(hasApi?' on':'');
+  document.getElementById('txt-api').textContent=hasApi?'API已連線':'API未設定';
+  document.getElementById('dot-sheets').className='status-dot'+(hasG?' on':'');
+  document.getElementById('txt-sheets').textContent=hasG?'Sheets已連結':'未連結Sheets';
+}
+
+// === PAGE NAV ===
+function showPage(name,btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='holdings') loadHoldings();
+}
+
+// === SETTINGS ===
+function openSettings() {
+  document.getElementById('input-apikey').value=getApiKey();
+  document.getElementById('input-sheetid').value=getSheetId();
+  updateGoogleBtn();
+  document.getElementById('settings-modal').classList.add('open');
+}
+function saveSettings() {
+  const k=document.getElementById('input-apikey').value.trim();
+  const s=document.getElementById('input-sheetid').value.trim();
+  k ? ls('anthropic_api_key',k) : ls('anthropic_api_key',null);
+  s ? ls('sheet_id',s) : ls('sheet_id',null);
+  updateStatusBar();
+  closeModal('settings-modal');
+}
+
+// === GOOGLE OAUTH ===
+function loadGoogleToken() {
+  const t=ls('google_token'), exp=ls('google_token_exp');
+  if(t && exp && Date.now()<parseInt(exp)) { googleToken=t; }
+  else { googleToken=null; ls('google_token',null); ls('google_token_exp',null); }
+}
+
+function startGoogleAuth() {
+  if(googleToken) {
+    if(confirm('已連結 Google。要取消連結嗎？')) {
+      googleToken=null; ls('google_token',null); ls('google_token_exp',null);
+      updateStatusBar(); updateGoogleBtn();
+    }
+    return;
+  }
+  if(!window.google) { alert('Google 授權套件尚未載入，請稍後再試。'); return; }
+  google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if(resp.error) { alert('授權失敗：'+resp.error); return; }
+      googleToken=resp.access_token;
+      ls('google_token',googleToken);
+      ls('google_token_exp',(Date.now()+(resp.expires_in-60)*1000).toString());
+      updateStatusBar(); updateGoogleBtn();
+      alert('✅ Google 帳號連結成功！請點擊「同步試算表」載入持股。');
+    }
+  }).requestAccessToken({prompt:'consent'});
+}
+
+function updateGoogleBtn() {
+  const btn=document.getElementById('btn-google-auth');
+  const txt=document.getElementById('google-auth-text');
+  if(googleToken){ btn.classList.add('connected'); txt.textContent='已連結（點擊取消連結）'; }
+  else { btn.classList.remove('connected'); txt.textContent='連結 Google 帳號'; }
+}
+
+// === SHEETS FETCH ===
+async function fetchSheetRows() {
+  if(!googleToken) return null;
+  const range=encodeURIComponent(`${SHEET_NAME}!A1:P120`);
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`;
+  try {
+    const res=await fetch(url,{headers:{Authorization:`Bearer ${googleToken}`}});
+    if(res.status===401){ googleToken=null; ls('google_token',null); ls('google_token_exp',null); updateStatusBar(); return null; }
+    const data=await res.json();
+    return data.values||[];
+  } catch(e){ console.error(e); return null; }
+}
+
+function parseHoldings(rows) {
+  const out=[];
+  if(!rows||!rows.length) return out;
+  for(const row of rows){
+    const ticker=(row[COLS.ticker]||'').replace(/\s/g,'');
+    if(!ticker||ticker.length<2) continue;
+    const skip=['代號','成長型股票','持有ETF','現配置比例','BX-0','景氣指標','美股區','KD判斷','趨勢判斷'];
+    if(skip.some(s=>ticker.includes(s))) continue;
+    const sharesRaw=(row[COLS.shares]||'').replace(/,/g,'');
+    const costRaw=(row[COLS.cost]||'').replace(/,/g,'');
+    const priceRaw=(row[COLS.price]||'').replace(/,/g,'');
+    const shares=parseFloat(sharesRaw);
+    const cost=parseFloat(costRaw);
+    const price=parseFloat(priceRaw);
+    if(!shares||shares<=0||!cost||cost<=0) continue;
+    const name=(row[COLS.name]||row[COLS.fullCode]||ticker).trim().split('\n')[0];
+    const type=ticker==='TQQQ'?'wave':ETF_TICKERS.includes(ticker)?'etf':'growth';
+    const currency=TW_TICKERS.includes(ticker)?'TWD':'USD';
+    out.push({ticker,name,shares,cost,price:price||cost,type,currency});
+  }
+  return out;
+}
+
+async function syncSheets() {
+  const banner=document.getElementById('sync-status');
+  if(!googleToken){
+    banner.innerHTML=`<div class="sync-banner error">⚠ 尚未連結 Google 帳號 <button class="btn-nav" style="margin-left:auto;font-size:9px" onclick="openSettings()">開啟設定</button></div>`;
+    return;
+  }
+  banner.innerHTML=`<div class="sync-banner"><div class="loading-spinner" style="width:14px;height:14px;border-width:1.5px;margin:0"></div>&nbsp;正在從試算表同步...</div>`;
+  const rows=await fetchSheetRows();
+  if(!rows){
+    banner.innerHTML=`<div class="sync-banner error">⚠ 同步失敗，Token 可能已過期，請重新授權 <button class="btn-nav" style="margin-left:auto;font-size:9px" onclick="openSettings()">重新授權</button></div>`;
+    return;
+  }
+  holdingsData=parseHoldings(rows);
+  ls('holdings_cache',JSON.stringify({data:holdingsData,ts:Date.now()}));
+  renderHoldings();
+  const now=new Date().toLocaleTimeString('zh-TW');
+  banner.innerHTML=`<div class="sync-banner synced">✓ 已同步 ${holdingsData.length} 筆持股 · ${now} &nbsp;<span style="cursor:pointer;opacity:0.7;text-decoration:underline" onclick="syncSheets()">重新同步</span></div>`;
+}
+
+async function loadHoldings() {
+  try {
+    const c=JSON.parse(ls('holdings_cache')||'{}');
+    if(c.data && c.ts && Date.now()-c.ts < 5*60*1000){
+      holdingsData=c.data; renderHoldings();
+      const ago=Math.floor((Date.now()-c.ts)/60000);
+      document.getElementById('sync-status').innerHTML=`<div class="sync-banner synced">✓ 快取資料（${ago}分鐘前）&nbsp;<span style="cursor:pointer;text-decoration:underline;opacity:0.7" onclick="syncSheets()">重新同步</span></div>`;
+      return;
+    }
+  } catch{}
+  if(googleToken) await syncSheets();
+  else {
+    document.getElementById('sync-status').innerHTML=`<div class="sync-banner error">⚠ 請先連結 Google 帳號以讀取持股 <button class="btn-nav" style="margin-left:auto;font-size:9px" onclick="openSettings()">開啟設定</button></div>`;
+    renderHoldings();
+  }
+}
+
+// === RENDER HOLDINGS ===
+function renderHoldings() {
+  const c=document.getElementById('holdings-list');
+  if(!c) return;
+  if(!holdingsData.length){
+    c.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">尚無持股資料</div><div class="empty-sub">請在設定中連結 Google 帳號<br>然後點擊右上角「同步試算表」</div></div>`;
+    return;
+  }
+  c.innerHTML=holdingsData.map((h)=>{
+    const pnl=(h.price-h.cost)*h.shares;
+    const pct=h.cost>0?((h.price-h.cost)/h.cost*100).toFixed(1):0;
+    const col=pnl>=0?'var(--green)':'var(--red)';
+    const sign=pnl>=0?'+':'';
+    const curr=h.currency==='TWD'?'NT$':'$';
+    const thesis=getThesisDisplay(h.ticker);
+    return `<div class="holding-entry" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
+      <div><div class="holding-ticker">${h.ticker}</div><div class="holding-name">${h.name}</div></div>
+      <div class="holding-metrics">
+        <div><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
+        <div><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
+        <div><div class="h-metric-label">現價</div><div class="h-metric-value">${curr}${h.price.toLocaleString()}</div></div>
+        <div><div class="h-metric-label">買入論文</div><div class="h-metric-value" style="font-size:11px">${thesis}</div></div>
+      </div>
+      <div class="holding-pnl">
+        <div class="pnl-value" style="color:${col}">${sign}${curr}${Math.abs(pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+        <div class="pnl-pct" style="color:${col}">${sign}${pct}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// === THESIS ===
+function getThesisDisplay(ticker){
+  try{
+    const d=JSON.parse(ls('thesis_'+ticker)||'{}');
+    if(!d.status) return `<span style="color:var(--text-muted)">尚未填寫</span>`;
+    return {yes:`<span style="color:var(--green)">✓ 成立</span>`,partial:`<span style="color:var(--yellow)">△ 部分</span>`,no:`<span style="color:var(--red)">✗ 不成立</span>`}[d.status]||'—';
+  }catch{return '—';}
+}
+function openThesisModal(ticker,name){
+  currentThesisTicker=ticker;
+  document.getElementById('thesis-ticker').textContent=`${ticker} — ${name}`;
+  try{
+    const d=JSON.parse(ls('thesis_'+ticker)||'{}');
+    document.getElementById('thesis-input').value=d.thesis||'';
+    document.getElementById('sell-trigger-input').value=d.sellTrigger||'';
+    setThesisStatus(d.status||'yes');
+  }catch{ document.getElementById('thesis-input').value=''; document.getElementById('sell-trigger-input').value=''; setThesisStatus('yes'); }
+  document.getElementById('thesis-modal').classList.add('open');
+}
+function setThesisStatus(v){
+  thesisStatus=v;
+  ['yes','partial','no'].forEach(x=>{ const el=document.getElementById('ts-'+x); if(el) el.style.opacity=x===v?'1':'0.35'; });
+}
+function saveThesis(){
+  if(!currentThesisTicker) return;
+  ls('thesis_'+currentThesisTicker,JSON.stringify({thesis:document.getElementById('thesis-input').value,sellTrigger:document.getElementById('sell-trigger-input').value,status:thesisStatus,updatedAt:Date.now()}));
+  closeModal('thesis-modal'); renderHoldings();
+}
+
+// === WATCHLIST RENDER ===
+function renderWatchlist(){
+  document.getElementById('watchlist-grid').innerHTML=WATCHLIST.map(s=>{
+    const tc=s.type==='value'?'badge-value':s.type==='etf'?'badge-etf':'badge-wave';
+    const tt=s.type==='value'?'價值投資':s.type==='etf'?'ETF':'波段';
+    const ac=s.ability==='know'?'ability-know':'ability-partial';
+    const at=s.ability==='know'?'能力圈內':'部分理解';
+    const vc=s.val==='low'?'val-low':s.val==='mid'?'val-mid':'val-high';
+    const vt=s.val==='low'?'低估值區':s.val==='mid'?'合理區間':'高估值區';
+    const mc=s.mos.startsWith('+')?'var(--green)':s.mos==='—'?'var(--text-muted)':'var(--red)';
+    const ci=getCacheInfo('analysis_'+s.ticker);
+    return `<div class="stock-card" onclick="openAnalysis('${s.ticker}')">
+      <div class="stock-header">
+        <div><div class="stock-ticker">${s.ticker}</div><div class="stock-name">${s.name}</div></div>
+        <span class="type-badge ${tc}">${tt}</span>
+      </div>
+      <div class="stock-metrics">
+        <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:${mc}">${s.mos}</div></div>
+        <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge ${vc}">${vt}</span></div></div>
+        <div><div class="metric-label">能力圈</div><div class="metric-value"><span class="ability-badge ${ac}">${at}</span></div></div>
+        <div><div class="metric-label">護城河</div><div class="metric-value">${s.moat} ${s.trend}</div></div>
+      </div>
+      <div class="stock-footer">
+        <span class="cache-info">${ci?'快取：'+ci:'尚未分析'}</span>
+        <button class="analyze-btn">AI 分析 →</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// === CACHE ===
+function getCacheInfo(key){
+  try{
+    const d=JSON.parse(ls(key)||'{}');
+    if(!d.ts) return null;
+    const m=Math.floor((Date.now()-d.ts)/60000);
+    if(m>24*60){ls(key,null);return null;}
+    return m<60?m+'分鐘前':Math.floor(m/60)+'小時前';
+  }catch{return null;}
+}
+function getCache(key){
+  try{
+    const d=JSON.parse(ls(key)||'{}');
+    if(!d.ts||Date.now()-d.ts>24*60*60*1000){ls(key,null);return null;}
+    return d;
+  }catch{return null;}
+}
+function setCache(key,content){ls(key,JSON.stringify({content,ts:Date.now()}));}
+
+// === ANALYSIS ===
+function openAnalysis(ticker){
+  currentTicker=ticker;
+  const s=WATCHLIST.find(x=>x.ticker===ticker);
+  document.getElementById('modal-ticker').textContent=ticker;
+  document.getElementById('modal-name').textContent=s.name;
+  document.getElementById('analysis-modal').classList.add('open');
+  const ck='analysis_'+ticker;
+  const cached=getCache(ck);
+  if(cached){
+    document.getElementById('modal-cache-badge').textContent='快取：'+getCacheInfo(ck);
+    document.getElementById('modal-cache-badge').style.display='inline';
+    renderAnalysis(cached.content);
+  } else {
+    document.getElementById('modal-cache-badge').style.display='none';
+    runAnalysis(ticker,s);
+  }
+}
+function refreshAnalysis(){
+  if(!currentTicker) return;
+  ls('analysis_'+currentTicker,null);
+  document.getElementById('modal-cache-badge').style.display='none';
+  runAnalysis(currentTicker,WATCHLIST.find(x=>x.ticker===currentTicker));
+}
+async function runAnalysis(ticker,stock){
+  const apiKey=getApiKey();
+  const body=document.getElementById('modal-body');
+  if(!apiKey){
+    body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--font-mono);font-size:12px">請先在設定中填入 Anthropic API Key<br><br><button class="btn-nav" onclick="openSettings()">⚙ 開啟設定</button></div>`;
+    return;
+  }
+  body.innerHTML=`<div class="analysis-loading"><div class="loading-spinner"></div><div class="loading-text">正在分析 ${ticker}...</div></div>`;
+  const prompts={
+    wave:`你是波段交易者，分析 TQQQ（Nasdaq 3倍槓桿ETF），不做基本面分析。繁體中文，只輸出JSON無其他文字：{"type":"wave","sections":[{"title":"⚡ 槓桿特性提醒","content":"..."},{"title":"📊 當前市場位置","content":"..."},{"title":"🎯 波段操作建議","content":"..."},{"title":"🛡 風險控管","content":"..."}]}`,
+    etf:`你是半導體產業分析師，分析 SMH（VanEck半導體ETF）。繁體中文，只輸出JSON無其他文字：{"type":"etf","sections":[{"title":"📋 成分股集中度","content":"..."},{"title":"🔄 半導體週期位置","content":"..."},{"title":"💡 核心持倉分析","content":"..."},{"title":"🎯 建倉時機","content":"..."}]}`,
+    value:`你是巴菲特與查理蒙格，長期價值投資視角分析 ${ticker}（${stock.name}）。搜尋最新財報。繁體中文，只輸出JSON無其他文字：{"type":"value","sections":[{"title":"⚠️ 現況風險","content":"宏觀+產業+財務健全度"},{"title":"🏰 護城河分析","content":"四維度+趨勢方向"},{"title":"💰 價值位階","content":"PE/PB Band+安全邊際%"},{"title":"🎯 建倉策略","content":"具體點位+5-10年邏輯"},{"title":"👤 管理層品質","content":"資本配置+誠信+創辦人"}]}`
+  };
+  const pk=stock.type==='wave'?'wave':stock.type==='etf'?'etf':'value';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompts[pk]}]})
+    });
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const tb=data.content.find(b=>b.type==='text');
+    const raw=tb?tb.text:'';
+    const m=raw.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('解析失敗，請重試');
+    const parsed=JSON.parse(m[0]);
+    setCache('analysis_'+ticker,parsed);
+    document.getElementById('modal-cache-badge').textContent='剛剛更新';
+    document.getElementById('modal-cache-badge').style.display='inline';
+    renderAnalysis(parsed);
+  }catch(err){
+    body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--red);font-family:var(--font-mono);font-size:12px">分析失敗：${err.message}<br><br><button class="refresh-btn" onclick="refreshAnalysis()">↻ 重試</button></div>`;
+  }
+}
+function renderAnalysis(data){
+  const body=document.getElementById('modal-body');
+  if(!data?.sections){body.innerHTML='<div style="color:var(--red);padding:20px;font-family:var(--font-mono);font-size:12px">資料格式錯誤</div>';return;}
+  body.innerHTML=data.sections.map(s=>`<div class="analysis-section"><div class="analysis-section-title">${s.title}</div><div class="analysis-text">${s.content.replace(/\n/g,'<br>')}</div></div>`).join('');
+}
+
+// === MODAL ===
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+['analysis-modal','settings-modal','thesis-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal(id);});
+});
+
+init();
+</script>
+</body>
+</html>
