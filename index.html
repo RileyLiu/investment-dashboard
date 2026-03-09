@@ -938,6 +938,7 @@ function renderTechIndicators(h) {
   if(h.ma200pct!==null) {
     const ma=h.ma200pct;
     const maColor=ma>20?'#f87171':ma>10?'#fbbf24':ma<-10?'#34d399':'#7a9abf';
+    const warn=Math.abs(ma)>20?'⚠':'';
     const absma=Math.abs(ma), barPos=Math.max(2,Math.min(98,50+ma*1.2));
     html+=`<div class="tech-row">
       <span class="tech-label" style="width:56px">200MA偏離</span>
