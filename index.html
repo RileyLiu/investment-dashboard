@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.7.2</title>
+<title>投資儀錶板 v1.7.3</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.7.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.7.3</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -286,6 +286,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="chart-card">
       <div class="chart-title">個股持倉分布</div>
       <div class="chart-wrap"><canvas id="chart-stocks"></canvas></div>
+    </div>
+  </div>
+  <!-- 資產成長曲線 -->
+  <div id="growth-chart-section" style="display:none;margin-bottom:24px">
+    <div class="section-header"><span class="section-label">資產成長曲線</span><div class="section-line"></div></div>
+    <div class="chart-card" style="padding:20px">
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-growth"></canvas></div>
     </div>
   </div>
   <div class="section-header"><span class="section-label">風險監控</span><div class="section-line"></div></div>
@@ -392,6 +399,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v1.7.3 — 2026-03-09</div>
+        <div class="analysis-text">
+          ✦ 資產成長曲線：每次同步試算表自動寫入「資產快照」分頁（同一週只寫一次）<br>
+          ✦ 持股管理頁新增折線圖，顯示歷史總資產變化<br>
+          ✦ 多台電腦共用：快照存 Google Sheets，任何裝置皆可查看
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v1.7.2 — 2026-03-09</div>
         <div class="analysis-text">
@@ -782,6 +797,66 @@ async function syncSheets() {
   updateAllocCards(meta);
   const now=new Date().toLocaleTimeString('zh-TW');
   banner.innerHTML=`<div class="sync-banner synced">✓ 已同步 ${holdingsData.length} 筆持股 · ${now} &nbsp;<span style="cursor:pointer;opacity:0.7;text-decoration:underline" onclick="syncSheets()">重新同步</span></div>`;
+  // 自動寫入資產快照（每週一次）
+  await writeAssetSnapshot();
+  // 渲染成長曲線
+  renderGrowthChart();
+}
+
+// === 資產快照 ===
+async function writeAssetSnapshot() {
+  if(!googleToken || !holdingsData.length) return;
+  // 計算本週週次（年份+週數），同一週只寫一次
+  const now = new Date();
+  const weekKey = `${now.getFullYear()}-W${String(Math.ceil((now - new Date(now.getFullYear(),0,1))/604800000)).padStart(2,'0')}`;
+  const lastKey = ls('last_snapshot_week');
+  if(lastKey === weekKey) return; // 本週已寫過
+
+  // 計算總資產、各損益
+  let totalTWD=0, usdPnl=0, twPnl=0;
+  for(const h of holdingsData){
+    const pnl=(h.price-h.cost)*h.shares;
+    const val=h.price*h.shares;
+    if(h.currency==='TWD'){ totalTWD+=val; twPnl+=pnl; }
+    else { totalTWD+=val*usdTwd; usdPnl+=pnl; }
+  }
+  const totalMW = (totalTWD/10000).toFixed(1);
+  const dateStr = now.toISOString().split('T')[0];
+  const vixVal = document.getElementById('vix-bar')?.dataset?.vix || '';
+
+  // 抓現有快照找下一行
+  try {
+    const rangeCheck = encodeURIComponent(`資產快照!A:A`);
+    const checkRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${rangeCheck}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const checkData = await checkRes.json();
+    const nextRow = (checkData.values||[]).length + 1;
+
+    // 寫入新一行
+    const writeRange = encodeURIComponent(`資產快照!A${nextRow}:E${nextRow}`);
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${writeRange}?valueInputOption=USER_ENTERED`,{
+      method:'PUT',
+      headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify({values:[[dateStr, totalMW, usdPnl.toFixed(0), twPnl.toFixed(0), vixVal]]})
+    });
+    ls('last_snapshot_week', weekKey);
+    console.log('資產快照已寫入:', dateStr, totalMW+'萬');
+  } catch(e){ console.error('快照寫入失敗:', e); }
+}
+
+async function fetchAssetSnapshots() {
+  if(!googleToken) return [];
+  try {
+    const range = encodeURIComponent(`資產快照!A2:E200`);
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const data = await res.json();
+    return (data.values||[]).map(r=>({
+      date: r[0]||'',
+      total: parseFloat(r[1])||0,
+      usdPnl: parseFloat(r[2])||0,
+      twPnl: parseFloat(r[3])||0,
+      vix: parseFloat(r[4])||null,
+    })).filter(r=>r.date&&r.total>0);
+  } catch(e){ return []; }
 }
 
 async function loadHoldings() {
@@ -860,10 +935,52 @@ function updateVIX(vix) {
     <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:${color};padding:2px 8px;border:1px solid ${color};border-radius:3px">${level}</span>
     <span style="font-family:var(--font-mono);font-size:18px;color:var(--text-muted);margin-left:12px">${tip}</span>
   `;
-  el.style.borderColor=color+'60';
+  el.dataset.vix = vix.toFixed(2);
 }
 
-// === TOTAL P&L + CHARTS ===
+// === 資產成長曲線 ===
+let chartGrowth = null;
+async function renderGrowthChart() {
+  const snapshots = await fetchAssetSnapshots();
+  const section = document.getElementById('growth-chart-section');
+  if(!snapshots.length || !section) return;
+  section.style.display = 'block';
+  const labels = snapshots.map(s => s.date);
+  const values = snapshots.map(s => s.total);
+  const ctx = document.getElementById('chart-growth').getContext('2d');
+  if(chartGrowth) chartGrowth.destroy();
+  chartGrowth = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '總資產（萬TWD）',
+        data: values,
+        borderColor: '#38bdf8',
+        backgroundColor: '#38bdf820',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#38bdf8',
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 11 } } },
+        tooltip: {
+          bodyFont: { family: 'IBM Plex Mono' },
+          callbacks: { label: ctx => ` NT$${ctx.parsed.y}萬` }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: '#1e3050' } },
+        y: { ticks: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => `${v}萬` }, grid: { color: '#1e3050' } }
+      }
+    }
+  });
+}
 let chartCategory=null, chartStocks=null;
 
 function computeAndRenderPnL() {
