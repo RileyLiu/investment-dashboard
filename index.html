@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.8.1</title>
+<title>投資儀錶板 v1.8.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.8.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.8.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -399,6 +399,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v1.8.2 — 2026-03-09</div>
+        <div class="analysis-text">
+          ✦ 儲存買入論文時自動同步寫入 Google Sheets「論文庫」分頁<br>
+          ✦ 欄位：代號 / 買入論文 / 賣出觸發條件 / 論文狀態<br>
+          ✦ 為 Gmail 週報 Apps Script 讀取論文資料做準備
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v1.8.1 — 2026-03-09</div>
         <div class="analysis-text">
@@ -1362,8 +1370,36 @@ function setThesisStatus(v){
 }
 function saveThesis(){
   if(!currentThesisTicker) return;
-  ls('thesis_'+currentThesisTicker,JSON.stringify({thesis:document.getElementById('thesis-input').value,sellTrigger:document.getElementById('sell-trigger-input').value,status:thesisStatus,updatedAt:Date.now()}));
+  const thesisText = document.getElementById('thesis-input').value;
+  const sellTrigger = document.getElementById('sell-trigger-input').value;
+  ls('thesis_'+currentThesisTicker,JSON.stringify({thesis:thesisText,sellTrigger,status:thesisStatus,updatedAt:Date.now()}));
   closeModal('thesis-modal'); renderHoldings();
+  // 同步寫入 Google Sheets 論文庫
+  if(googleToken) saveThesisToSheets(currentThesisTicker, thesisText, sellTrigger, thesisStatus);
+}
+
+async function saveThesisToSheets(ticker, thesis, sellTrigger, status) {
+  try {
+    // 先搜尋是否已有此代號
+    const range = encodeURIComponent('論文庫!A:A');
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const data = await res.json();
+    const rows = data.values || [];
+    let targetRow = -1;
+    for(let i=1;i<rows.length;i++){
+      if((rows[i][0]||'').trim() === ticker) { targetRow = i+1; break; }
+    }
+    const statusText = status==='yes'?'成立':status==='partial'?'部分':'不成立';
+    const writeRange = targetRow > 0
+      ? encodeURIComponent(`論文庫!A${targetRow}:D${targetRow}`)
+      : encodeURIComponent(`論文庫!A${rows.length+1}:D${rows.length+1}`);
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${writeRange}?valueInputOption=USER_ENTERED`,{
+      method:'PUT',
+      headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify({values:[[ticker, thesis, sellTrigger, statusText]]})
+    });
+    console.log('[論文庫] 已同步:', ticker);
+  } catch(e){ console.error('[論文庫] 寫入失敗:', e); }
 }
 function markFaithCheck(ticker){
   const d=JSON.parse(localStorage.getItem('faithCheck')||'{}');
