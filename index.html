@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.6.0</title>
+<title>投資儀錶板 v1.7.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -114,7 +114,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
 
 /* HOLDINGS */
-.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:140px 1fr 180px auto;gap:12px;align-items:center;cursor:pointer;transition:all 0.2s;}
+.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:150px minmax(0,1fr) 220px auto;gap:16px;align-items:center;cursor:pointer;transition:all 0.2s;}
 .holding-entry:hover{border-color:var(--border-bright);background:var(--bg-card-hover);}
 .holding-ticker{font-family:var(--font-mono);font-size:15px;font-weight:600;}
 .holding-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
@@ -126,13 +126,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .pnl-pct{font-size:12px;margin-top:2px;}
 
 /* TECHNICAL INDICATORS (in holding-entry) */
-.tech-col{display:flex;flex-direction:column;gap:5px;min-width:180px;width:180px;flex-shrink:0;}
+.tech-col{display:flex;flex-direction:column;gap:5px;width:220px;flex-shrink:0;}
 .tech-row{display:flex;align-items:center;gap:6px;}
-.tech-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;width:28px;flex-shrink:0;}
+.tech-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;width:72px;flex-shrink:0;}
 .tech-track{flex:1;height:4px;border-radius:2px;background:var(--bg-elevated);position:relative;overflow:visible;}
 .tech-fill{height:100%;border-radius:2px;}
 .tech-dot{position:absolute;top:-3px;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--bg-card);transform:translateX(-50%);}
-.tech-val{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);min-width:46px;text-align:right;}
+.tech-val{font-family:var(--font-mono);font-size:9px;color:var(--text-secondary);min-width:52px;text-align:right;}
 
 /* RISK */
 .risk-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;}
@@ -210,7 +210,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.6.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.7.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -392,6 +392,16 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v1.7.0 — 2026-03-09</div>
+        <div class="analysis-text">
+          ✦ SMH/TQQQ watchlist 卡片改顯示52週高低橫條（移除「尚無DCF資料」）<br>
+          ✦ 觀察清單個股安全邊際改為動態計算：(DCF合理價-現價)/現價<br>
+          ✦ DCF 橫條現價修正：優先從持股資訊即時現價抓，fallback DCF分頁<br>
+          ✦ 持股管理右側技術指標欄位對齊修正<br>
+          ✦ VIX 從 Cloudflare Worker 自動抓取（頁面載入即顯示，不需同步Sheets）
+        </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v1.6.0 — 2026-03-09</div>
         <div class="analysis-text">
           ✦ VIX 恐慌指數狀態列（觀察清單頁頂部，從 Sheets G10 即時抓取）<br>
@@ -505,7 +515,7 @@ function init() {
   loadGoogleToken();
   renderWatchlist();
   updateStatusBar();
-  // Load DCF for watchlist if token exists
+  fetchVIX();
   if (googleToken) fetchAllDCF();
 }
 
@@ -761,6 +771,16 @@ function updateAllocCards(meta) {
 }
 
 // === VIX ===
+async function fetchVIX() {
+  try {
+    const res = await fetch('https://anthropic-proxy.issac0901.workers.dev/vix');
+    const data = await res.json();
+    if(data.vix) updateVIX(data.vix);
+  } catch(e) {
+    console.log('VIX fetch failed:', e);
+  }
+}
+
 function updateVIX(vix) {
   const el=document.getElementById('vix-bar');
   if(!el) return;
@@ -936,7 +956,7 @@ function renderTechIndicators(h) {
     const pos=Math.max(0,Math.min(100,((h.pe-h.peL)/range)*100));
     const markerColor=pos<33?'#34d399':pos<66?'#fbbf24':'#f87171';
     html+=`<div class="tech-row">
-      <span class="tech-label" style="width:72px;flex-shrink:0">PE位階</span>
+      <span class="tech-label" >PE位階</span>
       <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
         <div class="tech-dot" style="left:${pos}%;background:${markerColor}"></div>
       </div>
@@ -950,7 +970,7 @@ function renderTechIndicators(h) {
     const pos=Math.max(0,Math.min(100,((h.price-h.w52low)/range)*100));
     const markerColor=pos<30?'#34d399':pos<70?'#fbbf24':'#f87171';
     html+=`<div class="tech-row">
-      <span class="tech-label" style="width:72px;flex-shrink:0">52周高低</span>
+      <span class="tech-label" >52周高低</span>
       <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
         <div class="tech-dot" style="left:${pos}%;background:${markerColor}"></div>
       </div>
@@ -965,7 +985,7 @@ function renderTechIndicators(h) {
     const warn=Math.abs(ma)>20?'⚠':'';
     const barPos=Math.max(2,Math.min(98,50+ma*1.2));
     html+=`<div class="tech-row">
-      <span class="tech-label" style="width:72px;flex-shrink:0">200MA偏離</span>
+      <span class="tech-label" >200MA偏離</span>
       <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
         <div class="tech-dot" style="left:${barPos}%;background:${maColor}"></div>
       </div>
@@ -978,16 +998,55 @@ function renderTechIndicators(h) {
 }
 
 // === DCF BAND (watchlist) ===
+function getLivePrice(ticker) {
+  const h = holdingsData.find(x => x.ticker === ticker);
+  if(h && h.price) return h.price;
+  const d = dcfCache[ticker];
+  if(d && d.currentPrice) return d.currentPrice;
+  return null;
+}
+
 function renderDCFBand(ticker) {
-  const d=dcfCache[ticker];
+  const stock = WATCHLIST.find(s => s.ticker === ticker);
+  const curr = TW_TICKERS.includes(ticker) ? 'NT$' : '$';
+
+  // ETF / 波段：顯示 52 週高低橫條
+  if(stock && (stock.type === 'etf' || stock.type === 'wave')) {
+    const h = holdingsData.find(x => x.ticker === ticker);
+    if(!h || !h.w52low || !h.w52high || h.w52high <= h.w52low) {
+      return `<div class="dcf-band-wrap"><div class="dcf-no-data">尚無52週資料（請同步試算表）</div></div>`;
+    }
+    const pos = Math.max(2, Math.min(98, ((h.price - h.w52low) / (h.w52high - h.w52low)) * 100));
+    const markerColor = pos < 30 ? '#34d399' : pos < 70 ? '#fbbf24' : '#f87171';
+    const zone = pos < 30 ? '相對低點區' : pos < 70 ? '中間區間' : '相對高點區';
+    const zoneColor = pos < 30 ? 'var(--green)' : pos < 70 ? 'var(--yellow)' : 'var(--red)';
+    return `<div class="dcf-band-wrap">
+      <div class="dcf-band-label">
+        <span>52 週高低位置</span>
+        <span style="color:${zoneColor};font-weight:600">${zone}</span>
+      </div>
+      <div class="dcf-track">
+        <div class="dcf-marker" style="left:${pos}%;background:${markerColor}"></div>
+      </div>
+      <div class="dcf-prices">
+        <span>低 ${curr}${h.w52low.toLocaleString()}</span>
+        <span>▲ 現價 ${curr}${h.price.toLocaleString()} (${pos.toFixed(0)}%)</span>
+        <span>高 ${curr}${h.w52high.toLocaleString()}</span>
+      </div>
+    </div>`;
+  }
+
+  // 個股：DCF 估值位階
+  const d = dcfCache[ticker];
   if(!d) return `<div class="dcf-band-wrap"><div class="dcf-no-data">尚無 DCF 資料</div></div>`;
-  const {conservative,fair,optimistic,currentPrice,decision}=d;
-  const low=conservative*0.9, high=optimistic*1.05;
-  const range=high-low;
-  const pos=range>0?Math.max(2,Math.min(98,((currentPrice-low)/range)*100)):50;
-  const markerColor=currentPrice<conservative?'#34d399':currentPrice<fair?'#fbbf24':'#f87171';
-  const decColor=decision.includes('買入')||decision.includes('建議')?'var(--green)':decision.includes('觀望')?'var(--yellow)':'var(--text-muted)';
-  const curr=TW_TICKERS.includes(ticker)?'NT$':'$';
+  const {conservative, fair, optimistic, decision} = d;
+  const livePrice = getLivePrice(ticker);
+  const currentPrice = livePrice || d.currentPrice || 0;
+  const low = conservative * 0.9, high = optimistic * 1.05;
+  const range = high - low;
+  const pos = range > 0 ? Math.max(2, Math.min(98, ((currentPrice - low) / range) * 100)) : 50;
+  const markerColor = currentPrice < conservative ? '#34d399' : currentPrice < fair ? '#fbbf24' : '#f87171';
+  const decColor = decision.includes('買入') || decision.includes('建議') ? 'var(--green)' : decision.includes('觀望') ? 'var(--yellow)' : 'var(--text-muted)';
   return `<div class="dcf-band-wrap">
     <div class="dcf-band-label">
       <span>DCF 估值位階</span>
@@ -1003,6 +1062,7 @@ function renderDCFBand(ticker) {
     </div>
   </div>`;
 }
+
 
 // === THESIS ===
 function getThesisDisplay(ticker){
@@ -1055,19 +1115,29 @@ function renderWatchlist(){
     const tt=s.type==='value'?'價值投資':s.type==='etf'?'ETF':'波段';
     const vc=s.val==='low'?'val-low':s.val==='mid'?'val-mid':'val-high';
     const vt=s.val==='low'?'低估值區':s.val==='mid'?'合理區間':'高估值區';
-    // 安全邊際：SMH/TQQQ 用52週位置動態計算
+    // 安全邊際：ETF/波段用52週位置，個股用DCF動態計算
     let mosDisplay, mosColor;
-    if(s.mos==='dynamic') {
-      const pos52=get52WPosition(s.ticker);
-      if(pos52!==null) {
-        mosColor=pos52<30?'var(--green)':pos52<70?'var(--yellow)':'var(--red)';
-        mosDisplay=`52週 ${pos52.toFixed(0)}% 位置`;
+    if(stock.type === 'etf' || stock.type === 'wave') {
+      const pos52 = get52WPosition(s.ticker);
+      if(pos52 !== null) {
+        mosColor = pos52 < 30 ? 'var(--green)' : pos52 < 70 ? 'var(--yellow)' : 'var(--red)';
+        mosDisplay = `52週 ${pos52.toFixed(0)}% 位置`;
       } else {
-        mosColor='var(--text-muted)'; mosDisplay='—';
+        mosColor = 'var(--text-muted)'; mosDisplay = '—';
       }
     } else {
-      mosColor=s.mos.startsWith('+')?'var(--green)':s.mos==='—'?'var(--text-muted)':'var(--red)';
-      mosDisplay=s.mos;
+      // 個股：從 DCF 動態算安全邊際
+      const d = dcfCache[s.ticker];
+      const livePrice = getLivePrice(s.ticker);
+      if(d && d.fair && livePrice) {
+        const mos = ((d.fair - livePrice) / livePrice * 100);
+        mosColor = mos >= 20 ? 'var(--green)' : mos >= 0 ? 'var(--yellow)' : 'var(--red)';
+        mosDisplay = (mos >= 0 ? '+' : '') + mos.toFixed(0) + '%';
+      } else {
+        // fallback 寫死值
+        mosColor = s.mos.startsWith('+') ? 'var(--green)' : s.mos === '—' ? 'var(--text-muted)' : 'var(--red)';
+        mosDisplay = s.mos;
+      }
     }
     const ci=getCacheInfo('analysis_'+s.ticker);
     const dcfBand=renderDCFBand(s.ticker);
