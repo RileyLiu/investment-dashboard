@@ -797,6 +797,8 @@ async function syncSheets() {
   updateAllocCards(meta);
   const now=new Date().toLocaleTimeString('zh-TW');
   banner.innerHTML=`<div class="sync-banner synced">✓ 已同步 ${holdingsData.length} 筆持股 · ${now} &nbsp;<span style="cursor:pointer;opacity:0.7;text-decoration:underline" onclick="syncSheets()">重新同步</span></div>`;
+  // 清除本週快照記錄，強制重新寫入
+  ls('last_snapshot_week', null);
   // 自動寫入資產快照（每週一次）
   await writeAssetSnapshot();
   // 渲染成長曲線
@@ -829,17 +831,27 @@ async function writeAssetSnapshot() {
     const rangeCheck = encodeURIComponent(`資產快照!A:A`);
     const checkRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${rangeCheck}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const checkData = await checkRes.json();
+    console.log('[快照] checkData:', JSON.stringify(checkData).slice(0,200));
     const nextRow = (checkData.values||[]).length + 1;
+    console.log('[快照] 準備寫入第', nextRow, '行');
 
     // 寫入新一行
     const writeRange = encodeURIComponent(`資產快照!A${nextRow}:E${nextRow}`);
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${writeRange}?valueInputOption=USER_ENTERED`,{
+    const writeBody = {values:[[dateStr, totalMW, usdPnl.toFixed(0), twPnl.toFixed(0), vixVal]]};
+    console.log('[快照] 寫入內容:', JSON.stringify(writeBody));
+    const writeRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${writeRange}?valueInputOption=USER_ENTERED`,{
       method:'PUT',
       headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
-      body:JSON.stringify({values:[[dateStr, totalMW, usdPnl.toFixed(0), twPnl.toFixed(0), vixVal]]})
+      body:JSON.stringify(writeBody)
     });
-    ls('last_snapshot_week', weekKey);
-    console.log('資產快照已寫入:', dateStr, totalMW+'萬');
+    const writeData = await writeRes.json();
+    console.log('[快照] 寫入結果:', JSON.stringify(writeData).slice(0,300));
+    if(writeData.updatedCells) {
+      ls('last_snapshot_week', weekKey);
+      console.log('資產快照已寫入:', dateStr, totalMW+'萬');
+    } else {
+      console.error('[快照] 寫入失敗:', writeData);
+    }
   } catch(e){ console.error('快照寫入失敗:', e); }
 }
 
