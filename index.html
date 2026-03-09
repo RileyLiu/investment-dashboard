@@ -820,7 +820,8 @@ async function writeAssetSnapshot() {
   if(!googleToken || !holdingsData.length) return;
   // 計算本週週次（年份+週數），同一週只寫一次
   const now = new Date();
-  const weekKey = now.toISOString().split('T')[0]; // 同一天只寫一次  const lastKey = ls('last_snapshot_week');
+  const weekKey = now.toISOString().split('T')[0]; // 同一天只寫一次
+  const lastKey = ls('last_snapshot_week');
   if(lastKey === weekKey) return; // 本週已寫過
 
   // 計算總資產、各損益
