@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.7.1</title>
+<title>投資儀錶板 v1.7.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.7.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.7.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -393,6 +393,17 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v1.7.2 — 2026-03-09</div>
+        <div class="analysis-text">
+          ✦ DCF 現價修正：從 G2 抓（非 F2）<br>
+          ✦ 安全邊際動態計算：(G3合理股價 - G2現價) / G2現價<br>
+          ✦ 估值位階動態判斷：現價 vs 保守/合理價自動分低估/合理/高估<br>
+          ✦ ETF/波段（SMH/TQQQ）52週資料從 Yahoo Finance 即時抓，頁面載入自動執行<br>
+          ✦ VIX 狀態列文字全部改為 18px<br>
+          ✦ 持股管理左側欄位固定寬度，解決現價跑版問題
+        </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v1.7.1 — 2026-03-09</div>
         <div class="analysis-text">
           ✦ 修正 renderWatchlist bug（stock → s）觀察清單恢復正常<br>
@@ -525,7 +536,23 @@ function init() {
   renderWatchlist();
   updateStatusBar();
   fetchVIX();
+  fetchETFQuotes(); // 不需登入，直接抓 ETF/波段
   if (googleToken) fetchAllDCF();
+}
+
+async function fetchETFQuotes() {
+  for(const s of WATCHLIST) {
+    if(s.type === 'etf' || s.type === 'wave') {
+      try {
+        const res = await fetch(`https://anthropic-proxy.issac0901.workers.dev/quote/${s.ticker}`);
+        const q = await res.json();
+        if(q.price && q.low52 && q.high52) {
+          dcfCache[s.ticker] = { currentPrice: q.price, w52low: q.low52, w52high: q.high52, isETF: true };
+        }
+      } catch(e) { console.log('ETF quote failed:', s.ticker); }
+    }
+  }
+  renderWatchlist();
 }
 
 // === STATUS ===
@@ -631,16 +658,28 @@ async function fetchDCFSheet(sheetName) {
     if(!res.ok) return null;
     const data=await res.json();
     const rows=data.values||[];
-    // 結構：rows[0]=第2行, rows[1]=第3行, rows[2]=第4行
-    // F(0)=現價, G(1)=股代/決策, H(2)=label, I(3)=label, J(4)=數值
-    const parseN = s => parseFloat((s||'').replace(/,/g,''))||0;
-    const currentPrice = parseN(rows[0]?.[0]); // F2
+    // 欄位對應（抓 F2:J5，所以 index 從0開始）
+    // row[0] = 第2行：F2=現價label, G2=現價數值, ..., J2=保守估計
+    // row[1] = 第3行：F3=合理股價label, G3=合理股價數值, ..., J3=合理預估
+    // row[2] = 第4行：F4=決策標準label, G4=決策標準, ..., J4=樂觀溢價
+    const parseN = s => parseFloat((s||'').replace(/,/g,'').replace(/[^\d.-]/g,''))||0;
+    const currentPrice = parseN(rows[0]?.[1]); // G2 現價
+    const fairPrice    = parseN(rows[1]?.[1]); // G3 合理股價
     const decision     = (rows[2]?.[1]||'').trim(); // G4 決策標準
-    const conservative = parseN(rows[0]?.[4]); // J2 保守
-    const fair         = parseN(rows[1]?.[4]); // J3 合理
-    const optimistic   = parseN(rows[2]?.[4]); // J4 樂觀
+    const conservative = parseN(rows[0]?.[4]); // J2 保守估計
+    const fair         = parseN(rows[1]?.[4]); // J3 合理預估
+    const optimistic   = parseN(rows[2]?.[4]); // J4 樂觀溢價
     if(!conservative && !fair && !optimistic) return null;
-    return { conservative, fair, optimistic, currentPrice, decision };
+    // 安全邊際：(G3合理股價 - G2現價) / G2現價
+    const mos = currentPrice > 0 ? ((fairPrice - currentPrice) / currentPrice * 100) : null;
+    // 估值位階：動態判斷
+    let valTier = 'mid';
+    if(currentPrice > 0 && conservative > 0) {
+      if(currentPrice < conservative) valTier = 'low';
+      else if(fair > 0 && currentPrice >= fair) valTier = 'high';
+      else valTier = 'mid';
+    }
+    return { conservative, fair, optimistic, currentPrice, fairPrice, decision, mos, valTier };
   } catch(e){ return null; }
 }
 
@@ -648,13 +687,30 @@ async function fetchAllDCF() {
   if(!googleToken) return;
   sheetTabNames = await fetchSheetTabNames();
   for(const s of WATCHLIST) {
-    const sheetName = DCF_SHEET_MAP[s.ticker] || s.ticker;
-    if(sheetTabNames.includes(sheetName)) {
-      const d = await fetchDCFSheet(sheetName);
-      if(d) dcfCache[s.ticker] = d;
+    if(s.type === 'etf' || s.type === 'wave') {
+      // ETF/波段：從 Yahoo Finance 抓即時52週資料
+      try {
+        const res = await fetch(`https://anthropic-proxy.issac0901.workers.dev/quote/${s.ticker}`);
+        const q = await res.json();
+        if(q.price && q.low52 && q.high52) {
+          dcfCache[s.ticker] = {
+            currentPrice: q.price,
+            w52low: q.low52,
+            w52high: q.high52,
+            isETF: true
+          };
+        }
+      } catch(e) { console.log('Quote fetch failed:', s.ticker, e); }
+    } else {
+      // 個股：從 DCF 分頁抓
+      const sheetName = DCF_SHEET_MAP[s.ticker] || s.ticker;
+      if(sheetTabNames.includes(sheetName)) {
+        const d = await fetchDCFSheet(sheetName);
+        if(d) dcfCache[s.ticker] = d;
+      }
     }
   }
-  renderWatchlist(); // re-render with DCF data
+  renderWatchlist();
 }
 
 // === PARSE META ===
@@ -799,10 +855,10 @@ function updateVIX(vix) {
   const color=vix>=30?'var(--red)':vix>=20?'var(--yellow)':'var(--green)';
   const tip=vix>=30?'價值投資者留意建倉機會':vix>=20?'保持觀望，控制倉位':'市場情緒穩定';
   el.innerHTML=`
-    <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:0.1em">VIX 恐慌指數</span>
+    <span style="font-family:var(--font-mono);font-size:18px;color:var(--text-muted);letter-spacing:0.1em">VIX 恐慌指數</span>
     <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:${color};margin:0 12px">${vix.toFixed(2)}</span>
-    <span style="font-family:var(--font-mono);font-size:10px;font-weight:600;color:${color};padding:2px 8px;border:1px solid ${color};border-radius:3px">${level}</span>
-    <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-left:12px">${tip}</span>
+    <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:${color};padding:2px 8px;border:1px solid ${color};border-radius:3px">${level}</span>
+    <span style="font-family:var(--font-mono);font-size:18px;color:var(--text-muted);margin-left:12px">${tip}</span>
   `;
   el.style.borderColor=color+'60';
 }
@@ -945,9 +1001,9 @@ function renderHoldings() {
     return `<div class="holding-entry" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
       <div><div class="holding-ticker">${h.ticker}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${faithHTML}</div></div>
       <div class="holding-metrics">
-        <div><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
-        <div><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
-        <div><div class="h-metric-label">現價</div><div class="h-metric-value">${curr}${h.price.toLocaleString()}</div></div>
+        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
+        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
+        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">${curr}${h.price.toLocaleString()}</div></div>
       </div>
       <div class="tech-col">${techHTML}</div>
       <div class="holding-pnl" style="text-align:right">
@@ -1023,11 +1079,19 @@ function renderDCFBand(ticker) {
 
   // ETF / 波段：顯示 52 週高低橫條
   if(stock && (stock.type === 'etf' || stock.type === 'wave')) {
-    const h = holdingsData.find(x => x.ticker === ticker);
-    if(!h || !h.w52low || !h.w52high || h.w52high <= h.w52low) {
-      return `<div class="dcf-band-wrap"><div class="dcf-no-data">尚無52週資料（請同步試算表）</div></div>`;
+    // 優先從 dcfCache（Yahoo Finance）抓，fallback holdingsData
+    const d = dcfCache[ticker];
+    let price, low52, high52;
+    if(d && d.isETF) {
+      price = d.currentPrice; low52 = d.w52low; high52 = d.w52high;
+    } else {
+      const h = holdingsData.find(x => x.ticker === ticker);
+      if(h) { price = h.price; low52 = h.w52low; high52 = h.w52high; }
     }
-    const pos = Math.max(2, Math.min(98, ((h.price - h.w52low) / (h.w52high - h.w52low)) * 100));
+    if(!price || !low52 || !high52 || high52 <= low52) {
+      return `<div class="dcf-band-wrap"><div class="dcf-no-data">載入52週資料中...</div></div>`;
+    }
+    const pos = Math.max(2, Math.min(98, ((price - low52) / (high52 - low52)) * 100));
     const markerColor = pos < 30 ? '#34d399' : pos < 70 ? '#fbbf24' : '#f87171';
     const zone = pos < 30 ? '相對低點區' : pos < 70 ? '中間區間' : '相對高點區';
     const zoneColor = pos < 30 ? 'var(--green)' : pos < 70 ? 'var(--yellow)' : 'var(--red)';
@@ -1040,9 +1104,9 @@ function renderDCFBand(ticker) {
         <div class="dcf-marker" style="left:${pos}%;background:${markerColor}"></div>
       </div>
       <div class="dcf-prices">
-        <span>低 ${curr}${h.w52low.toLocaleString()}</span>
-        <span>▲ 現價 ${curr}${h.price.toLocaleString()} (${pos.toFixed(0)}%)</span>
-        <span>高 ${curr}${h.w52high.toLocaleString()}</span>
+        <span>低 ${curr}${low52.toLocaleString()}</span>
+        <span>▲ 現價 ${curr}${price.toLocaleString()} (${pos.toFixed(0)}%)</span>
+        <span>高 ${curr}${high52.toLocaleString()}</span>
       </div>
     </div>`;
   }
@@ -1124,8 +1188,14 @@ function renderWatchlist(){
   document.getElementById('watchlist-grid').innerHTML=WATCHLIST.map(s=>{
     const tc=s.type==='value'?'badge-value':s.type==='etf'?'badge-etf':'badge-wave';
     const tt=s.type==='value'?'價值投資':s.type==='etf'?'ETF':'波段';
-    const vc=s.val==='low'?'val-low':s.val==='mid'?'val-mid':'val-high';
-    const vt=s.val==='low'?'低估值區':s.val==='mid'?'合理區間':'高估值區';
+    // 估值位階：個股從 DCF 動態算，ETF/波段維持寫死
+    let valTier = s.val;
+    if(s.type === 'value') {
+      const d = dcfCache[s.ticker];
+      if(d && d.valTier) valTier = d.valTier;
+    }
+    const vc = valTier==='low'?'val-low':valTier==='mid'?'val-mid':'val-high';
+    const vt = valTier==='low'?'低估值區':valTier==='mid'?'合理區間':'高估值區';
     // 安全邊際：ETF/波段用52週位置，個股用DCF動態計算
     let mosDisplay, mosColor;
     if(s.type === 'etf' || s.type === 'wave') {
@@ -1134,18 +1204,22 @@ function renderWatchlist(){
         mosColor = pos52 < 30 ? 'var(--green)' : pos52 < 70 ? 'var(--yellow)' : 'var(--red)';
         mosDisplay = `52週 ${pos52.toFixed(0)}% 位置`;
       } else {
-        mosColor = 'var(--text-muted)'; mosDisplay = '—';
+        // 嘗試從 dcfCache（Yahoo Finance）抓
+        const d = dcfCache[s.ticker];
+        if(d && d.isETF && d.w52low && d.w52high && d.currentPrice) {
+          const pos = Math.max(0,Math.min(100,((d.currentPrice-d.w52low)/(d.w52high-d.w52low))*100));
+          mosColor = pos < 30 ? 'var(--green)' : pos < 70 ? 'var(--yellow)' : 'var(--red)';
+          mosDisplay = `52週 ${pos.toFixed(0)}% 位置`;
+        } else {
+          mosColor = 'var(--text-muted)'; mosDisplay = '—';
+        }
       }
     } else {
-      // 個股：從 DCF 動態算安全邊際
       const d = dcfCache[s.ticker];
-      const livePrice = getLivePrice(s.ticker);
-      if(d && d.fair && livePrice) {
-        const mos = ((d.fair - livePrice) / livePrice * 100);
-        mosColor = mos >= 20 ? 'var(--green)' : mos >= 0 ? 'var(--yellow)' : 'var(--red)';
-        mosDisplay = (mos >= 0 ? '+' : '') + mos.toFixed(0) + '%';
+      if(d && d.mos !== null && d.mos !== undefined) {
+        mosColor = d.mos >= 20 ? 'var(--green)' : d.mos >= 0 ? 'var(--yellow)' : 'var(--red)';
+        mosDisplay = (d.mos >= 0 ? '+' : '') + d.mos.toFixed(0) + '%';
       } else {
-        // fallback 寫死值
         mosColor = s.mos.startsWith('+') ? 'var(--green)' : s.mos === '—' ? 'var(--text-muted)' : 'var(--red)';
         mosDisplay = s.mos;
       }
