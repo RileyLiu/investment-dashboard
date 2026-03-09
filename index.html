@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.8.0</title>
+<title>投資儀錶板 v1.8.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.8.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.8.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -399,6 +399,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v1.8.1 — 2026-03-09</div>
+        <div class="analysis-text">
+          ✦ 資產成長曲線加入「目標年末」黃色虛線（來源：財富規劃分頁第18行）<br>
+          ✦ 顯示近5年目標錨點（2026-2030），一眼看出超前或落後進度<br>
+          ✦ 單位統一：財富規劃元 → 萬TWD 換算後與實際線對齊
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v1.8.0 — 2026-03-09</div>
         <div class="analysis-text">
@@ -953,43 +961,102 @@ function updateVIX(vix) {
 
 // === 資產成長曲線 ===
 let chartGrowth = null;
+
+async function fetchWealthTargets() {
+  if(!googleToken) return [];
+  try {
+    // 抓第12行(年份)和第18行(年末投資)，B到F欄（近5年 2026-2030）
+    const r12 = encodeURIComponent('財富規劃!B12:F12');
+    const r18 = encodeURIComponent('財富規劃!B18:F18');
+    const [res12, res18] = await Promise.all([
+      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${r12}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
+      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${r18}`,{headers:{Authorization:`Bearer ${googleToken}`}})
+    ]);
+    const [d12, d18] = await Promise.all([res12.json(), res18.json()]);
+    const years = (d12.values||[[]])[0] || [];
+    const targets = (d18.values||[[]])[0] || [];
+    const result = [];
+    for(let i=0;i<years.length;i++){
+      const yr = parseInt((years[i]||'').toString().replace(/,/g,''));
+      const val = parseFloat((targets[i]||'').toString().replace(/,/g,''));
+      if(yr >= 2026 && yr <= 2030 && !isNaN(val) && val > 0) {
+        result.push({ year: yr, target: val / 10000 }); // 元 → 萬
+      }
+    }
+    return result;
+  } catch(e) { console.error('財富規劃抓取失敗:', e); return []; }
+}
+
 async function renderGrowthChart() {
-  const snapshots = await fetchAssetSnapshots();
+  const [snapshots, targets] = await Promise.all([fetchAssetSnapshots(), fetchWealthTargets()]);
   const section = document.getElementById('growth-chart-section');
   if(!snapshots.length || !section) return;
   section.style.display = 'block';
-  const labels = snapshots.map(s => s.date);
-  const values = snapshots.map(s => s.total);
+
+  // 實際資產：日期 + 萬
+  const actualLabels = snapshots.map(s => s.date);
+  const actualValues = snapshots.map(s => s.total);
+
+  // 目標線：把年末目標對齊到 x 軸（以 YYYY-12-31 為錨點）
+  // 合併所有 x 軸 label
+  const targetMap = {};
+  for(const t of targets) targetMap[`${t.year}-12-31`] = t.target;
+
+  // 建立合併 label 集合（實際日期 + 目標年末日期）
+  const allLabels = [...new Set([...actualLabels, ...Object.keys(targetMap)])].sort();
+
+  const actualData = allLabels.map(l => actualLabels.includes(l) ? actualValues[actualLabels.indexOf(l)] : null);
+  const targetData = allLabels.map(l => targetMap[l] !== undefined ? targetMap[l] : null);
+
   const ctx = document.getElementById('chart-growth').getContext('2d');
   if(chartGrowth) chartGrowth.destroy();
+
+  const fontMono = { family: 'IBM Plex Mono', size: 10 };
   chartGrowth = new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
-      datasets: [{
-        label: '總資產（萬TWD）',
-        data: values,
-        borderColor: '#38bdf8',
-        backgroundColor: '#38bdf820',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointBackgroundColor: '#38bdf8',
-        fill: true,
-        tension: 0.3,
-      }]
+      labels: allLabels,
+      datasets: [
+        {
+          label: '實際總資產',
+          data: actualData,
+          borderColor: '#38bdf8',
+          backgroundColor: '#38bdf815',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#38bdf8',
+          fill: true,
+          tension: 0.3,
+          spanGaps: false,
+        },
+        {
+          label: '目標年末（財富規劃）',
+          data: targetData,
+          borderColor: '#fbbf24',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          pointRadius: 5,
+          pointBackgroundColor: '#fbbf24',
+          pointStyle: 'triangle',
+          fill: false,
+          tension: 0,
+          spanGaps: false,
+        }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { labels: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 11 } } },
+        legend: { labels: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 11 }, usePointStyle: true } },
         tooltip: {
           bodyFont: { family: 'IBM Plex Mono' },
-          callbacks: { label: ctx => ` NT$${ctx.parsed.y}萬` }
+          callbacks: { label: ctx => ` NT$${ctx.parsed.y?.toFixed(1)}萬` }
         }
       },
       scales: {
-        x: { ticks: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: '#1e3050' } },
-        y: { ticks: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => `${v}萬` }, grid: { color: '#1e3050' } }
+        x: { ticks: { color: '#7a9abf', font: fontMono, maxTicksLimit: 8 }, grid: { color: '#1e3050' } },
+        y: { ticks: { color: '#7a9abf', font: fontMono, callback: v => `${v}萬` }, grid: { color: '#1e3050' } }
       }
     }
   });
