@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.7.0</title>
+<title>投資儀錶板 v1.7.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -114,7 +114,8 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
 
 /* HOLDINGS */
-.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:150px minmax(0,1fr) 220px auto;gap:16px;align-items:center;cursor:pointer;transition:all 0.2s;}
+.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:150px minmax(0,1fr) 230px 110px;gap:16px;align-items:center;cursor:pointer;transition:all 0.2s;}
+.holding-entry:hover{background:var(--bg-card-hover);border-color:var(--border-bright);}
 .holding-entry:hover{border-color:var(--border-bright);background:var(--bg-card-hover);}
 .holding-ticker{font-family:var(--font-mono);font-size:15px;font-weight:600;}
 .holding-name{font-size:11px;color:var(--text-muted);margin-top:2px;}
@@ -210,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.7.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.7.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -391,6 +392,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v1.7.1 — 2026-03-09</div>
+        <div class="analysis-text">
+          ✦ 修正 renderWatchlist bug（stock → s）觀察清單恢復正常<br>
+          ✦ VIX 載入失敗時顯示提示文字<br>
+          ✦ 持股管理列表佈局重排：技術指標移至中右欄、損益獨立最右欄
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v1.7.0 — 2026-03-09</div>
         <div class="analysis-text">
@@ -778,6 +787,8 @@ async function fetchVIX() {
     if(data.vix) updateVIX(data.vix);
   } catch(e) {
     console.log('VIX fetch failed:', e);
+    const el=document.getElementById('vix-bar');
+    if(el) el.innerHTML=`<span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">VIX 載入失敗</span>`;
   }
 }
 
@@ -932,14 +943,14 @@ function renderHoldings() {
       faithHTML=`<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span>`;
     }
     return `<div class="holding-entry" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
-      <div style="min-width:110px"><div class="holding-ticker">${h.ticker}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${faithHTML}</div></div>
-      <div class="holding-metrics" style="min-width:280px">
-        <div style="min-width:80px"><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
-        <div style="min-width:90px"><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
-        <div style="min-width:90px"><div class="h-metric-label">現價</div><div class="h-metric-value">${curr}${h.price.toLocaleString()}</div></div>
+      <div><div class="holding-ticker">${h.ticker}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${faithHTML}</div></div>
+      <div class="holding-metrics">
+        <div><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
+        <div><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
+        <div><div class="h-metric-label">現價</div><div class="h-metric-value">${curr}${h.price.toLocaleString()}</div></div>
       </div>
       <div class="tech-col">${techHTML}</div>
-      <div class="holding-pnl">
+      <div class="holding-pnl" style="text-align:right">
         <div class="pnl-value" style="color:${col}">${sign}${curr}${Math.abs(pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
         <div class="pnl-pct" style="color:${col}">${sign}${pct}%</div>
       </div>
@@ -1117,7 +1128,7 @@ function renderWatchlist(){
     const vt=s.val==='low'?'低估值區':s.val==='mid'?'合理區間':'高估值區';
     // 安全邊際：ETF/波段用52週位置，個股用DCF動態計算
     let mosDisplay, mosColor;
-    if(stock.type === 'etf' || stock.type === 'wave') {
+    if(s.type === 'etf' || s.type === 'wave') {
       const pos52 = get52WPosition(s.ticker);
       if(pos52 !== null) {
         mosColor = pos52 < 30 ? 'var(--green)' : pos52 < 70 ? 'var(--yellow)' : 'var(--red)';
