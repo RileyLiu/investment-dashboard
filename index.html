@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.4.0</title>
+<title>投資儀錶板 v1.5.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -210,7 +210,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.4.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.5.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -346,6 +346,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <textarea class="thesis-input" id="sell-trigger-input" placeholder="哪些情況會讓你賣出？護城河消失、估值過高..."></textarea>
       </div>
       <button class="btn-save" onclick="saveThesis()">儲存買入論文</button>
+      <button class="btn-save" style="background:var(--bg-elevated);color:var(--yellow);border:1px solid var(--yellow);margin-top:6px" onclick="markFaithCheck(currentThesisTicker)">✓ 標記今日信仰檢核</button>
     </div>
   </div>
 </div>
@@ -386,6 +387,18 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v1.5.0 — 2026-03-09</div>
+        <div class="analysis-text">
+          ✦ 移除持股列表「買入論文」欄位顯示<br>
+          ✦ 移除觀察清單卡片「能力圈」與「護城河」欄位<br>
+          ✦ 技術指標欄位更名：52W → 52周高低、MA → 200MA偏離度<br>
+          ✦ 技術指標三欄對齊統一（PE位階/52周高低/200MA偏離度均使用橫條）<br>
+          ✦ AI 分析 API 改用 Proxy endpoint<br>
+          ✦ 信仰檢核功能：持股列表顯示距下次檢核天數，逾期變紅、30天內變黃<br>
+          ✦ Thesis Modal 新增「標記今日信仰檢核」按鈕
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v1.4.0 — 2026-03-10</div>
         <div class="analysis-text">
@@ -863,13 +876,23 @@ function renderHoldings() {
     const curr=h.currency==='TWD'?'NT$':'US$';
     const thesis=getThesisDisplay(h.ticker);
     const techHTML=renderTechIndicators(h);
+    const faithData=JSON.parse(localStorage.getItem('faithCheck')||'{}');
+    const lastCheck=faithData[h.ticker];
+    let faithHTML='';
+    if(lastCheck){
+      const daysLeft=180-Math.floor((Date.now()-new Date(lastCheck).getTime())/86400000);
+      const fc=daysLeft<=0?'var(--red)':daysLeft<=30?'var(--yellow)':'var(--text-muted)';
+      const ft=daysLeft<=0?`逾期 ${Math.abs(daysLeft)} 天`:`${daysLeft} 天後信仰檢核`;
+      faithHTML=`<span style="font-family:var(--font-mono);font-size:9px;color:${fc}">${ft}</span>`;
+    } else {
+      faithHTML=`<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span>`;
+    }
     return `<div class="holding-entry" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
-      <div><div class="holding-ticker">${h.ticker}</div><div class="holding-name">${h.name}</div></div>
+      <div><div class="holding-ticker">${h.ticker}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${faithHTML}</div></div>
       <div class="holding-metrics">
         <div><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
         <div><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
         <div><div class="h-metric-label">現價</div><div class="h-metric-value">${curr}${h.price.toLocaleString()}</div></div>
-        <div><div class="h-metric-label">買入論文</div><div class="h-metric-value" style="font-size:11px">${thesis}</div></div>
       </div>
       <div class="tech-col">${techHTML}</div>
       <div class="holding-pnl">
@@ -889,7 +912,7 @@ function renderTechIndicators(h) {
     const pos=Math.max(0,Math.min(100,((h.pe-h.peL)/range)*100));
     const markerColor=pos<33?'#34d399':pos<66?'#fbbf24':'#f87171';
     html+=`<div class="tech-row">
-      <span class="tech-label">PE</span>
+      <span class="tech-label" style="width:56px">PE位階</span>
       <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
         <div class="tech-dot" style="left:${pos}%;background:${markerColor}"></div>
       </div>
@@ -903,7 +926,7 @@ function renderTechIndicators(h) {
     const pos=Math.max(0,Math.min(100,((h.price-h.w52low)/range)*100));
     const markerColor=pos<30?'#34d399':pos<70?'#fbbf24':'#f87171';
     html+=`<div class="tech-row">
-      <span class="tech-label">52W</span>
+      <span class="tech-label" style="width:56px">52周高低</span>
       <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
         <div class="tech-dot" style="left:${pos}%;background:${markerColor}"></div>
       </div>
@@ -915,11 +938,13 @@ function renderTechIndicators(h) {
   if(h.ma200pct!==null) {
     const ma=h.ma200pct;
     const maColor=ma>20?'#f87171':ma>10?'#fbbf24':ma<-10?'#34d399':'#7a9abf';
-    const warn=Math.abs(ma)>20?'⚠':'';
+    const absma=Math.abs(ma), barPos=Math.max(2,Math.min(98,50+ma*1.2));
     html+=`<div class="tech-row">
-      <span class="tech-label">MA</span>
-      <div style="flex:1"></div>
-      <span class="tech-val" style="color:${maColor}">${ma>0?'+':''}${ma.toFixed(1)}% ${warn}</span>
+      <span class="tech-label" style="width:56px">200MA偏離</span>
+      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
+        <div class="tech-dot" style="left:${barPos}%;background:${maColor}"></div>
+      </div>
+      <span class="tech-val" style="color:${maColor}">${ma>0?'+':''}${ma.toFixed(1)}%${warn}</span>
     </div>`;
   }
 
@@ -982,6 +1007,13 @@ function saveThesis(){
   ls('thesis_'+currentThesisTicker,JSON.stringify({thesis:document.getElementById('thesis-input').value,sellTrigger:document.getElementById('sell-trigger-input').value,status:thesisStatus,updatedAt:Date.now()}));
   closeModal('thesis-modal'); renderHoldings();
 }
+function markFaithCheck(ticker){
+  const d=JSON.parse(localStorage.getItem('faithCheck')||'{}');
+  d[ticker]=new Date().toISOString();
+  localStorage.setItem('faithCheck',JSON.stringify(d));
+  renderHoldings();
+  closeModal('thesis-modal');
+}
 
 // === WATCHLIST RENDER ===
 function renderWatchlist(){
@@ -1003,8 +1035,7 @@ function renderWatchlist(){
       <div class="stock-metrics">
         <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:${mc}">${s.mos}</div></div>
         <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge ${vc}">${vt}</span></div></div>
-        <div><div class="metric-label">能力圈</div><div class="metric-value"><span class="ability-badge ${ac}">${at}</span></div></div>
-        <div><div class="metric-label">護城河</div><div class="metric-value">${s.moat} ${s.trend}</div></div>
+
       </div>
       ${dcfBand}
       <div class="stock-footer">
@@ -1075,9 +1106,9 @@ async function runAnalysis(ticker,stock){
   };
   const pk=stock.type==='wave'?'wave':stock.type==='etf'?'etf':'value';
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('https://anthropic-proxy.issac0901.workers.dev/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompts[pk]}]})
     });
     const data=await res.json();
