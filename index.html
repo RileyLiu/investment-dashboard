@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.7.3</title>
+<title>投資儀錶板 v1.8.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.7.3</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.8.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -400,11 +400,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v1.7.3 — 2026-03-09</div>
+        <div class="analysis-section-title">v1.8.0 — 2026-03-09</div>
         <div class="analysis-text">
-          ✦ 資產成長曲線：每次同步試算表自動寫入「資產快照」分頁（同一週只寫一次）<br>
-          ✦ 持股管理頁新增折線圖，顯示歷史總資產變化<br>
-          ✦ 多台電腦共用：快照存 Google Sheets，任何裝置皆可查看
+          ✦ 資產成長曲線：每次同步自動寫入「資產快照」分頁，同一天只寫一次<br>
+          ✦ 持股管理頁新增折線圖，顯示歷史總資產（萬TWD）變化趨勢<br>
+          ✦ 快照欄位：日期 / 總資產 / 美股損益 / 台股損益 / VIX<br>
+          ✦ 資料存 Google Sheets，換裝置也能同步查看<br>
+          ✦ OAuth scope 升級為讀寫權限（spreadsheets）
         </div>
       </div>
       <div class="analysis-section">
@@ -810,8 +812,7 @@ async function writeAssetSnapshot() {
   if(!googleToken || !holdingsData.length) return;
   // 計算本週週次（年份+週數），同一週只寫一次
   const now = new Date();
-  const weekKey = `${now.getFullYear()}-W${String(Math.ceil((now - new Date(now.getFullYear(),0,1))/604800000)).padStart(2,'0')}`;
-  const lastKey = ls('last_snapshot_week');
+  const weekKey = now.toISOString().split('T')[0]; // 同一天只寫一次  const lastKey = ls('last_snapshot_week');
   if(lastKey === weekKey) return; // 本週已寫過
 
   // 計算總資產、各損益
