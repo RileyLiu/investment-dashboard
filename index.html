@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v2.0.0</title>
+<title>投資儀錶板 v2.1.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.0.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.1.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -227,12 +227,22 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <main>
 <!-- WATCHLIST PAGE -->
 <div class="page active" id="page-watchlist">
-  <div id="vix-bar" style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;margin-bottom:16px;flex-wrap:wrap">
-    <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">VIX 恐慌指數</span>
-    <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">同步持股後顯示</span>
-  </div>
+  <!-- 第一排：VIX + 可部署子彈 各50% -->
   <div class="section-header"><span class="section-label">配置進度</span><div class="section-line"></div></div>
-  <div class="overview-grid">
+  <div class="alloc-row-top" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div id="vix-bar" style="display:flex;align-items:center;gap:8px;padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">VIX 恐慌指數</span>
+      <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">同步持股後顯示</span>
+    </div>
+    <div class="alloc-card">
+      <div class="alloc-label">可部署子彈</div>
+      <div class="alloc-value text-green" id="alloc-cash-val">—</div>
+      <div class="alloc-sub" id="alloc-cash-sub">載入中...</div>
+      <div class="progress-bar"><div class="progress-fill" id="alloc-cash-bar" style="width:0%;background:var(--green)"></div></div>
+    </div>
+  </div>
+  <!-- 第二排：成長型股票 + 持有ETF 各50% -->
+  <div class="alloc-row-bot" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
     <div class="alloc-card">
       <div class="alloc-label">成長型股票</div>
       <div class="alloc-value text-accent" id="alloc-growth-pct">—</div>
@@ -245,15 +255,19 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="alloc-sub" id="alloc-etf-sub">目標執行進度</div>
       <div class="progress-bar"><div class="progress-fill" id="alloc-etf-bar" style="width:0%;background:var(--purple)"></div></div>
     </div>
-    <div class="alloc-card">
-      <div class="alloc-label">可部署子彈</div>
-      <div class="alloc-value text-green" id="alloc-cash-val">—</div>
-      <div class="alloc-sub" id="alloc-cash-sub">載入中...</div>
-      <div class="progress-bar"><div class="progress-fill" id="alloc-cash-bar" style="width:0%;background:var(--green)"></div></div>
-    </div>
   </div>
   <div class="section-header"><span class="section-label">觀察清單</span><div class="section-line"></div></div>
-  <div class="watchlist-grid" id="watchlist-grid"></div>
+  <!-- 觀察清單分兩欄：左個股 / 右ETF & 波段 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+    <div>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase">個股</div>
+      <div id="watchlist-grid-value" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+    <div>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase">ETF &amp; 波段</div>
+      <div id="watchlist-grid-etf" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+  </div>
 </div>
 
 <!-- HOLDINGS PAGE -->
@@ -399,6 +413,15 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v2.1.0 — 2026-03-10</div>
+        <div class="analysis-text">
+          ✦ 版面重排：VIX + 可部署子彈同一排各50%<br>
+          ✦ 版面重排：成長型股票 + 持有ETF同一排各50%<br>
+          ✦ 觀察清單分兩欄：左側個股 / 右側ETF & 波段<br>
+          ✦ 排除清單：IX0001 等指數型代號不再進入觀察清單
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v2.0.0 — 2026-03-10</div>
         <div class="analysis-text">
@@ -576,6 +599,7 @@ async function buildWatchlistFromSheets(rows) {
     if(!fullCode || !fullCode.includes(':')) continue;
     const ticker = fullCode.split(':').pop().trim().toUpperCase();
     if(!ticker || ticker.length < 1) continue;
+    if(WATCHLIST_EXCLUDE.includes(ticker)) continue; // 排除指數型代號
     if(heldTickers.has(ticker)) continue; // 已持股，跳過
     if(seen.has(ticker)) continue;
     seen.add(ticker);
@@ -1539,8 +1563,13 @@ function get52WPosition(ticker) {
   return pos;
 }
 
+// 排除清單：指數型代號不進觀察清單
+const WATCHLIST_EXCLUDE = ['IX0001','TWSE','SPX','NDX','DJI','VIX'];
+
 function renderWatchlist(){
-  document.getElementById('watchlist-grid').innerHTML=WATCHLIST.map(s=>{
+  const valueList = WATCHLIST.filter(s => s.type === 'value');
+  const etfList = WATCHLIST.filter(s => s.type === 'etf' || s.type === 'wave');
+  const renderCard = s => {
     const tc=s.type==='value'?'badge-value':s.type==='etf'?'badge-etf':'badge-wave';
     const tt=s.type==='value'?'價值投資':s.type==='etf'?'ETF':'波段';
     // 估值位階：個股從 DCF 動態算，ETF/波段維持寫死
@@ -1589,7 +1618,6 @@ function renderWatchlist(){
       <div class="stock-metrics">
         <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:${mosColor}">${mosDisplay}</div></div>
         <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge ${vc}">${vt}</span></div></div>
-
       </div>
       ${dcfBand}
       <div class="stock-footer">
@@ -1597,7 +1625,11 @@ function renderWatchlist(){
         <button class="analyze-btn">AI 分析 →</button>
       </div>
     </div>`;
-  }).join('');
+  };
+  const vGrid = document.getElementById('watchlist-grid-value');
+  const eGrid = document.getElementById('watchlist-grid-etf');
+  if(vGrid) vGrid.innerHTML = valueList.map(renderCard).join('');
+  if(eGrid) eGrid.innerHTML = etfList.map(renderCard).join('');
 }
 
 // === CACHE ===
