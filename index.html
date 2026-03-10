@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< HEAD
+<title>投資儀錶板 v2.4.0</title>
+=======
 <title>投資儀錶板 v2.1.0</title>
+>>>>>>> 04703787171ac2926bf90c8a59eec136dca4b55d
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +215,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
+<<<<<<< HEAD
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.4.0</span></div>
+=======
   <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.1.0</span></div>
+>>>>>>> 04703787171ac2926bf90c8a59eec136dca4b55d
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -400,6 +408,23 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <span>🔗</span><span id="google-auth-text">連結 Google 帳號</span>
       </button>
     </div>
+    <div class="settings-section">
+      <div class="settings-section-title">🚀 GitHub 自動上傳</div>
+      <div class="settings-note">GitHub PAT 優先從試算表「設定」分頁 B1 讀取（同步後生效）。此處可手動備用填入。</div>
+      <div class="settings-field">
+        <label class="settings-label">GitHub PAT</label>
+        <input type="password" class="settings-input" id="input-github-pat" placeholder="github_pat_...">
+      </div>
+      <div class="settings-field" style="margin-top:8px">
+        <label class="settings-label">Repo（owner/name）</label>
+        <input type="text" class="settings-input" id="input-github-repo" placeholder="RileyLiu/investment-dashboard">
+      </div>
+      <div class="settings-field" style="margin-top:8px">
+        <label class="settings-label">Branch</label>
+        <input type="text" class="settings-input" id="input-github-branch" placeholder="main">
+      </div>
+      <button class="btn-save" style="background:var(--bg-elevated);color:var(--accent);border:1px solid var(--accent-dim);margin-top:10px" onclick="pushToGitHub()">⬆ 立即上傳至 GitHub</button>
+    </div>
     <button class="btn-save" onclick="saveSettings()">儲存設定</button>
     <button class="btn-cancel" onclick="closeModal('settings-modal')">取消</button>
   </div>
@@ -414,6 +439,26 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+<<<<<<< HEAD
+        <div class="analysis-section-title">v2.4.0 — 2026-03-10</div>
+        <div class="analysis-text">
+          ✦ 全自動部署：「立即上傳」改為寫入 Google Sheets 設定!C1<br>
+          ✦ GAS 偵測 C1 有內容 → 自動 push 到 GitHub Pages<br>
+          ✦ 完全不需手動操作
+        </div>
+        <div class="analysis-section-title">v2.3.0 — 2026-03-10</div>
+        <div class="analysis-text">
+          ✦ GitHub PAT 改從 Google Sheets「設定」分頁 B1 讀取，跨裝置同步<br>
+          ✦ sync 時自動載入 PAT，無需每台電腦手動設定
+        </div>
+        <div class="analysis-section-title">v2.2.0 — 2026-03-10</div>
+        <div class="analysis-text">
+          ✦ GitHub 自動上傳：Settings 新增 PAT 欄位，儲存後可一鍵 push 到 GitHub Pages<br>
+          ✦ 新增「立即上傳至 GitHub」按鈕<br>
+          ✦ 上傳成功 / 失敗 toast 提示
+        </div>
+=======
+>>>>>>> 04703787171ac2926bf90c8a59eec136dca4b55d
         <div class="analysis-section-title">v2.1.0 — 2026-03-10</div>
         <div class="analysis-text">
           ✦ 版面重排：VIX + 可部署子彈同一排各50%<br>
@@ -565,6 +610,7 @@ const GOOGLE_CLIENT_ID = '956633966031-5sek3munlvoif3nbt0kr1qo52c5k8krk.apps.goo
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 const SHEET_NAME = '持股資訊';
 const DEFAULT_SHEET_ID = '1wSie_fKvkfJKXT6WSQh3VSsyzdnCJKRv10DrJMU5F80';
+let githubPAT = null; // 從 設定!B1 讀取
 
 const COLS = { ticker:5, fullCode:6, name:7, shares:10, cost:11, price:13,
                ma200pct:15, w52low:16, w52high:17, pe:19, peL:20, peH:21 };
@@ -711,16 +757,68 @@ function showPage(name,btn) {
 function openSettings() {
   document.getElementById('input-apikey').value=getApiKey();
   document.getElementById('input-sheetid').value=getSheetId();
+  document.getElementById('input-github-pat').value=ls('github_pat')||'';
+  document.getElementById('input-github-repo').value=ls('github_repo')||'RileyLiu/investment-dashboard';
+  document.getElementById('input-github-branch').value=ls('github_branch')||'main';
   updateGoogleBtn();
   document.getElementById('settings-modal').classList.add('open');
 }
 function saveSettings() {
   const k=document.getElementById('input-apikey').value.trim();
   const s=document.getElementById('input-sheetid').value.trim();
+  const pat=document.getElementById('input-github-pat').value.trim();
+  const repo=document.getElementById('input-github-repo').value.trim();
+  const branch=document.getElementById('input-github-branch').value.trim();
   k ? ls('anthropic_api_key',k) : ls('anthropic_api_key',null);
   s ? ls('sheet_id',s) : ls('sheet_id',null);
+  if(pat) ls('github_pat',pat);
+  if(repo) ls('github_repo',repo);
+  if(branch) ls('github_branch',branch);
   updateStatusBar();
   closeModal('settings-modal');
+}
+
+// === GITHUB AUTO PUSH ===
+async function pushToGitHub() {
+  // 把目前頁面 HTML 寫進 設定!C1，由 GAS 接手 push 到 GitHub
+  if(!googleToken) {
+    showToast('⚠️ 請先連結 Google 帳號');
+    return;
+  }
+  try {
+    showToast('⏳ 正在準備部署...');
+    const html = document.documentElement.outerHTML;
+    const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!C1?valueInputOption=RAW`;
+    const res = await fetch(writeUrl, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${googleToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: [[html]] })
+    });
+    if(res.ok) {
+      console.log('[GitHub] ✅ HTML 已寫入 設定!C1，GAS 將自動 push');
+      showToast('✅ 已觸發自動部署，約 1 分鐘後 GitHub Pages 更新');
+    } else {
+      const err = await res.json();
+      console.error('[GitHub] 寫入失敗:', err);
+      showToast('⚠️ 寫入失敗：' + (err.error?.message || '未知錯誤'));
+    }
+  } catch(e) {
+    console.error('[GitHub] 錯誤:', e);
+    showToast('⚠️ 部署觸發失敗');
+  }
+}
+
+function showToast(msg) {
+  let t = document.getElementById('gh-toast');
+  if(!t) {
+    t = document.createElement('div');
+    t.id = 'gh-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--bg-elevated);border:1px solid var(--border-bright);color:var(--text-primary);font-family:var(--font-mono);font-size:11px;padding:10px 16px;border-radius:6px;z-index:9999;opacity:0;transition:opacity 0.3s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(() => t.style.opacity = '0', 3000);
 }
 
 // === GOOGLE OAUTH ===
@@ -913,6 +1011,13 @@ async function syncSheets() {
     banner.innerHTML=`<div class="sync-banner error">⚠ 同步失敗，Token 可能已過期，請重新授權 <button class="btn-nav" style="margin-left:auto;font-size:9px" onclick="openSettings()">重新授權</button></div>`;
     return;
   }
+  // 讀取 設定!B1 GitHub PAT
+  try {
+    const patRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B1`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const patJson = await patRes.json();
+    const patVal = patJson.values?.[0]?.[0]?.trim();
+    if(patVal) { githubPAT = patVal; console.log('[GitHub] PAT 已從 Sheets 載入'); }
+  } catch(e) { console.warn('[GitHub] 無法讀取 設定!B1:', e); }
   holdingsData=parseHoldings(rows);
   const meta=parseMeta(rows);
   ls('holdings_cache',JSON.stringify({data:holdingsData,meta,ts:Date.now()}));
