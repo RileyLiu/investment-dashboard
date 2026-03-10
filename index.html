@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v2.5.0</title>
+<title>投資儀錶板 v2.6.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.5.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.6.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -431,6 +431,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v2.6.0 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ VIX 區塊：市場警戒 / 數值全部改為同色（黃/紅/綠）<br>
+          ✦ 操作提示移至第二行顯示
+        </div>
         <div class="analysis-section-title">v2.5.0 — 2026-03-10</div>
         <div class="analysis-text">
           ✦ 部署改用 Google Drive：繞過 Sheets 50000 字元限制<br>
@@ -1179,11 +1184,17 @@ function updateVIX(vix) {
   const color=vix>=30?'var(--red)':vix>=20?'var(--yellow)':'var(--green)';
   const tip=vix>=30?'價值投資者留意建倉機會':vix>=20?'保持觀望，控制倉位':'市場情緒穩定';
   el.innerHTML=`
-    <span style="font-family:var(--font-mono);font-size:18px;color:var(--text-muted);letter-spacing:0.1em">VIX 恐慌指數</span>
-    <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:${color};margin:0 12px">${vix.toFixed(2)}</span>
-    <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:${color};padding:2px 8px;border:1px solid ${color};border-radius:3px">${level}</span>
-    <span style="font-family:var(--font-mono);font-size:18px;color:var(--text-muted);margin-left:12px">${tip}</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-family:var(--font-mono);font-size:18px;color:var(--text-muted);letter-spacing:0.1em">VIX 恐慌指數</span>
+      <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:${color}">${vix.toFixed(2)}</span>
+      <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:${color};padding:2px 10px;border:1px solid ${color};border-radius:3px">${level}</span>
+    </div>
+    <div style="margin-top:6px">
+      <span style="font-family:var(--font-mono);font-size:14px;color:${color}">${tip}</span>
+    </div>
   `;
+  el.style.flexDirection='column';
+  el.style.alignItems='flex-start';
   el.dataset.vix = vix.toFixed(2);
 }
 
