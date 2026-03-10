@@ -759,7 +759,7 @@ async function fetchAllDCF() {
 
 // === PARSE META ===
 function parseMeta(rows) {
-  let totalCash=0, reserveCash=0, growthTarget=0.45, etfTarget=0.35, vix=null;
+  let pureCash=0, tto=0, reserveCash=0, growthTarget=0.45, etfTarget=0.35, vix=null;
   for(const row of rows){
     const label=(row[0]||'').trim();
     const bVal=parseFloat((row[1]||'').replace(/,/g,'').replace('%',''));
@@ -768,15 +768,18 @@ function parseMeta(rows) {
     const iVal=(row[8]||'').trim();
     const gVal=parseFloat((row[6]||'').replace(/,/g,''));
     if(fVal>25&&fVal<45) usdTwd=fVal;
-    // TTO 行 = 總現金（B欄）
-    if(label==='TTO'&&!isNaN(bVal)&&bVal>0) totalCash=bVal;
+    // B2:B6 各銀行現金加總 → 可部署子彈用
+    if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0) pureCash+=bVal;
+    // TTO 行 → 配置進度目標用
+    if(label==='TTO'&&!isNaN(bVal)&&bVal>0) tto=bVal;
     // 現金行 C欄 = 保留現金
     if(label==='現金'&&!isNaN(cVal)&&cVal>0) reserveCash=cVal;
     if(label===ALLOC_ROWS.growth&&!isNaN(bVal)) growthTarget=bVal/100;
     if(label===ALLOC_ROWS.etf&&!isNaN(bVal)) etfTarget=bVal/100;
     if(iVal==='VIX 數值'&&!isNaN(gVal)&&gVal>0) vix=gVal;
   }
-  return {totalCash,reserveCash,deployable:Math.max(0,totalCash-reserveCash),growthTarget,etfTarget,vix};
+  const deployable=Math.max(0,pureCash-reserveCash);
+  return {totalCash:tto, pureCash, reserveCash, deployable, growthTarget, etfTarget, vix};
 }
 
 function parseHoldings(rows) {
@@ -949,10 +952,10 @@ function updateAllocCards(meta) {
   document.getElementById('alloc-etf-sub').textContent=`目標執行進度 · 還差 ${fmt萬(etfGap)}`;
   document.getElementById('alloc-etf-bar').style.width=etfPct+'%';
   const deployable萬=(deployable/10000).toFixed(0);
-  const total萬=(tto/10000).toFixed(0);
+  const pureCash萬=((meta.pureCash||0)/10000).toFixed(0);
   const reserve萬=(reserveCash/10000).toFixed(0);
   document.getElementById('alloc-cash-val').textContent='NT$'+deployable萬+'萬';
-  document.getElementById('alloc-cash-sub').textContent=`現金 NT$${total萬}萬 · 保留 NT$${reserve萬}萬`;
+  document.getElementById('alloc-cash-sub').textContent=`現金 NT$${pureCash萬}萬 · 保留 NT$${reserve萬}萬`;
   if(meta.vix!==null) updateVIX(meta.vix);
 }
 
