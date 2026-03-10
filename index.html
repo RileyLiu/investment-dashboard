@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v1.8.2</title>
+<title>投資儀錶板 v2.0.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v1.8.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.0.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -400,6 +400,27 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v2.0.0 — 2026-03-10</div>
+        <div class="analysis-text">
+          ✦ 觀察清單完全動態化：掃描 Sheets G 欄自動建立，不再寫死<br>
+          ✦ 排除已持股標的，觀察清單只顯示尚未建倉的股票<br>
+          ✦ 自動判斷類型：Yahoo Finance quoteType 識別 ETF/個股，longName 含 2x/3x/leveraged 識別為波段<br>
+          ✦ DCF 分頁對應改為動態推斷，新增個股無需修改程式碼<br>
+          ✦ 同步狀態列顯示觀察清單股票數量
+        </div>
+      </div>
+      <div class="analysis-section">
+        <div class="analysis-section-title">v1.9.0 — 2026-03-10</div>
+        <div class="analysis-text">
+          ✦ 觀察清單：決策標準直接顯示 Sheets G4 文字，不再自行計算<br>
+          ✦ 觀察清單：安全邊際改用 G3（DCF合理股價）統一計算<br>
+          ✦ 觀察清單：決策標準顏色正確對應賣出/建倉/持有/觀望<br>
+          ✦ 配置進度：現金水位改從 TTO（B7）動態抓取，不再寫死<br>
+          ✦ 配置進度：成長型/ETF 目標金額以 TTO × 目標比例計算<br>
+          ✦ 配置進度：保留現金從 C8 動態抓取
+        </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v1.8.2 — 2026-03-09</div>
         <div class="analysis-text">
           ✦ 儲存買入論文時自動同步寫入 Google Sheets「論文庫」分頁<br>
@@ -530,21 +551,74 @@ const TW_NAMES = {'2330':'台積電','6669':'緯穎','5871':'中租KY','006208':
 const CASH_ROWS = ['中信銀','DH投','NNB','Richart','日美韓幣持有'];
 const ALLOC_ROWS = { growth:'成長型股票', etf:'持有ETF', cash:'現金' };
 
-// DCF 分頁名稱對應（ticker → sheetName）
-const DCF_SHEET_MAP = {
-  '6669': '6669(緯穎)',
-  'AMD': 'AMD', 'MU': 'MU', 'PLTR': 'PLTR',
-};
+// DCF 分頁名稱對應（動態從 sheetTabNames 推斷）
+// 格式：分頁名稱若含 ticker 就視為該 ticker 的 DCF 分頁
+function getDCFSheetName(ticker) {
+  // 優先完全匹配
+  if(sheetTabNames.includes(ticker)) return ticker;
+  // 次優：分頁名稱包含 ticker（如 '6669(緯穎)'）
+  const match = sheetTabNames.find(n => n.includes(ticker));
+  return match || null;
+}
 
-// === WATCHLIST ===
-const WATCHLIST = [
-  {ticker:'6669', name:'緯穎科技',            type:'value', ability:'know',    moat:'🟢', trend:'🔼', val:'mid', mos:'+18%'},
-  {ticker:'AMD',  name:'Advanced Micro Devices',type:'value', ability:'know',    moat:'🟢', trend:'➡️', val:'mid', mos:'+22%'},
-  {ticker:'MU',   name:'Micron Technology',     type:'value', ability:'partial', moat:'🟡', trend:'➡️', val:'low', mos:'+35%'},
-  {ticker:'PLTR', name:'Palantir Technologies',  type:'value', ability:'partial', moat:'🟢', trend:'🔼', val:'high',mos:'-5%'},
-  {ticker:'SMH',  name:'VanEck Semiconductor ETF',type:'etf',  ability:'know',    moat:'—',  trend:'—',  val:'mid', mos:'dynamic'},
-  {ticker:'TQQQ', name:'ProShares UltraPro QQQ', type:'wave',  ability:'know',    moat:'—',  trend:'—',  val:'mid', mos:'dynamic'},
-];
+// === WATCHLIST（動態，從 Sheets G 欄建立）===
+let WATCHLIST = [];
+
+// 從 Sheets rows 的 G 欄解析觀察清單（排除已持股）
+async function buildWatchlistFromSheets(rows) {
+  const heldTickers = new Set(holdingsData.map(h => h.ticker.toUpperCase()));
+  const seen = new Set();
+  const candidates = [];
+
+  for(const row of rows) {
+    const fullCode = (row[6]||'').trim(); // G欄 代號全名，如 NASDAQ:AMD
+    const displayName = (row[7]||'').trim(); // H欄 名稱
+    if(!fullCode || !fullCode.includes(':')) continue;
+    const ticker = fullCode.split(':').pop().trim().toUpperCase();
+    if(!ticker || ticker.length < 1) continue;
+    if(heldTickers.has(ticker)) continue; // 已持股，跳過
+    if(seen.has(ticker)) continue;
+    seen.add(ticker);
+    candidates.push({ ticker, displayName });
+  }
+
+  // 批次查詢 Worker 取得 quoteType + longName
+  const results = [];
+  for(const c of candidates) {
+    try {
+      const res = await fetch(`https://anthropic-proxy.issac0901.workers.dev/quote/${c.ticker}`);
+      const q = await res.json();
+      const longName = (q.longName||'').toLowerCase();
+      const isLeveraged = /2x|3x|2倍|3倍|leveraged|槓桿/.test(longName) || /2x|3x/i.test(c.ticker);
+      let type = 'value';
+      if(isLeveraged) type = 'wave';
+      else if(q.quoteType === 'ETF') type = 'etf';
+      const name = c.displayName || q.longName || c.ticker;
+      results.push({
+        ticker: c.ticker,
+        name,
+        type,
+        ability: 'know',
+        moat: type === 'value' ? '🟡' : '—',
+        trend: '—',
+        val: 'mid',
+        mos: type === 'value' ? 'dynamic' : 'dynamic',
+      });
+      // 同時填充 dcfCache 的 ETF/波段行情
+      if((type === 'etf' || type === 'wave') && q.price && q.low52 && q.high52) {
+        dcfCache[c.ticker] = { currentPrice: q.price, w52low: q.low52, w52high: q.high52, isETF: true };
+      }
+    } catch(e) {
+      // 抓取失敗仍加入，類型預設 value
+      results.push({
+        ticker: c.ticker,
+        name: c.displayName || c.ticker,
+        type: 'value', ability: 'know', moat: '🟡', trend: '—', val: 'mid', mos: 'dynamic',
+      });
+    }
+  }
+  WATCHLIST = results;
+}
 
 // === STATE ===
 let googleToken = null;
@@ -574,6 +648,8 @@ function init() {
 }
 
 async function fetchETFQuotes() {
+  // 登入前 WATCHLIST 為空，靜默跳過
+  if(!WATCHLIST.length) return;
   for(const s of WATCHLIST) {
     if(s.type === 'etf' || s.type === 'wave') {
       try {
@@ -736,8 +812,8 @@ async function fetchAllDCF() {
       } catch(e) { console.log('Quote fetch failed:', s.ticker, e); }
     } else {
       // 個股：從 DCF 分頁抓
-      const sheetName = DCF_SHEET_MAP[s.ticker] || s.ticker;
-      if(sheetTabNames.includes(sheetName)) {
+      const sheetName = getDCFSheetName(s.ticker);
+      if(sheetName && sheetTabNames.includes(sheetName)) {
         const d = await fetchDCFSheet(sheetName);
         if(d) dcfCache[s.ticker] = d;
       }
@@ -748,22 +824,27 @@ async function fetchAllDCF() {
 
 // === PARSE META ===
 function parseMeta(rows) {
-  let totalCash=0, reserveCash=0, growthTarget=0.45, etfTarget=0.35, vix=null;
+  let pureCash=0, tto=0, reserveCash=0, growthTarget=0.45, etfTarget=0.35, vix=null;
   for(const row of rows){
     const label=(row[0]||'').trim();
     const bVal=parseFloat((row[1]||'').replace(/,/g,'').replace('%',''));
     const cVal=parseFloat((row[2]||'').replace(/,/g,''));
     const fVal=parseFloat((row[5]||'').replace(/,/g,''));
-    const iVal=(row[8]||'').trim(); // I欄 label
-    const gVal=parseFloat((row[6]||'').replace(/,/g,'')); // G欄 數值
+    const iVal=(row[8]||'').trim();
+    const gVal=parseFloat((row[6]||'').replace(/,/g,''));
     if(fVal>25&&fVal<45) usdTwd=fVal;
-    if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0) totalCash+=bVal;
-    if(label===ALLOC_ROWS.cash&&!isNaN(cVal)&&cVal>0) reserveCash=cVal;
+    // B2:B6 各銀行現金加總 → 可部署子彈用
+    if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0) pureCash+=bVal;
+    // TTO 行 → 配置進度目標用
+    if(label==='TTO'&&!isNaN(bVal)&&bVal>0) tto=bVal;
+    // 現金行 C欄 = 保留現金
+    if(label==='現金'&&!isNaN(cVal)&&cVal>0) reserveCash=cVal;
     if(label===ALLOC_ROWS.growth&&!isNaN(bVal)) growthTarget=bVal/100;
     if(label===ALLOC_ROWS.etf&&!isNaN(bVal)) etfTarget=bVal/100;
     if(iVal==='VIX 數值'&&!isNaN(gVal)&&gVal>0) vix=gVal;
   }
-  return {totalCash,reserveCash,deployable:Math.max(0,totalCash-reserveCash),growthTarget,etfTarget,vix};
+  const deployable=Math.max(0,pureCash-reserveCash);
+  return {totalCash:tto, pureCash, reserveCash, deployable, growthTarget, etfTarget, vix};
 }
 
 function parseHoldings(rows) {
@@ -813,12 +894,21 @@ async function syncSheets() {
   ls('holdings_cache',JSON.stringify({data:holdingsData,meta,ts:Date.now()}));
   renderHoldings();
   updateAllocCards(meta);
+
+  // 動態建立觀察清單（從 G 欄掃描，排除已持股）
+  banner.innerHTML=`<div class="sync-banner"><div class="loading-spinner" style="width:14px;height:14px;border-width:1.5px;margin:0"></div>&nbsp;正在建立觀察清單...</div>`;
+  await buildWatchlistFromSheets(rows);
+  await fetchAllDCF();
+  renderWatchlist();
+
   const now=new Date().toLocaleTimeString('zh-TW');
-  banner.innerHTML=`<div class="sync-banner synced">✓ 已同步 ${holdingsData.length} 筆持股 · ${now} &nbsp;<span style="cursor:pointer;opacity:0.7;text-decoration:underline" onclick="syncSheets()">重新同步</span></div>`;
+  banner.innerHTML=`<div class="sync-banner synced">✓ 已同步 ${holdingsData.length} 筆持股 · 觀察清單 ${WATCHLIST.length} 支 · ${now} &nbsp;<span style="cursor:pointer;opacity:0.7;text-decoration:underline" onclick="syncSheets()">重新同步</span></div>`;
   // 清除本週快照記錄，強制重新寫入
   ls('last_snapshot_week', null);
-  // 自動寫入資產快照（每週一次）
+  // 自動寫入資產快照（每天一次）
   await writeAssetSnapshot();
+  // 批量同步論文庫到 Sheets
+  await syncAllThesisToSheets();
   // 渲染成長曲線
   renderGrowthChart();
 }
@@ -918,14 +1008,15 @@ function updateAllocCards(meta) {
     if(h.type==='etf'||h.type==='wave') etfVal+=val;
     else growthVal+=val;
   }
-  const totalAssets=growthVal+etfVal+totalCash;
-  const growthTargetAmt=totalAssets*growthTarget;
-  const etfTargetAmt=totalAssets*etfTarget;
-  const growthPct=growthTargetAmt>0?Math.min(100,(growthVal/growthTargetAmt*100)):0;
-  const etfPct=etfTargetAmt>0?Math.min(100,(etfVal/etfTargetAmt*100)):0;
-  const growthGap=Math.max(0,growthTargetAmt-growthVal);
-  const etfGap=Math.max(0,etfTargetAmt-etfVal);
-  const fmt萬=n=>'NT$'+(n/10000).toFixed(0)+'萬';
+  // TTO = 總現金（含持股），配置目標以 TTO 為基準
+  const tto = totalCash; // parseMeta 已改為抓 TTO 行
+  const growthTargetAmt = tto * growthTarget;
+  const etfTargetAmt = tto * etfTarget;
+  const growthPct = growthTargetAmt>0 ? Math.min(100,(growthVal/growthTargetAmt*100)) : 0;
+  const etfPct = etfTargetAmt>0 ? Math.min(100,(etfVal/etfTargetAmt*100)) : 0;
+  const growthGap = Math.max(0, growthTargetAmt-growthVal);
+  const etfGap = Math.max(0, etfTargetAmt-etfVal);
+  const fmt萬 = n => 'NT$'+(n/10000).toFixed(0)+'萬';
   document.getElementById('alloc-growth-pct').textContent=growthPct.toFixed(1)+'%';
   document.getElementById('alloc-growth-sub').textContent=`目標執行進度 · 還差 ${fmt萬(growthGap)}`;
   document.getElementById('alloc-growth-bar').style.width=growthPct+'%';
@@ -933,10 +1024,10 @@ function updateAllocCards(meta) {
   document.getElementById('alloc-etf-sub').textContent=`目標執行進度 · 還差 ${fmt萬(etfGap)}`;
   document.getElementById('alloc-etf-bar').style.width=etfPct+'%';
   const deployable萬=(deployable/10000).toFixed(0);
-  const total萬=(totalCash/10000).toFixed(0);
+  const pureCash萬=((meta.pureCash||0)/10000).toFixed(0);
   const reserve萬=(reserveCash/10000).toFixed(0);
   document.getElementById('alloc-cash-val').textContent='NT$'+deployable萬+'萬';
-  document.getElementById('alloc-cash-sub').textContent=`現金 NT$${total萬}萬 · 保留 NT$${reserve萬}萬`;
+  document.getElementById('alloc-cash-sub').textContent=`現金 NT$${pureCash萬}萬 · 保留 NT$${reserve萬}萬`;
   if(meta.vix!==null) updateVIX(meta.vix);
 }
 
@@ -1327,7 +1418,10 @@ function renderDCFBand(ticker) {
   const range = high - low;
   const pos = range > 0 ? Math.max(2, Math.min(98, ((currentPrice - low) / range) * 100)) : 50;
   const markerColor = currentPrice < conservative ? '#34d399' : currentPrice < fair ? '#fbbf24' : '#f87171';
-  const decColor = decision.includes('買入') || decision.includes('建議') ? 'var(--green)' : decision.includes('觀望') ? 'var(--yellow)' : 'var(--text-muted)';
+  const decColor = decision.includes('賣出') || decision.includes('減碼') ? 'var(--red)' 
+    : decision.includes('建倉') || decision.includes('買入') ? 'var(--green)' 
+    : decision.includes('觀望') || decision.includes('持有') ? 'var(--yellow)' 
+    : 'var(--text-muted)';
   return `<div class="dcf-band-wrap">
     <div class="dcf-band-label">
       <span>DCF 估值位階</span>
@@ -1345,42 +1439,64 @@ function renderDCFBand(ticker) {
 }
 
 
-// === THESIS ===
-function getThesisDisplay(ticker){
-  try{
-    const d=JSON.parse(ls('thesis_'+ticker)||'{}');
-    if(!d.status) return `<span style="color:var(--text-muted)">尚未填寫</span>`;
-    return {yes:`<span style="color:var(--green)">✓ 成立</span>`,partial:`<span style="color:var(--yellow)">△ 部分</span>`,no:`<span style="color:var(--red)">✗ 不成立</span>`}[d.status]||'—';
-  }catch{return '—';}
+// === THESIS (Sheets-based) ===
+let thesisCache = {}; // 同步後的論文快取，當次 session 用
+
+async function loadThesisFromSheets() {
+  if(!googleToken) return;
+  try {
+    const range = encodeURIComponent('論文庫!A2:D200');
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const data = await res.json();
+    thesisCache = {};
+    for(const row of (data.values||[])) {
+      const ticker = (row[0]||'').trim();
+      if(!ticker) continue;
+      const statusMap = {'成立':'yes','部分':'partial','不成立':'no'};
+      thesisCache[ticker] = {
+        thesis: row[1]||'',
+        sellTrigger: row[2]||'',
+        status: statusMap[row[3]||''] || 'yes'
+      };
+    }
+    console.log('[論文庫] 已載入', Object.keys(thesisCache).length, '筆');
+  } catch(e){ console.error('[論文庫] 載入失敗:', e); }
 }
-function openThesisModal(ticker,name){
-  currentThesisTicker=ticker;
-  document.getElementById('thesis-ticker').textContent=`${ticker} — ${name}`;
-  try{
-    const d=JSON.parse(ls('thesis_'+ticker)||'{}');
-    document.getElementById('thesis-input').value=d.thesis||'';
-    document.getElementById('sell-trigger-input').value=d.sellTrigger||'';
-    setThesisStatus(d.status||'yes');
-  }catch{document.getElementById('thesis-input').value='';document.getElementById('sell-trigger-input').value='';setThesisStatus('yes');}
+
+function getThesisDisplay(ticker){
+  const d = thesisCache[ticker];
+  if(!d || !d.status) return `<span style="color:var(--text-muted)">尚未填寫</span>`;
+  return {yes:`<span style="color:var(--green)">✓ 成立</span>`,partial:`<span style="color:var(--yellow)">△ 部分</span>`,no:`<span style="color:var(--red)">✗ 不成立</span>`}[d.status]||'—';
+}
+
+function openThesisModal(ticker, name){
+  currentThesisTicker = ticker;
+  document.getElementById('thesis-ticker').textContent = `${ticker} — ${name}`;
+  const d = thesisCache[ticker] || {};
+  document.getElementById('thesis-input').value = d.thesis||'';
+  document.getElementById('sell-trigger-input').value = d.sellTrigger||'';
+  setThesisStatus(d.status||'yes');
   document.getElementById('thesis-modal').classList.add('open');
 }
+
 function setThesisStatus(v){
   thesisStatus=v;
   ['yes','partial','no'].forEach(x=>{const el=document.getElementById('ts-'+x);if(el) el.style.opacity=x===v?'1':'0.35';});
 }
+
 function saveThesis(){
   if(!currentThesisTicker) return;
   const thesisText = document.getElementById('thesis-input').value;
   const sellTrigger = document.getElementById('sell-trigger-input').value;
-  ls('thesis_'+currentThesisTicker,JSON.stringify({thesis:thesisText,sellTrigger,status:thesisStatus,updatedAt:Date.now()}));
+  // 更新本地 cache
+  thesisCache[currentThesisTicker] = {thesis:thesisText, sellTrigger, status:thesisStatus};
   closeModal('thesis-modal'); renderHoldings();
-  // 同步寫入 Google Sheets 論文庫
+  // 寫入 Sheets
   if(googleToken) saveThesisToSheets(currentThesisTicker, thesisText, sellTrigger, thesisStatus);
 }
 
 async function saveThesisToSheets(ticker, thesis, sellTrigger, status) {
   try {
-    // 先搜尋是否已有此代號
     const range = encodeURIComponent('論文庫!A:A');
     const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const data = await res.json();
@@ -1398,8 +1514,13 @@ async function saveThesisToSheets(ticker, thesis, sellTrigger, status) {
       headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
       body:JSON.stringify({values:[[ticker, thesis, sellTrigger, statusText]]})
     });
-    console.log('[論文庫] 已同步:', ticker);
+    console.log('[論文庫] 已儲存:', ticker);
   } catch(e){ console.error('[論文庫] 寫入失敗:', e); }
+}
+
+async function syncAllThesisToSheets() {
+  // 已改用 Sheets 為主，同步時只需載入
+  await loadThesisFromSheets();
 }
 function markFaithCheck(ticker){
   const d=JSON.parse(localStorage.getItem('faithCheck')||'{}');
