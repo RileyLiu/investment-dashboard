@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v2.4.0</title>
+<title>投資儀錶板 v2.5.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.4.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.5.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -431,6 +431,12 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v2.5.0 — 2026-03-10</div>
+        <div class="analysis-text">
+          ✦ 部署改用 Google Drive：繞過 Sheets 50000 字元限制<br>
+          ✦ 「立即上傳」→ 寫進 Drive portfolio_deploy.html → GAS 自動 push<br>
+          ✦ OAuth scope 新增 drive.file 權限（需重新授權）
+        </div>
         <div class="analysis-section-title">v2.4.0 — 2026-03-10</div>
         <div class="analysis-text">
           ✦ 全自動部署：「立即上傳」改為寫入 Google Sheets 設定!C1<br>
@@ -596,7 +602,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <script>
 // === CONFIG ===
 const GOOGLE_CLIENT_ID = '956633966031-5sek3munlvoif3nbt0kr1qo52c5k8krk.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 const SHEET_NAME = '持股資訊';
 const DEFAULT_SHEET_ID = '1wSie_fKvkfJKXT6WSQh3VSsyzdnCJKRv10DrJMU5F80';
 let githubPAT = null; // 從 設定!B1 讀取
@@ -769,7 +775,7 @@ function saveSettings() {
 
 // === GITHUB AUTO PUSH ===
 async function pushToGitHub() {
-  // 把目前頁面 HTML 寫進 設定!C1，由 GAS 接手 push 到 GitHub
+  // 把目前頁面 HTML 上傳到 Google Drive，由 GAS 接手 push 到 GitHub
   if(!googleToken) {
     showToast('⚠️ 請先連結 Google 帳號');
     return;
@@ -777,19 +783,23 @@ async function pushToGitHub() {
   try {
     showToast('⏳ 正在準備部署...');
     const html = document.documentElement.outerHTML;
-    const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!C1?valueInputOption=RAW`;
-    const res = await fetch(writeUrl, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${googleToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values: [[html]] })
+    const blob = new Blob([html], {type: 'text/html'});
+    const metadata = JSON.stringify({ name: 'portfolio_deploy.html', mimeType: 'text/html' });
+    const formData = new FormData();
+    formData.append('metadata', new Blob([metadata], {type: 'application/json'}));
+    formData.append('file', blob);
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${googleToken}` },
+      body: formData
     });
     if(res.ok) {
-      console.log('[GitHub] ✅ HTML 已寫入 設定!C1，GAS 將自動 push');
+      console.log('[GitHub] ✅ HTML 已上傳至 Google Drive，GAS 將自動 push');
       showToast('✅ 已觸發自動部署，約 1 分鐘後 GitHub Pages 更新');
     } else {
       const err = await res.json();
-      console.error('[GitHub] 寫入失敗:', err);
-      showToast('⚠️ 寫入失敗：' + (err.error?.message || '未知錯誤'));
+      console.error('[GitHub] Drive 上傳失敗:', err);
+      showToast('⚠️ 上傳失敗：' + (err.error?.message || '未知錯誤'));
     }
   } catch(e) {
     console.error('[GitHub] 錯誤:', e);
