@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.4.0</title>
+<title>投資儀錶板 v3.4.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -246,7 +246,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.4.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.4.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -500,6 +500,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.4.1 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ 50MA 偏離修正：改為用（現價 - 50MA絕對值）/ 50MA × 100% 計算<br>
+          ✦ 趨勢+KD 改為橫向一行：股票名稱｜趨勢｜KD，節省版面
+        </div>
         <div class="analysis-section-title">v3.4.0 — 2026-03-11</div>
         <div class="analysis-text">
           ✦ 技術監控擴展為三欄：200MA偏離 / 50MA偏離 / 趨勢+KD判斷<br>
@@ -1139,7 +1144,8 @@ function parseHoldings(rows) {
     const currency=TW_TICKERS.includes(ticker)?'TWD':'USD';
     // Technical indicators
     const ma200pct = parseFloat((row[COLS.ma200pct]||'').replace(/%/g,'').replace(/,/g,''))||null;
-    const ma50pct  = parseFloat((row[COLS.ma50pct]||'').replace(/%/g,'').replace(/,/g,''))||null;
+    const ma50raw  = parseFloat((row[COLS.ma50pct]||'').replace(/,/g,''))||null;
+    const ma50pct  = (ma50raw && price) ? parseFloat(((price - ma50raw) / ma50raw * 100).toFixed(2)) : null;
     const trend    = (row[COLS.trend]||'').trim()||null;
     const kd       = (row[COLS.kd]||'').trim()||null;
     const w52low   = parseFloat((row[COLS.w52low]||'').replace(/,/g,''))||null;
@@ -1526,18 +1532,18 @@ function renderRiskMonitor() {
     ? ma50list.map(h => maRow(h, h.ma50pct, TW_NAMES[h.ticker]||h.ticker)).join('')
     : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
 
-  // 3. 趨勢 + KD 判斷
+  // 3. 趨勢 + KD 判斷 — 橫向一行
   const trendList = holdingsData.filter(h=>h.trend||h.kd);
   document.getElementById('risk-trend').innerHTML = trendList.length
     ? trendList.map(h => {
         const trendColor = (h.trend||'').includes('強勢') ? 'var(--green)'
-          : (h.trend||'').includes('弱勢') ? 'var(--red)' : 'var(--yellow)';
+          : (h.trend||'').includes('弱勢') || (h.trend||'').includes('空頭') ? 'var(--red)' : 'var(--yellow)';
         const kdColor = (h.kd||'').includes('轉強') || (h.kd||'').includes('多頭') ? 'var(--green)'
-          : (h.kd||'').includes('弱') || (h.kd||'').includes('空') ? 'var(--red)' : 'var(--yellow)';
-        return `<div class="risk-item" style="flex-direction:column;align-items:flex-start;gap:2px;">
-          <span style="color:var(--text-secondary);font-weight:600">${TW_NAMES[h.ticker]||h.ticker}</span>
-          ${h.trend ? `<span style="font-size:11px;color:${trendColor}">趨勢：${h.trend}</span>` : ''}
-          ${h.kd ? `<span style="font-size:11px;color:${kdColor}">KD：${h.kd}</span>` : ''}
+          : (h.kd||'').includes('弱') || (h.kd||'').includes('空') || (h.kd||'').includes('轉弱') ? 'var(--red)' : 'var(--yellow)';
+        return `<div class="risk-item" style="justify-content:space-between;">
+          <span style="color:var(--text-secondary);font-weight:600;min-width:60px">${TW_NAMES[h.ticker]||h.ticker}</span>
+          ${h.trend ? `<span style="font-size:11px;color:${trendColor};flex:1;text-align:center">${h.trend}</span>` : '<span style="flex:1"></span>'}
+          ${h.kd ? `<span style="font-size:11px;color:${kdColor};flex:1;text-align:right">${h.kd}</span>` : ''}
         </div>`;
       }).join('')
     : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
