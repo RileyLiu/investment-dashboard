@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.0.0</title>
+<title>投資儀錶板 v3.1.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -76,8 +76,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .analyze-btn{font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-glow);border:1px solid var(--accent-dim);padding:4px 10px;border-radius:3px;cursor:pointer;transition:all 0.2s;}
 .analyze-btn:hover{background:var(--accent-dim);}
 .val-badge{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.06em;}
+.val-deep{background:#064e3b;color:#34d399;border:1px solid #065f46;}
 .val-low{background:var(--green-dim);color:var(--green);border:1px solid var(--green-dim);}
 .val-mid{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow-dim);}
+.val-warn{background:#431407;color:#fb923c;border:1px solid #7c2d12;}
 .val-high{background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim);}
 .ability-badge{font-family:var(--font-mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.06em;}
 .ability-know{background:var(--green-dim);color:var(--green);border:1px solid var(--green-dim);}
@@ -211,7 +213,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.0.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.1.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -431,6 +433,16 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.1.0 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ 估值位階升級為五段：深度低估 / 低估買入 / 合理區間 / 偏高注意 / 高估減碼<br>
+          ✦ 判斷基準改為合理股價（G3）× 0.7 / 0.85 / 1.1 / 1.25
+        </div>
+        <div class="analysis-section-title">v3.1.0 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ 決策標準顏色判斷修正：移除 emoji 干擾，純中文關鍵字比對<br>
+          ✦ 估值位階確認五段：深度低估 / 低估買入 / 合理區間 / 偏高注意 / 高估減碼
+        </div>
         <div class="analysis-section-title">v3.0.0 — 2026-03-11</div>
         <div class="analysis-text">
           ✦ 持股列表 grid 修正，字體放大不跑版<br>
@@ -948,10 +960,12 @@ async function fetchDCFSheet(sheetName) {
     const mos = currentPrice > 0 ? ((fairPrice - currentPrice) / currentPrice * 100) : null;
     // 估值位階：動態判斷
     let valTier = 'mid';
-    if(currentPrice > 0 && conservative > 0) {
-      if(currentPrice < conservative) valTier = 'low';
-      else if(fair > 0 && currentPrice >= fair) valTier = 'high';
-      else valTier = 'mid';
+    if(currentPrice > 0 && fairPrice > 0) {
+      if(currentPrice < fairPrice * 0.7)       valTier = 'deep';
+      else if(currentPrice < fairPrice * 0.85) valTier = 'low';
+      else if(currentPrice <= fairPrice * 1.1) valTier = 'mid';
+      else if(currentPrice <= fairPrice * 1.25) valTier = 'warn';
+      else                                      valTier = 'high';
     }
     return { conservative, fair, optimistic, currentPrice, fairPrice, decision, mos, valTier };
   } catch(e){ return null; }
@@ -1596,9 +1610,10 @@ function renderDCFBand(ticker) {
   const range = high - low;
   const pos = range > 0 ? Math.max(2, Math.min(98, ((currentPrice - low) / range) * 100)) : 50;
   const markerColor = currentPrice < conservative ? '#34d399' : currentPrice < fair ? '#fbbf24' : '#f87171';
-  const decColor = decision.includes('賣出') || decision.includes('減碼') ? 'var(--red)' 
-    : decision.includes('建倉') || decision.includes('買入') ? 'var(--green)' 
-    : decision.includes('觀望') || decision.includes('持有') ? 'var(--yellow)' 
+  const _dec = decision.replace(/[^\u4e00-\u9fff]/g,'');
+  const decColor = (_dec.includes('賣出') || _dec.includes('減碼')) ? 'var(--red)' 
+    : (_dec.includes('建倉') || _dec.includes('買入')) ? 'var(--green)' 
+    : (_dec.includes('觀望') || _dec.includes('持有')) ? 'var(--yellow)' 
     : 'var(--text-muted)';
   return `<div class="dcf-band-wrap">
     <div class="dcf-band-label">
@@ -1732,8 +1747,8 @@ function renderWatchlist(){
       const d = dcfCache[s.ticker];
       if(d && d.valTier) valTier = d.valTier;
     }
-    const vc = valTier==='low'?'val-low':valTier==='mid'?'val-mid':'val-high';
-    const vt = valTier==='low'?'低估值區':valTier==='mid'?'合理區間':'高估值區';
+    const vc = valTier==='deep'?'val-deep':valTier==='low'?'val-low':valTier==='mid'?'val-mid':valTier==='warn'?'val-warn':'val-high';
+    const vt = valTier==='deep'?'深度低估':valTier==='low'?'低估買入':valTier==='mid'?'合理區間':valTier==='warn'?'偏高注意':'高估減碼';
     // 安全邊際：ETF/波段用52週位置，個股用DCF動態計算
     let mosDisplay, mosColor;
     if(s.type === 'etf' || s.type === 'wave') {
