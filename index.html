@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v2.9.0</title>
+<title>投資儀錶板 v3.0.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -114,7 +114,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
 
 /* HOLDINGS */
-.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:200px 20px 280px 130px;gap:16px;align-items:center;cursor:pointer;transition:all 0.2s;}
+.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:160px 1fr 240px 140px;gap:20px;align-items:center;cursor:pointer;transition:all 0.2s;}
 .holding-entry:hover{background:var(--bg-card-hover);border-color:var(--border-bright);}
 .holding-entry:hover{border-color:var(--border-bright);background:var(--bg-card-hover);}
 .holding-ticker{font-family:var(--font-mono);font-size:17px;font-weight:600;}
@@ -202,7 +202,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 }
 @media (min-width:641px) and (max-width:1024px) {
   .overview-grid{grid-template-columns:repeat(3,1fr);}
-  .holding-entry{grid-template-columns:160px 20px 220px 110px;}
+  .holding-entry{grid-template-columns:140px 1fr 200px 120px;}
   .charts-row{grid-template-columns:1fr 1fr;}
   .risk-grid{grid-template-columns:1fr 1fr 1fr;}
 }
@@ -211,7 +211,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.9.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.0.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -431,6 +431,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.0.0 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ 持股列表 grid 修正，字體放大不跑版<br>
+          ✦ 圓餅圖 tooltip 加入配置金額（NT$X萬）
+        </div>
         <div class="analysis-section-title">v2.9.0 — 2026-03-11</div>
         <div class="analysis-text">
           ✦ 持股列表字體放大 ~110%<br>
@@ -1379,14 +1384,14 @@ function renderCharts(growthVal,etfVal,stockValues){
     plugins:{
       legend:{position:'bottom',labels:{color:'#7a9abf',font:{family:'IBM Plex Mono',size:13},padding:12,boxWidth:12}},
       tooltip:{bodyFont:{family:'IBM Plex Mono'},titleFont:{family:'IBM Plex Mono'},
-        callbacks:{label:function(ctx){const total=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=total>0?((ctx.parsed/total)*100).toFixed(1):0;return ` ${ctx.label}: ${pct}%`;}}}
+        callbacks:{label:function(ctx){const total=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=total>0?((ctx.parsed/total)*100).toFixed(1):0;const amt=Math.round(ctx.parsed/10000);return ` ${ctx.label}: ${pct}% (NT$${amt}萬)`;}}}
     }
   };
   if(chartCategory) chartCategory.destroy();
   chartCategory=new Chart(document.getElementById('chart-category'),{type:'doughnut',data:{labels:['成長型股票','持有ETF'],datasets:[{data:[growthVal,etfVal],backgroundColor:['#38bdf8','#a78bfa'],borderColor:'#0d1526',borderWidth:2}]},options:{...opts,cutout:'60%'}});
   if(chartStocks) chartStocks.destroy();
   const sorted=stockValues.sort((a,b)=>b.val-a.val);
-  chartStocks=new Chart(document.getElementById('chart-stocks'),{type:'doughnut',data:{labels:sorted.map(s=>TW_NAMES[s.ticker]||s.ticker),datasets:[{data:sorted.map(s=>Math.round(s.val)),backgroundColor:COLORS.slice(0,sorted.length),borderColor:'#0d1526',borderWidth:2}]},options:{...opts,cutout:'55%'}});
+  chartStocks=new Chart(document.getElementById('chart-stocks'),{type:'doughnut',data:{labels:sorted.map(s=>TW_NAMES[s.ticker]||s.ticker),datasets:[{data:sorted.map(s=>Math.round(s.val)),backgroundColor:COLORS.slice(0,sorted.length),borderColor:'#0d1526',borderWidth:2}]},options:{...opts,cutout:'55%',plugins:{...opts.plugins,tooltip:{bodyFont:{family:'IBM Plex Mono'},titleFont:{family:'IBM Plex Mono'},callbacks:{label:function(ctx){const total=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=total>0?((ctx.parsed/total)*100).toFixed(1):0;const amt=Math.round(ctx.parsed/10000);return ` ${ctx.label}: ${pct}% (NT$${amt}萬)`;}}}}}});
 }
 
 // === RISK MONITOR (dynamic) ===
