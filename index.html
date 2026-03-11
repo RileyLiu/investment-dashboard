@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.2.0</title>
+<title>投資儀錶板 v3.3.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -246,7 +246,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.2.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.3.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -345,20 +345,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="chart-wrap" style="height:200px"><canvas id="chart-growth"></canvas></div>
     </div>
   </div>
-  <div class="section-header"><span class="section-label">風險監控</span><div class="section-line"></div></div>
-  <div class="risk-grid" id="risk-grid" style="margin-bottom:28px">
+  <div class="section-header"><span class="section-label">技術監控</span><div class="section-line"></div></div>
+  <div class="risk-grid" id="risk-grid" style="margin-bottom:28px;grid-template-columns:1fr;">
     <div class="risk-card">
-      <div class="risk-title">基本面風險</div>
-      <div id="risk-concentration"><div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">載入中...</span></div></div>
-      <div class="risk-item"><div class="risk-dot" id="dot-region" style="background:var(--text-muted)"></div><span id="txt-region" style="color:var(--text-secondary)">地區分布計算中</span></div>
-    </div>
-    <div class="risk-card">
-      <div class="risk-title">估值位階警示</div>
+      <div class="risk-title">200MA 偏離</div>
       <div id="risk-valuation"><div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">載入中...</span></div></div>
-    </div>
-    <div class="risk-card">
-      <div class="risk-title">集中度自查</div>
-      <div id="risk-top3"><div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">載入中...</span></div></div>
     </div>
   </div>
   <div class="section-header">
@@ -501,13 +492,20 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.3.0 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ Treemap 改為真正二維 Squarified 矩形演算法<br>
+          ✦ Treemap 字體放大，小格子自適應顯示<br>
+          ✦ PE Band ETF 改顯示 52週位置替代 PE<br>
+          ✦ 持股管理「風險監控」改名「技術監控」，只保留 200MA 偏離
+        </div>
         <div class="analysis-section-title">v3.2.0 — 2026-03-11</div>
         <div class="analysis-text">
           ✦ 新增「風險總覽」第三個 tab<br>
           ✦ 產業分布 Treemap（AI 自動分類產業）<br>
           ✦ PE Band 估值位階卡片（歷史區間 + 當前位置）<br>
           ✦ 安全邊際警示（距公平價值中位 &lt;20% 標紅）<br>
-          ✦ AI 分析 CD 30分鐘，設定!B6 跨裝置同步<br>
+          ✦ AI 分析 CD 30分鐘，設定!B6 跨裝置同步
         </div>
         <div class="analysis-section-title">v3.1.0 — 2026-03-11</div>
         <div class="analysis-text">
@@ -1491,45 +1489,18 @@ function renderCharts(growthVal,etfVal,stockValues){
 // === RISK MONITOR (dynamic) ===
 function renderRiskMonitor() {
   if(!holdingsData.length) return;
-
-  // 1. Concentration — top3
-  const vals = holdingsData.map(h=>({
-    ticker: h.ticker,
-    name: TW_NAMES[h.ticker]||h.ticker,
-    val: h.price*h.shares*(h.currency==='USD'?usdTwd:1)
-  })).sort((a,b)=>b.val-a.val);
-  const totalVal = vals.reduce((s,v)=>s+v.val,0);
-  const top3 = vals.slice(0,3);
-  const top3pct = totalVal>0?(top3.reduce((s,v)=>s+v.val,0)/totalVal*100):0;
-  const concColor = top3pct>70?'var(--red)':top3pct>60?'var(--yellow)':'var(--green)';
-  document.getElementById('risk-concentration').innerHTML=
-    `<div class="risk-item"><div class="risk-dot" style="background:${concColor}"></div><span style="color:var(--text-secondary)">集中度 ${top3pct.toFixed(0)}% — ${top3.map(v=>v.name).join('、')}</span></div>`;
-
-  // 2. Region
-  const twVal = holdingsData.filter(h=>h.currency==='TWD').reduce((s,h)=>s+h.price*h.shares,0)*1;
-  const usVal = holdingsData.filter(h=>h.currency==='USD').reduce((s,h)=>s+h.price*h.shares*usdTwd,0);
-  const usPct = totalVal>0?(usVal/totalVal*100).toFixed(0):0;
-  document.getElementById('dot-region').style.background='var(--green)';
-  document.getElementById('txt-region').textContent=`地區分布 — 美股 ${usPct}% / 台股 ${(100-usPct)>0?(100-parseInt(usPct)):0}%`;
-
-  // 3. Valuation — scan PE vs PE band
-  const highPE = holdingsData.filter(h=>h.pe&&h.peH&&h.pe>(h.peH*0.8));
-  const valItems = highPE.length>0
-    ? highPE.map(h=>`<div class="risk-item"><div class="risk-dot" style="background:var(--red)"></div><span style="color:var(--text-secondary)">${TW_NAMES[h.ticker]||h.ticker} PE ${h.pe?.toFixed(1)}x 偏高（歷史高 ${h.peH}x）</span></div>`).join('')
-    : `<div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">估值位階整體合理</span></div>`;
-  // MA200 warning
-  const highMA = holdingsData.filter(h=>h.ma200pct&&Math.abs(h.ma200pct)>20);
-  const maItems = highMA.map(h=>{
-    const c=h.ma200pct>20?'var(--red)':'var(--green)';
-    return `<div class="risk-item"><div class="risk-dot" style="background:${c}"></div><span style="color:var(--text-secondary)">${TW_NAMES[h.ticker]||h.ticker} 200MA偏離 ${h.ma200pct>0?'+':''}${h.ma200pct?.toFixed(1)}%</span></div>`;
-  }).join('');
-  document.getElementById('risk-valuation').innerHTML=valItems+maItems;
-
-  // 4. Top3 detail
-  document.getElementById('risk-top3').innerHTML=top3.map((v,i)=>{
-    const pct=(totalVal>0?(v.val/totalVal*100).toFixed(1):0);
-    const c=parseFloat(pct)>30?'var(--yellow)':'var(--green)';
-    return `<div class="risk-item"><div class="risk-dot" style="background:${c}"></div><span style="color:var(--text-secondary)">#${i+1} ${v.name} — ${pct}%</span></div>`;
+  // 只顯示 200MA 偏離
+  const allMA = holdingsData.filter(h=>h.ma200pct!=null);
+  if(!allMA.length) {
+    document.getElementById('risk-valuation').innerHTML=`<div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">無 200MA 資料</span></div>`;
+    return;
+  }
+  const sorted = [...allMA].sort((a,b)=>Math.abs(b.ma200pct)-Math.abs(a.ma200pct));
+  document.getElementById('risk-valuation').innerHTML=sorted.map(h=>{
+    const pct=h.ma200pct;
+    const c=pct>30?'var(--red)':pct>15?'var(--yellow)':pct<-15?'var(--green)':'var(--text-muted)';
+    const sign=pct>0?'+':'';
+    return `<div class="risk-item"><div class="risk-dot" style="background:${c}"></div><span style="color:var(--text-secondary)">${TW_NAMES[h.ticker]||h.ticker} <span style="color:${c};font-weight:600">${sign}${pct?.toFixed(1)}%</span></span></div>`;
   }).join('');
 }
 
@@ -2009,62 +1980,127 @@ function renderTreemap() {
     return;
   }
 
-  // Use AI-assigned industries if available, fallback to ticker grouping
   const industryMap = (riskAiData && riskAiData.industries) ? riskAiData.industries : {};
-
-  // Group holdings by industry
   const groups = {};
   holdingsData.forEach(h => {
     const val = h.price * h.shares * (h.currency === 'USD' ? usdTwd : 1);
     const industry = industryMap[h.ticker] || '其他';
     if (!groups[industry]) groups[industry] = { val: 0, tickers: [] };
     groups[industry].val += val;
-    groups[industry].tickers.push(h.ticker);
+    groups[industry].tickers.push(TW_NAMES[h.ticker] || h.ticker);
   });
 
   const totalVal = Object.values(groups).reduce((s, g) => s + g.val, 0);
-  const sorted = Object.entries(groups).sort((a, b) => b[1].val - a[1].val);
+  const sorted = Object.entries(groups)
+    .sort((a, b) => b[1].val - a[1].val)
+    .map(([name, g], i) => ({
+      name, val: g.val, tickers: g.tickers,
+      pct: totalVal > 0 ? (g.val / totalVal * 100) : 0,
+      color: TREEMAP_COLORS[i % TREEMAP_COLORS.length]
+    }));
 
-  // Simple squarified treemap
-  const W = container.offsetWidth || 600;
-  const H = 280;
+  const W = container.offsetWidth || 700;
+  const H = 300;
   container.innerHTML = '';
   container.style.position = 'relative';
+  container.style.height = H + 'px';
 
-  let cells = sorted.map(([name, g], i) => ({
-    name, val: g.val, tickers: g.tickers,
-    pct: totalVal > 0 ? (g.val / totalVal * 100) : 0,
-    color: TREEMAP_COLORS[i % TREEMAP_COLORS.length]
-  }));
+  // Squarified treemap algorithm
+  function squarify(items, x, y, w, h) {
+    if (!items.length) return [];
+    const total = items.reduce((s, i) => s + i.pct, 0);
+    const results = [];
 
-  // Slice-and-dice layout (simple row-based)
-  let remaining = [...cells];
-  let y = 0;
-  const totalPct = cells.reduce((s, c) => s + c.pct, 0);
+    function layoutRow(row, x, y, w, h, horizontal) {
+      const rowTotal = row.reduce((s, i) => s + i.pct, 0);
+      let pos = horizontal ? x : y;
+      row.forEach(item => {
+        const size = (item.pct / rowTotal) * (horizontal ? w : h);
+        results.push({
+          ...item,
+          x: horizontal ? pos : x,
+          y: horizontal ? y : pos,
+          w: horizontal ? size : w,
+          h: horizontal ? h : size
+        });
+        pos += size;
+      });
+    }
 
-  cells.forEach((cell, i) => {
-    const pct = cell.pct / totalPct;
-    // Use squarified approximation: fill rows
-    const cellW = W * pct;
-    const cellH = H;
-    // Actually do a proper row layout
-  });
+    // Simple slice-and-dice with aspect ratio optimization
+    function processItems(items, x, y, w, h) {
+      if (!items.length) return;
+      if (items.length === 1) {
+        results.push({ ...items[0], x, y, w, h });
+        return;
+      }
+      const total = items.reduce((s, i) => s + i.pct, 0);
+      const horizontal = w >= h;
 
-  // Simple proportional horizontal slicing
-  let x = 0;
-  cells.forEach((cell, i) => {
-    const w = Math.max((cell.pct / 100) * W, 30);
+      // Find best split point
+      let bestSplit = 1;
+      let bestRatio = Infinity;
+      let cumPct = 0;
+      for (let i = 0; i < items.length - 1; i++) {
+        cumPct += items[i].pct;
+        const r1 = cumPct / total;
+        const r2 = 1 - r1;
+        const dim1 = horizontal ? w * r1 : h * r1;
+        const dim2 = horizontal ? w * r2 : h * r2;
+        const cross = horizontal ? h : w;
+        // Aspect ratio of worst cell in each half
+        const worstR1 = items.slice(0, i + 1).reduce((worst, item) => {
+          const cellSize = (item.pct / cumPct) * (horizontal ? dim1 * cross : dim1 * cross);
+          const cellW = horizontal ? (item.pct / cumPct) * dim1 : cross;
+          const cellH = horizontal ? cross : (item.pct / cumPct) * dim1;
+          return Math.max(worst, Math.max(cellW, cellH) / Math.min(cellW, cellH));
+        }, 0);
+        if (worstR1 < bestRatio) { bestRatio = worstR1; bestSplit = i + 1; }
+      }
+
+      const split1 = items.slice(0, bestSplit);
+      const split2 = items.slice(bestSplit);
+      const pct1 = split1.reduce((s, i) => s + i.pct, 0) / total;
+
+      if (horizontal) {
+        const w1 = w * pct1;
+        layoutRow(split1, x, y, w1, h, false);
+        processItems(split2, x + w1, y, w - w1, h);
+      } else {
+        const h1 = h * pct1;
+        layoutRow(split1, x, y, w, h1, true);
+        processItems(split2, x, y + h1, w, h - h1);
+      }
+    }
+
+    processItems(items, x, y, w, h);
+    return results;
+  }
+
+  const cells = squarify(sorted, 0, 0, W, H);
+
+  cells.forEach(cell => {
     const div = document.createElement('div');
     div.className = 'treemap-cell';
-    div.style.cssText = `left:${x}px;top:0;width:${w-2}px;height:${H}px;background:${cell.color}22;border-color:${cell.color}55;`;
-    div.innerHTML = `<div class="treemap-label" style="color:${cell.color}">${cell.name}</div><div class="treemap-pct" style="color:${cell.color}">${cell.pct.toFixed(1)}%</div><div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px">${cell.tickers.join(' · ')}</div>`;
+    const cellW = Math.max(cell.w - 3, 10);
+    const cellH = Math.max(cell.h - 3, 10);
+    div.style.cssText = `left:${cell.x}px;top:${cell.y}px;width:${cellW}px;height:${cellH}px;background:${cell.color}20;border-color:${cell.color}50;`;
+
+    const isSmall = cellW < 60 || cellH < 50;
+    const isTiny = cellW < 35 || cellH < 30;
+
+    if (!isTiny) {
+      div.innerHTML = `
+        <div style="font-family:var(--font-mono);font-size:${isSmall?10:13}px;font-weight:700;color:${cell.color};text-align:center;padding:0 6px;line-height:1.3">${cell.name}</div>
+        <div style="font-family:var(--font-mono);font-size:${isSmall?9:12}px;color:${cell.color}cc;margin-top:2px">${cell.pct.toFixed(1)}%</div>
+        ${!isSmall ? `<div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px;text-align:center;padding:0 4px">${cell.tickers.join(' · ')}</div>` : ''}
+      `;
+    }
     container.appendChild(div);
-    x += w;
   });
 
-  // Legend
-  legend.innerHTML = cells.map(c =>
-    `<div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;color:var(--text-secondary)">
+  legend.innerHTML = sorted.map(c =>
+    `<div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)">
       <div style="width:8px;height:8px;border-radius:2px;background:${c.color};flex-shrink:0"></div>
       ${c.name} ${c.pct.toFixed(1)}%
     </div>`
@@ -2231,7 +2267,34 @@ function renderPEAnalysis(peList) {
   const marginEl = document.getElementById('risk-margin-list');
   if (!peList.length) return;
 
+  // ETF tickers that should show 52-week position instead of PE
+  const ETF_TICKERS = ['QQQ','SMH','006208','TQQQ','JEPI','VTI','SPY','IVV','VOO','富邦台50'];
+
   peEl.innerHTML = peList.map(item => {
+    const isETF = ETF_TICKERS.includes(item.ticker) || item.peBand === 'ETF';
+
+    if (isETF) {
+      // 52-week position from holdingsData
+      const h = holdingsData.find(x => x.ticker === item.ticker);
+      const w52pct = h && h.w52pct != null ? h.w52pct : null;
+      if (w52pct == null) return '';
+      const band = w52pct >= 80 ? '相對高點' : w52pct >= 50 ? '中間位置' : '相對低點';
+      const bandClass = w52pct >= 80 ? 'high' : w52pct >= 50 ? 'mid' : 'low';
+      const barColor = w52pct >= 80 ? 'var(--red)' : w52pct >= 50 ? 'var(--yellow)' : 'var(--green)';
+      return `<div class="pe-card">
+        <div class="pe-card-header">
+          <span class="pe-ticker">${item.ticker} <span style="color:var(--text-muted);font-size:10px">${item.name||''}</span></span>
+          <span class="pe-badge ${bandClass}">${band}</span>
+        </div>
+        <div class="pe-bar-wrap">
+          <div class="pe-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red))"></div>
+          <div class="pe-bar-thumb" style="left:${w52pct}%;background:${barColor}"></div>
+        </div>
+        <div class="pe-range"><span>52週低</span><span style="font-size:10px">52週位置 ${w52pct.toFixed(0)}%</span><span>52週高</span></div>
+      </div>`;
+    }
+
+    // Individual stocks — PE Band
     if (!item.peRangeLow || !item.peRangeHigh) return '';
     const range = item.peRangeHigh - item.peRangeLow;
     const pos = item.currentPE && range > 0
