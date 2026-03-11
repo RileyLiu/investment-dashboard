@@ -1,10 +1,12 @@
-<html lang="zh-TW"><head>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v2.7.0</title>
-<script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
+<title>投資儀錶板 v2.8.0</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&amp;family=IBM+Plex+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg-base:#080c14;--bg-surface:#0d1526;--bg-card:#111d30;--bg-card-hover:#162238;--bg-elevated:#1a2840;
@@ -205,18 +207,18 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   .risk-grid{grid-template-columns:1fr 1fr 1fr;}
 }
 </style>
-<style id="googleidentityservice_button_styles">.qJTHM{-moz-user-select:none;-webkit-user-select:none;-ms-user-select:none;color:#202124;direction:ltr;-webkit-touch-callout:none;font-family:"Roboto-Regular",arial,sans-serif;-webkit-font-smoothing:antialiased;font-weight:400;margin:0;overflow:hidden;-webkit-text-size-adjust:100%}.ynRLnc{left:-9999px;position:absolute;top:-9999px}.L6cTce{display:none}.bltWBb{overflow-wrap:break-word;word-break:break-word}.hSRGPd{color:#1a73e8;cursor:pointer;font-weight:500;text-decoration:none}.Bz112c-W3lGp{height:16px;width:16px}.Bz112c-E3DyYd{height:20px;width:20px}.Bz112c-r9oPif{height:24px;width:24px}.Bz112c-u2z5K{height:36px;width:36px}.Bz112c-uaxL4e{border-radius:10px}.LgbsSe-Bz112c{display:block}.S9gUrf-YoZ4jf{border:none;margin:0;padding:0}.S9gUrf-YoZ4jf *{border:none;margin:0;padding:0}.fFW7wc-ibnC6b>.aZ2wEe>div{border-color:#4285f4}.P1ekSe-ZMv3u{-webkit-transition:height linear .2s;transition:height linear .2s}.P1ekSe-ZMv3u>div:nth-child(1){background-color:#1a73e8!important;-webkit-transition:width linear .3s;transition:width linear .3s}.P1ekSe-ZMv3u>div:nth-child(2){background-image:-webkit-gradient(linear,left top,right top,from(rgba(255,255,255,.7)),to(rgba(255,255,255,.7))),-webkit-gradient(linear,left top,right top,from(#1a73e8),to(#1a73e8))!important;background-image:-webkit-linear-gradient(left,rgba(255,255,255,.7),rgba(255,255,255,.7)),-webkit-linear-gradient(left,#1a73e8,#1a73e8)!important;background-image:linear-gradient(to right,rgba(255,255,255,.7),rgba(255,255,255,.7)),linear-gradient(to right,#1a73e8,#1a73e8)!important}.P1ekSe-ZMv3u>div:nth-child(3){background-image:-webkit-gradient(linear,left top,right top,from(rgba(255,255,255,.7)),to(rgba(255,255,255,.7))),-webkit-gradient(linear,left top,right top,from(#1a73e8),to(#1a73e8))!important;background-image:-webkit-linear-gradient(left,rgba(255,255,255,.7),rgba(255,255,255,.7)),-webkit-linear-gradient(left,#1a73e8,#1a73e8)!important;background-image:linear-gradient(to right,rgba(255,255,255,.7),rgba(255,255,255,.7)),linear-gradient(to right,#1a73e8,#1a73e8)!important}.haAclf{display:inline-block}.nsm7Bb-HzV7m-LgbsSe{border-radius:4px;box-sizing:border-box;-webkit-transition:background-color .218s,border-color .218s;transition:background-color .218s,border-color .218s;-moz-user-select:none;-webkit-user-select:none;-ms-user-select:none;-webkit-appearance:none;background-color:#fff;background-image:none;border:1px solid #dadce0;color:#3c4043;cursor:pointer;font-family:"Google Sans",arial,sans-serif;font-size:14px;height:40px;letter-spacing:.25px;outline:none;overflow:hidden;padding:0 12px;position:relative;text-align:center;vertical-align:middle;white-space:nowrap;width:auto}@media screen and (-ms-high-contrast:active){.nsm7Bb-HzV7m-LgbsSe{border:2px solid windowText;color:windowText}}@media screen and (preferes-contrast:more){.nsm7Bb-HzV7m-LgbsSe{color:#000}}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe{font-size:14px;height:32px;letter-spacing:.25px;padding:0 10px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe{font-size:11px;height:20px;letter-spacing:.3px;padding:0 8px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe{padding:0;width:40px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.pSzOP-SxQuSe{width:32px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.purZT-SxQuSe{width:20px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK{border-radius:20px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK.pSzOP-SxQuSe{border-radius:16px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK.purZT-SxQuSe{border-radius:10px}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc{border:none;color:#fff}.nsm7Bb-HzV7m-LgbsSe.MFS4be-v3pZbf-Ia7Qfc{background-color:#1a73e8}.nsm7Bb-HzV7m-LgbsSe.MFS4be-JaPV2b-Ia7Qfc{background-color:#202124;color:#e8eaed}@media screen and (prefers-contrast:more){.nsm7Bb-HzV7m-LgbsSe.MFS4be-JaPV2b-Ia7Qfc{color:#fff}}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:18px;margin-right:8px;min-width:18px;width:18px}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:14px;min-width:14px;width:14px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:10px;min-width:10px;width:10px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin-left:8px;margin-right:-4px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin:0;padding:10px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{padding:8px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{padding:4px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-top-left-radius:3px;border-bottom-left-radius:3px;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center;-webkit-box-align:center;-webkit-align-items:center;align-items:center;background-color:#fff;height:36px;margin-left:-10px;margin-right:12px;min-width:36px;width:36px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf .nsm7Bb-HzV7m-LgbsSe-Bz112c,.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin:0;padding:0}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{height:28px;margin-left:-8px;margin-right:10px;min-width:28px;width:28px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{height:16px;margin-left:-6px;margin-right:8px;min-width:16px;width:16px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:3px;margin-left:2px;margin-right:0;padding:0}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:18px}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:14px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:8px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-align-items:center;-webkit-box-align:center;align-items:center;-webkit-flex-direction:row;-webkit-box-orient:horizontal;-webkit-box-direction:normal;flex-direction:row;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;-webkit-flex-wrap:nowrap;flex-wrap:nowrap;height:100%;position:relative;width:100%}.nsm7Bb-HzV7m-LgbsSe .oXtfBe-l4eHX{-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-BPrWId{-webkit-flex-grow:1;-webkit-box-flex:1;flex-grow:1;font-family:"Google Sans",arial,sans-serif;font-weight:500;overflow:hidden;text-overflow:ellipsis;vertical-align:top}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-BPrWId{font-weight:300}.nsm7Bb-HzV7m-LgbsSe .oXtfBe-l4eHX .nsm7Bb-HzV7m-LgbsSe-BPrWId{-webkit-flex-grow:0;-webkit-box-flex:0;flex-grow:0}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-MJoBVe{-webkit-transition:background-color .218s;transition:background-color .218s;bottom:0;left:0;position:absolute;right:0;top:0}.nsm7Bb-HzV7m-LgbsSe:hover,.nsm7Bb-HzV7m-LgbsSe:focus{box-shadow:none;border-color:rgb(210,227,252);outline:none}.nsm7Bb-HzV7m-LgbsSe:focus-within{outline:2px solid #00639b;border-color:transparent}.nsm7Bb-HzV7m-LgbsSe:hover .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(66,133,244,.08)}.nsm7Bb-HzV7m-LgbsSe:active .nsm7Bb-HzV7m-LgbsSe-MJoBVe,.nsm7Bb-HzV7m-LgbsSe:focus .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(66,133,244,.1)}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:hover .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(255,255,255,.24)}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:active .nsm7Bb-HzV7m-LgbsSe-MJoBVe,.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:focus .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(255,255,255,.32)}.nsm7Bb-HzV7m-LgbsSe .n1UuX-DkfjY{border-radius:50%;display:-webkit-box;display:-webkit-flex;display:flex;height:20px;margin-left:-4px;margin-right:8px;min-width:20px;width:20px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId{font-family:"Roboto";font-size:12px;text-align:left}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .ssJRIf,.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff .fmcmS{overflow:hidden;text-overflow:ellipsis}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-align-items:center;-webkit-box-align:center;align-items:center;color:#5f6368;fill:#5f6368;font-size:11px;font-weight:400}.nsm7Bb-HzV7m-LgbsSe.jVeSEe.MFS4be-Ia7Qfc .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{color:#e8eaed;fill:#e8eaed}@media screen and (prefers-contrast:more){.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff,.nsm7Bb-HzV7m-LgbsSe.jVeSEe.MFS4be-Ia7Qfc .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{color:#000;fill:#000}}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff .Bz112c{height:18px;margin:-3px -3px -3px 2px;min-width:18px;width:18px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-top-left-radius:0;border-bottom-left-radius:0;border-top-right-radius:3px;border-bottom-right-radius:3px;margin-left:12px;margin-right:-10px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:18px}.L5Fo6c-sM5MNb{border:0;display:block;left:0;position:relative;top:0}.L5Fo6c-bF1uUb{border-radius:4px;bottom:0;cursor:pointer;left:0;position:absolute;right:0;top:0}.L5Fo6c-bF1uUb:focus{border:none;outline:none}sentinel{}</style></head>
+</head>
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.7.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v2.8.0</span></div>
   <div class="nav-tabs">
-    <button class="nav-tab" onclick="showPage('watchlist',this)">觀察清單</button>
-    <button class="nav-tab active" id="tab-holdings" onclick="showPage('holdings',this)" style="display: block;">持股管理</button>
+    <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
+    <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
   </div>
   <div class="nav-right">
-    <div class="status-pill"><div class="status-dot on" id="dot-api"></div><span id="txt-api">API已連線</span></div>
-    <div class="status-pill"><div class="status-dot on" id="dot-sheets"></div><span id="txt-sheets">Sheets已連結</span></div>
+    <div class="status-pill"><div class="status-dot" id="dot-api"></div><span id="txt-api">API未設定</span></div>
+    <div class="status-pill"><div class="status-dot" id="dot-sheets"></div><span id="txt-sheets">未連結Sheets</span></div>
     <button class="btn-nav" onclick="openSettings()">⚙ 設定</button>
     <button class="btn-nav" onclick="document.getElementById('changelog-modal').classList.add('open')" style="opacity:0.6">📋 log</button>
   </div>
@@ -224,299 +226,103 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 
 <main>
 <!-- WATCHLIST PAGE -->
-<div class="page" id="page-watchlist">
+<div class="page active" id="page-watchlist">
   <!-- 第一排：VIX + 可部署子彈 各50% -->
   <div class="section-header"><span class="section-label">配置進度</span><div class="section-line"></div></div>
   <div class="alloc-row-top" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <div id="vix-bar" style="display: flex; align-items: flex-start; gap: 8px; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; flex-flow: column wrap; --darkreader-inline-bg: var(--darkreader-bg--bg-card); --darkreader-inline-border-short: 1px solid var(--darkreader-border--border);" data-darkreader-inline-bg="" data-darkreader-inline-border-short="" data-vix="24.93">
-    <div style="display:flex;align-items:center;gap:12px">
-      <span style="font-family:var(--font-mono);font-size:18px;color:var(--text-muted);letter-spacing:0.1em">VIX 恐慌指數</span>
-      <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--yellow)">24.93</span>
-      <span style="font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--yellow);padding:2px 10px;border:1px solid var(--yellow);border-radius:3px">市場警戒</span>
+    <div id="vix-bar" style="display:flex;align-items:center;gap:8px;padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">VIX 恐慌指數</span>
+      <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">同步持股後顯示</span>
     </div>
-    <div style="margin-top:6px">
-      <span style="font-family:var(--font-mono);font-size:14px;color:var(--yellow)">保持觀望，控制倉位</span>
-    </div>
-  </div>
     <div class="alloc-card">
       <div class="alloc-label">可部署子彈</div>
-      <div class="alloc-value text-green" id="alloc-cash-val">NT$96萬</div>
-      <div class="alloc-sub" id="alloc-cash-sub">現金 NT$151萬 · 保留 NT$55萬</div>
-      <div class="progress-bar"><div class="progress-fill" id="alloc-cash-bar" style="width: 0%; background: var(--green); --darkreader-inline-bg: var(--darkreader-bg--green);" data-darkreader-inline-bg=""></div></div>
+      <div class="alloc-value text-green" id="alloc-cash-val">—</div>
+      <div class="alloc-sub" id="alloc-cash-sub">載入中...</div>
+      <div class="progress-bar"><div class="progress-fill" id="alloc-cash-bar" style="width:0%;background:var(--green)"></div></div>
     </div>
   </div>
   <!-- 第二排：成長型股票 + 持有ETF 各50% -->
   <div class="alloc-row-bot" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
     <div class="alloc-card">
       <div class="alloc-label">成長型股票</div>
-      <div class="alloc-value text-accent" id="alloc-growth-pct">60.8%</div>
-      <div class="alloc-sub" id="alloc-growth-sub">目標執行進度 · 還差 NT$49萬</div>
-      <div class="progress-bar"><div class="progress-fill" id="alloc-growth-bar" style="width: 60.7824%; background: var(--accent); --darkreader-inline-bg: var(--darkreader-bg--accent);" data-darkreader-inline-bg=""></div></div>
+      <div class="alloc-value text-accent" id="alloc-growth-pct">—</div>
+      <div class="alloc-sub" id="alloc-growth-sub">目標執行進度</div>
+      <div class="progress-bar"><div class="progress-fill" id="alloc-growth-bar" style="width:0%;background:var(--accent)"></div></div>
     </div>
     <div class="alloc-card">
       <div class="alloc-label">持有ETF</div>
-      <div class="alloc-value text-purple" id="alloc-etf-pct">58.5%</div>
-      <div class="alloc-sub" id="alloc-etf-sub">目標執行進度 · 還差 NT$40萬</div>
-      <div class="progress-bar"><div class="progress-fill" id="alloc-etf-bar" style="width: 58.5464%; background: var(--purple); --darkreader-inline-bg: var(--darkreader-bg--purple);" data-darkreader-inline-bg=""></div></div>
+      <div class="alloc-value text-purple" id="alloc-etf-pct">—</div>
+      <div class="alloc-sub" id="alloc-etf-sub">目標執行進度</div>
+      <div class="progress-bar"><div class="progress-fill" id="alloc-etf-bar" style="width:0%;background:var(--purple)"></div></div>
     </div>
   </div>
   <div class="section-header"><span class="section-label">觀察清單</span><div class="section-line"></div></div>
   <!-- 觀察清單分兩欄：左個股 / 右ETF & 波段 -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
     <div>
-      <div style="font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 8px; text-transform: uppercase; --darkreader-inline-color: var(--darkreader-text--text-muted, var(--darkreader-text-000000, #e8e6e3));" data-darkreader-inline-color="">個股</div>
-      <div id="watchlist-grid-value" style="display:flex;flex-direction:column;gap:12px"><div class="stock-card" onclick="openAnalysis('6669')">
-      <div class="stock-header">
-        <div><div class="stock-ticker">6669</div><div class="stock-name">緯穎</div></div>
-        <span class="type-badge badge-value">價值投資</span>
-      </div>
-      <div class="stock-metrics">
-        <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:var(--red)">-62%</div></div>
-        <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge val-mid">合理區間</span></div></div>
-      </div>
-      <div class="dcf-band-wrap">
-    <div class="dcf-band-label">
-      <span>DCF 估值位階</span>
-      <span style="color:var(--red);font-weight:600">🚨 建議分批賣出</span>
-    </div>
-    <div class="dcf-track">
-      <div class="dcf-marker" style="left:22.5%;background:#fbbf24"></div>
-    </div>
-    <div class="dcf-prices">
-      <span>保守 NT$3,162.5</span>
-      <span>▲ 現價 NT$3,960</span>
-      <span>樂觀 NT$7,425</span>
-    </div>
-  </div>
-      <div class="stock-footer">
-        <span class="cache-info">尚未分析</span>
-        <button class="analyze-btn">AI 分析 →</button>
-      </div>
-    </div><div class="stock-card" onclick="openAnalysis('AMD')">
-      <div class="stock-header">
-        <div><div class="stock-ticker">AMD</div><div class="stock-name">AMD</div></div>
-        <span class="type-badge badge-value">價值投資</span>
-      </div>
-      <div class="stock-metrics">
-        <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:var(--red)">-21%</div></div>
-        <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge val-high">高估值區</span></div></div>
-      </div>
-      <div class="dcf-band-wrap">
-    <div class="dcf-band-label">
-      <span>DCF 估值位階</span>
-      <span style="color:var(--red);font-weight:600">🚨 建議分批賣出</span>
-    </div>
-    <div class="dcf-track">
-      <div class="dcf-marker" style="left:98%;background:#f87171"></div>
-    </div>
-    <div class="dcf-prices">
-      <span>保守 $83</span>
-      <span>▲ 現價 $203.23</span>
-      <span>樂觀 $166</span>
-    </div>
-  </div>
-      <div class="stock-footer">
-        <span class="cache-info">尚未分析</span>
-        <button class="analyze-btn">AI 分析 →</button>
-      </div>
-    </div><div class="stock-card" onclick="openAnalysis('MU')">
-      <div class="stock-header">
-        <div><div class="stock-ticker">MU</div><div class="stock-name">MU</div></div>
-        <span class="type-badge badge-value">價值投資</span>
-      </div>
-      <div class="stock-metrics">
-        <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:var(--red)">-19%</div></div>
-        <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge val-mid">合理區間</span></div></div>
-      </div>
-      <div class="dcf-band-wrap">
-    <div class="dcf-band-label">
-      <span>DCF 估值位階</span>
-      <span style="color:var(--red);font-weight:600">🚨 建議分批賣出</span>
-    </div>
-    <div class="dcf-track">
-      <div class="dcf-marker" style="left:17.51328798435735%;background:#fbbf24"></div>
-    </div>
-    <div class="dcf-prices">
-      <span>保守 $363.11</span>
-      <span>▲ 現價 $403.11</span>
-      <span>樂觀 $726.22</span>
-    </div>
-  </div>
-      <div class="stock-footer">
-        <span class="cache-info">尚未分析</span>
-        <button class="analyze-btn">AI 分析 →</button>
-      </div>
-    </div><div class="stock-card" onclick="openAnalysis('PLTR')">
-      <div class="stock-header">
-        <div><div class="stock-ticker">PLTR</div><div class="stock-name">Palantir Technologies Inc.</div></div>
-        <span class="type-badge badge-value">價值投資</span>
-      </div>
-      <div class="stock-metrics">
-        <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:var(--red)">-28%</div></div>
-        <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge val-mid">合理區間</span></div></div>
-      </div>
-      <div class="dcf-band-wrap">
-    <div class="dcf-band-label">
-      <span>DCF 估值位階</span>
-      <span style="color:var(--red);font-weight:600">🚨 建議分批賣出</span>
-    </div>
-    <div class="dcf-track">
-      <div class="dcf-marker" style="left:31.954022988505738%;background:#fbbf24"></div>
-    </div>
-    <div class="dcf-prices">
-      <span>保守 $66</span>
-      <span>▲ 現價 $151.14</span>
-      <span>樂觀 $330</span>
-    </div>
-  </div>
-      <div class="stock-footer">
-        <span class="cache-info">尚未分析</span>
-        <button class="analyze-btn">AI 分析 →</button>
-      </div>
-    </div></div>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase">個股</div>
+      <div id="watchlist-grid-value" style="display:flex;flex-direction:column;gap:12px"></div>
     </div>
     <div>
-      <div style="font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 8px; text-transform: uppercase; --darkreader-inline-color: var(--darkreader-text--text-muted, var(--darkreader-text-000000, #e8e6e3));" data-darkreader-inline-color="">ETF &amp; 波段</div>
-      <div id="watchlist-grid-etf" style="display:flex;flex-direction:column;gap:12px"><div class="stock-card" onclick="openAnalysis('JEPI')">
-      <div class="stock-header">
-        <div><div class="stock-ticker">JEPI</div><div class="stock-name">JPMorgan Equity Premium Income ETF</div></div>
-        <span class="type-badge badge-etf">ETF</span>
-      </div>
-      <div class="stock-metrics">
-        <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:var(--red)">52週 83% 位置</div></div>
-        <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge val-mid">合理區間</span></div></div>
-      </div>
-      <div class="dcf-band-wrap">
-      <div class="dcf-band-label">
-        <span>52 週高低位置</span>
-        <span style="color:var(--red);font-weight:600">相對高點區</span>
-      </div>
-      <div class="dcf-track">
-        <div class="dcf-marker" style="left:82.83132530120481%;background:#f87171"></div>
-      </div>
-      <div class="dcf-prices">
-        <span>低 $49.94</span>
-        <span>▲ 現價 $58.19 (83%)</span>
-        <span>高 $59.9</span>
-      </div>
-    </div>
-      <div class="stock-footer">
-        <span class="cache-info">尚未分析</span>
-        <button class="analyze-btn">AI 分析 →</button>
-      </div>
-    </div><div class="stock-card" onclick="openAnalysis('QQQI')">
-      <div class="stock-header">
-        <div><div class="stock-ticker">QQQI</div><div class="stock-name">NEOS NASDAQ-100(R) High Income ETF</div></div>
-        <span class="type-badge badge-etf">ETF</span>
-      </div>
-      <div class="stock-metrics">
-        <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:var(--red)">52週 76% 位置</div></div>
-        <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge val-mid">合理區間</span></div></div>
-      </div>
-      <div class="dcf-band-wrap">
-      <div class="dcf-band-label">
-        <span>52 週高低位置</span>
-        <span style="color:var(--red);font-weight:600">相對高點區</span>
-      </div>
-      <div class="dcf-track">
-        <div class="dcf-marker" style="left:76.35501355013548%;background:#f87171"></div>
-      </div>
-      <div class="dcf-prices">
-        <span>低 $41.17</span>
-        <span>▲ 現價 $52.44 (76%)</span>
-        <span>高 $55.93</span>
-      </div>
-    </div>
-      <div class="stock-footer">
-        <span class="cache-info">尚未分析</span>
-        <button class="analyze-btn">AI 分析 →</button>
-      </div>
-    </div><div class="stock-card" onclick="openAnalysis('TQQQ')">
-      <div class="stock-header">
-        <div><div class="stock-ticker">TQQQ</div><div class="stock-name">那指100
-(三倍)</div></div>
-        <span class="type-badge badge-etf">ETF</span>
-      </div>
-      <div class="stock-metrics">
-        <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:var(--red)">52週 74% 位置</div></div>
-        <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge val-mid">合理區間</span></div></div>
-      </div>
-      <div class="dcf-band-wrap">
-      <div class="dcf-band-label">
-        <span>52 週高低位置</span>
-        <span style="color:var(--red);font-weight:600">相對高點區</span>
-      </div>
-      <div class="dcf-track">
-        <div class="dcf-marker" style="left:73.86824128748407%;background:#f87171"></div>
-      </div>
-      <div class="dcf-prices">
-        <span>低 $17.5</span>
-        <span>▲ 現價 $49.4 (74%)</span>
-        <span>高 $60.685</span>
-      </div>
-    </div>
-      <div class="stock-footer">
-        <span class="cache-info">尚未分析</span>
-        <button class="analyze-btn">AI 分析 →</button>
-      </div>
-    </div></div>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase">ETF &amp; 波段</div>
+      <div id="watchlist-grid-etf" style="display:flex;flex-direction:column;gap:12px"></div>
     </div>
   </div>
 </div>
 
 <!-- HOLDINGS PAGE -->
-<div class="page active" id="page-holdings">
-  <div id="sync-status"><div class="sync-banner synced">✓ 快取資料（0分鐘前）&nbsp;<span style="cursor:pointer;text-decoration:underline;opacity:0.7" onclick="syncSheets()">重新同步</span></div></div>
-  <div class="total-pnl-card" id="total-pnl-card" style="display: flex;">
+<div class="page" id="page-holdings">
+  <div id="sync-status"></div>
+  <div class="total-pnl-card" id="total-pnl-card" style="display:none">
     <div>
       <div class="total-pnl-label">總損益（台幣）</div>
-      <div class="total-pnl-value" id="total-pnl-twd" style="color: var(--red); --darkreader-inline-color: var(--darkreader-text--red, var(--darkreader-text-000000, #e8e6e3));" data-darkreader-inline-color="">+NT$85,582</div>
-      <div class="total-pnl-sub" id="total-pnl-twd-pct">+7.0%（台幣換算）</div>
+      <div class="total-pnl-value" id="total-pnl-twd">—</div>
+      <div class="total-pnl-sub" id="total-pnl-twd-pct">—</div>
     </div>
     <div class="pnl-divider"></div>
     <div>
       <div class="total-pnl-label">美股損益（USD）</div>
-      <div class="total-pnl-value" id="total-pnl-usd" style="font-size: 22px; color: var(--red); --darkreader-inline-color: var(--darkreader-text--red, var(--darkreader-text-000000, #e8e6e3));" data-darkreader-inline-color="">+US$1,940</div>
-      <div class="total-pnl-sub" id="total-pnl-usd-pct">+10.5% 美股</div>
+      <div class="total-pnl-value" id="total-pnl-usd" style="font-size:22px">—</div>
+      <div class="total-pnl-sub" id="total-pnl-usd-pct">—</div>
     </div>
     <div class="pnl-divider"></div>
     <div>
       <div class="total-pnl-label">台股損益（TWD）</div>
-      <div class="total-pnl-value" id="total-pnl-tw" style="font-size: 22px; color: var(--red); --darkreader-inline-color: var(--darkreader-text--red, var(--darkreader-text-000000, #e8e6e3));" data-darkreader-inline-color="">+NT$23,879</div>
-      <div class="total-pnl-sub" id="total-pnl-tw-pct">+3.7% 台股</div>
+      <div class="total-pnl-value" id="total-pnl-tw" style="font-size:22px">—</div>
+      <div class="total-pnl-sub" id="total-pnl-tw-pct">—</div>
     </div>
   </div>
-  <div class="charts-row" id="charts-row" style="display: grid;">
+  <div class="charts-row" id="charts-row" style="display:none">
     <div class="chart-card">
       <div class="chart-title">大類資產分布</div>
-      <div class="chart-wrap"><canvas id="chart-category" style="box-sizing: border-box; display: block; height: 200px; width: 635px;" width="1270" height="400"></canvas></div>
+      <div class="chart-wrap"><canvas id="chart-category"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">個股持倉分布</div>
-      <div class="chart-wrap"><canvas id="chart-stocks" style="box-sizing: border-box; display: block; height: 200px; width: 635px;" width="1270" height="400"></canvas></div>
+      <div class="chart-wrap"><canvas id="chart-stocks"></canvas></div>
     </div>
   </div>
   <!-- 資產成長曲線 -->
-  <div id="growth-chart-section" style="display: block; margin-bottom: 24px;">
+  <div id="growth-chart-section" style="display:none;margin-bottom:24px">
     <div class="section-header"><span class="section-label">資產成長曲線</span><div class="section-line"></div></div>
     <div class="chart-card" style="padding:20px">
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-growth" style="display: block; box-sizing: border-box; height: 200px; width: 1310px;" height="400" width="2620"></canvas></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-growth"></canvas></div>
     </div>
   </div>
   <div class="section-header"><span class="section-label">風險監控</span><div class="section-line"></div></div>
   <div class="risk-grid" id="risk-grid" style="margin-bottom:28px">
     <div class="risk-card">
       <div class="risk-title">基本面風險</div>
-      <div id="risk-concentration"><div class="risk-item"><div class="risk-dot" style="background:var(--yellow)"></div><span style="color:var(--text-secondary)">集中度 70% — 中租KY、富邦台50、QQQ</span></div></div>
-      <div class="risk-item"><div class="risk-dot" id="dot-region" style="background: var(--green); --darkreader-inline-bg: var(--darkreader-bg--green);" data-darkreader-inline-bg=""></div><span id="txt-region" style="color: var(--text-secondary); --darkreader-inline-color: var(--darkreader-text--text-secondary, var(--darkreader-text-000000, #e8e6e3));" data-darkreader-inline-color="">地區分布 — 美股 49% / 台股 51%</span></div>
+      <div id="risk-concentration"><div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">載入中...</span></div></div>
+      <div class="risk-item"><div class="risk-dot" id="dot-region" style="background:var(--text-muted)"></div><span id="txt-region" style="color:var(--text-secondary)">地區分布計算中</span></div>
     </div>
     <div class="risk-card">
       <div class="risk-title">估值位階警示</div>
-      <div id="risk-valuation"><div class="risk-item"><div class="risk-dot" style="background:var(--red)"></div><span style="color:var(--text-secondary)">台積電 PE 27.9x 偏高（歷史高 30.6x）</span></div><div class="risk-item"><div class="risk-dot" style="background:var(--red)"></div><span style="color:var(--text-secondary)">COST PE 51.9x 偏高（歷史高 55.5x）</span></div><div class="risk-item"><div class="risk-dot" style="background:var(--red)"></div><span style="color:var(--text-secondary)">GOOG PE 28.4x 偏高（歷史高 32.4x）</span></div><div class="risk-item"><div class="risk-dot" style="background:var(--red)"></div><span style="color:var(--text-secondary)">LLY PE 43.6x 偏高（歷史高 49.4x）</span></div><div class="risk-item"><div class="risk-dot" style="background:var(--red)"></div><span style="color:var(--text-secondary)">台積電 200MA偏離 +26.5%</span></div><div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">SOFI 200MA偏離 -28.9%</span></div><div class="risk-item"><div class="risk-dot" style="background:var(--red)"></div><span style="color:var(--text-secondary)">富邦台50 200MA偏離 +21.5%</span></div></div>
+      <div id="risk-valuation"><div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">載入中...</span></div></div>
     </div>
     <div class="risk-card">
       <div class="risk-title">集中度自查</div>
-      <div id="risk-top3"><div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">#1 中租KY — 27.9%</span></div><div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">#2 富邦台50 — 22.5%</span></div><div class="risk-item"><div class="risk-dot" style="background:var(--green)"></div><span style="color:var(--text-secondary)">#3 QQQ — 19.6%</span></div></div>
+      <div id="risk-top3"><div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">載入中...</span></div></div>
     </div>
   </div>
   <div class="section-header">
@@ -524,349 +330,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="section-line"></div>
     <button class="btn-nav" style="font-size:9px;white-space:nowrap" onclick="syncSheets()">↻ 同步試算表</button>
   </div>
-  <div id="holdings-list"><div class="holding-entry" onclick="openThesisModal('006208','富邦台50')">
-      <div><div class="holding-ticker">006208</div><div class="holding-name">富邦台50</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">1700</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">NT$90.54</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">NT$174</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:85.23489932885906%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">85%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:75.848%;background:#f87171"></div>
-      </div>
-      <span class="tech-val" style="color:#f87171">+21.5%⚠</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--red)">+NT$141,882</div>
-        <div class="pnl-pct" style="color:var(--red)">+92.2%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('GOOG','谷歌 ')">
-      <div><div class="holding-ticker">GOOG</div><div class="holding-name">谷歌 </div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">10.817</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$196.18</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$306.9</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:79.16666666666666%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">28.4x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:79.13253012048193%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">79%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:70.256%;background:#fbbf24"></div>
-      </div>
-      <span class="tech-val" style="color:#fbbf24">+16.9%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--red)">+US$1,198</div>
-        <div class="pnl-pct" style="color:var(--red)">+56.4%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('QQQ','那指100')">
-      <div><div class="holding-ticker">QQQ</div><div class="holding-name">那指100</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">13.319</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$558.14</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$607.8</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:87.55328218243818%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">88%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:53.564%;background:#7a9abf"></div>
-      </div>
-      <span class="tech-val" style="color:#7a9abf">+3.0%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--red)">+US$661</div>
-        <div class="pnl-pct" style="color:var(--red)">+8.9%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('COST','COSTCO')">
-      <div><div class="holding-ticker">COST</div><div class="holding-name">COSTCO</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">3.083</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$902.54</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$997.4</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:68.9655172413793%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">51.9x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:68.7443946188341%;background:#fbbf24"></div>
-      </div>
-      <span class="tech-val">69%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:55.604%;background:#7a9abf"></div>
-      </div>
-      <span class="tech-val" style="color:#7a9abf">+4.7%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--red)">+US$292</div>
-        <div class="pnl-pct" style="color:var(--red)">+10.5%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('SMH','半導體ETF')">
-      <div><div class="holding-ticker">SMH</div><div class="holding-name">半導體ETF</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">0.798</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$375.77</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$397.3</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:88.13033359193176%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">88%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:69.596%;background:#fbbf24"></div>
-      </div>
-      <span class="tech-val" style="color:#fbbf24">+16.3%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--red)">+US$17</div>
-        <div class="pnl-pct" style="color:var(--red)">+5.7%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('2330','台積電')">
-      <div><div class="holding-ticker">2330</div><div class="holding-name">台積電</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">1</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">NT$1,780</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">NT$1,850</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:85.6382978723404%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">27.9x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:85.94377510040161%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">86%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:81.824%;background:#f87171"></div>
-      </div>
-      <span class="tech-val" style="color:#f87171">+26.5%⚠</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--red)">+NT$70</div>
-        <div class="pnl-pct" style="color:var(--red)">+3.9%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('UNH','聯合健康')">
-      <div><div class="holding-ticker">UNH</div><div class="holding-name">聯合健康</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">1.699</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$282.53</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$282.3</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:12.811387900355879%;background:#34d399"></div>
-      </div>
-      <span class="tech-val">21.3x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:12.829478214093603%;background:#34d399"></div>
-      </div>
-      <span class="tech-val">13%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:36.164%;background:#34d399"></div>
-      </div>
-      <span class="tech-val" style="color:#34d399">-11.5%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--green)">US$0</div>
-        <div class="pnl-pct" style="color:var(--green)">-0.1%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('SOFI','NASDAQ:SOFI')">
-      <div><div class="holding-ticker">SOFI</div><div class="holding-name">NASDAQ:SOFI</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">20</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$18.51</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$18.29</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:40.938511326860834%;background:#fbbf24"></div>
-      </div>
-      <span class="tech-val">47.4x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:40.20746887966805%;background:#fbbf24"></div>
-      </div>
-      <span class="tech-val">40%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:15.308%;background:#34d399"></div>
-      </div>
-      <span class="tech-val" style="color:#34d399">-28.9%⚠</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--green)">US$4</div>
-        <div class="pnl-pct" style="color:var(--green)">-1.2%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('MSFT','微軟(手動)')">
-      <div><div class="holding-ticker">MSFT</div><div class="holding-name">微軟(手動)</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">5</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$410.8</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$405.8</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:28.787878787878775%;background:#34d399"></div>
-      </div>
-      <span class="tech-val">25.4x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:28.951115329852872%;background:#34d399"></div>
-      </div>
-      <span class="tech-val">29%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:26.84%;background:#34d399"></div>
-      </div>
-      <span class="tech-val" style="color:#34d399">-19.3%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--green)">US$25</div>
-        <div class="pnl-pct" style="color:var(--green)">-1.2%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('LLY','禮來製藥')">
-      <div><div class="holding-ticker">LLY</div><div class="holding-name">禮來製藥</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">0.494</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$1,052.82</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$1,001.4</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:73.87387387387389%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">43.6x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:74.01019208153666%;background:#f87171"></div>
-      </div>
-      <span class="tech-val">74%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:64.112%;background:#fbbf24"></div>
-      </div>
-      <span class="tech-val" style="color:#fbbf24">+11.8%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--green)">US$25</div>
-        <div class="pnl-pct" style="color:var(--green)">-4.9%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('MSFT','微軟(定期)')">
-      <div><div class="holding-ticker">MSFT</div><div class="holding-name">微軟(定期)</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">5.591</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">US$436.84</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">US$405.8</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:28.787878787878775%;background:#34d399"></div>
-      </div>
-      <span class="tech-val">25.4x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:28.951115329852872%;background:#34d399"></div>
-      </div>
-      <span class="tech-val">29%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:26.84%;background:#34d399"></div>
-      </div>
-      <span class="tech-val" style="color:#34d399">-19.3%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--green)">US$174</div>
-        <div class="pnl-pct" style="color:var(--green)">-7.1%</div>
-      </div>
-    </div><div class="holding-entry" onclick="openThesisModal('5871','中租ky')">
-      <div><div class="holding-ticker">5871</div><div class="holding-name">中租ky</div><div style="margin-top:4px"><span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">179 天後信仰檢核</span></div></div>
-      <div class="holding-metrics">
-        <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">3533</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">NT$137.42</div></div>
-        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">NT$104</div></div>
-      </div>
-      <div class="tech-col"><div class="tech-row">
-      <span class="tech-label">PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:30.555555555555546%;background:#34d399"></div>
-      </div>
-      <span class="tech-val">9.6x</span>
-    </div><div class="tech-row">
-      <span class="tech-label">52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:29.947916666666664%;background:#34d399"></div>
-      </div>
-      <span class="tech-val">30%</span>
-    </div><div class="tech-row">
-      <span class="tech-label">200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:40.748000000000005%;background:#7a9abf"></div>
-      </div>
-      <span class="tech-val" style="color:#7a9abf">-7.7%</span>
-    </div></div>
-      <div class="holding-pnl" style="text-align:right">
-        <div class="pnl-value" style="color:var(--green)">NT$118,073</div>
-        <div class="pnl-pct" style="color:var(--green)">-24.3%</div>
-      </div>
-    </div></div>
+  <div id="holdings-list"></div>
 </div>
 </main>
 
@@ -900,7 +364,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <div style="display:flex;gap:8px;margin-top:4px">
           <button class="ability-badge ability-know" id="ts-yes" onclick="setThesisStatus('yes')">✓ 成立</button>
           <button class="ability-badge ability-partial" id="ts-partial" onclick="setThesisStatus('partial')">△ 部分</button>
-          <button class="ability-badge" id="ts-no" style="background: var(--red-dim); color: var(--red); border: 1px solid var(--red-dim); --darkreader-inline-bg: var(--darkreader-bg--red-dim); --darkreader-inline-border-short: 1px solid var(--darkreader-border--red-dim); --darkreader-inline-color: var(--darkreader-text--red, var(--darkreader-text-000000, #e8e6e3));" onclick="setThesisStatus('no')" data-darkreader-inline-bg="" data-darkreader-inline-border-short="" data-darkreader-inline-color="">✗ 不成立</button>
+          <button class="ability-badge" id="ts-no" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim)" onclick="setThesisStatus('no')">✗ 不成立</button>
         </div>
       </div>
       <div class="thesis-box">
@@ -908,13 +372,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <textarea class="thesis-input" id="sell-trigger-input" placeholder="哪些情況會讓你賣出？護城河消失、估值過高..."></textarea>
       </div>
       <button class="btn-save" onclick="saveThesis()">儲存買入論文</button>
-      <button class="btn-save" style="background: var(--bg-elevated); color: var(--yellow); border: 1px solid var(--yellow); margin-top: 6px; --darkreader-inline-bg: var(--darkreader-bg--bg-elevated); --darkreader-inline-border-short: 1px solid var(--darkreader-border--yellow); --darkreader-inline-color: var(--darkreader-text--yellow, var(--darkreader-text-000000, #e8e6e3));" onclick="markFaithCheck(currentThesisTicker)" data-darkreader-inline-bg="" data-darkreader-inline-border-short="" data-darkreader-inline-color="">✓ 標記今日信仰檢核</button>
+      <button class="btn-save" style="background:var(--bg-elevated);color:var(--yellow);border:1px solid var(--yellow);margin-top:6px" onclick="markFaithCheck(currentThesisTicker)">✓ 標記今日信仰檢核</button>
     </div>
   </div>
 </div>
 
 <!-- SETTINGS MODAL -->
-<div class="modal-overlay open" id="settings-modal">
+<div class="modal-overlay" id="settings-modal">
   <div class="settings-modal">
     <div class="settings-title">⚙ 系統設定</div>
     <div class="settings-section">
@@ -932,8 +396,8 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <label class="settings-label">試算表 ID</label>
         <input type="text" class="settings-input" id="input-sheetid" placeholder="試算表網址中的長串ID">
       </div>
-      <button class="btn-google connected" id="btn-google-auth" onclick="startGoogleAuth()">
-        <span>🔗</span><span id="google-auth-text">已連結（點擊取消連結）</span>
+      <button class="btn-google" id="btn-google-auth" onclick="startGoogleAuth()">
+        <span>🔗</span><span id="google-auth-text">連結 Google 帳號</span>
       </button>
     </div>
     <div class="settings-section">
@@ -951,7 +415,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <label class="settings-label">Branch</label>
         <input type="text" class="settings-input" id="input-github-branch" placeholder="main">
       </div>
-      <button class="btn-save" style="background: var(--bg-elevated); color: var(--accent); border: 1px solid var(--accent-dim); margin-top: 10px; --darkreader-inline-bg: var(--darkreader-bg--bg-elevated); --darkreader-inline-border-short: 1px solid var(--darkreader-border--accent-dim); --darkreader-inline-color: var(--darkreader-text--accent, var(--darkreader-text-000000, #e8e6e3));" onclick="pushToGitHub()" data-darkreader-inline-bg="" data-darkreader-inline-border-short="" data-darkreader-inline-color="">⬆ 立即上傳至 GitHub</button>
+      <button id="btn-push-github" class="btn-save" style="background:var(--bg-elevated);color:var(--accent);border:1px solid var(--accent-dim);margin-top:10px" onclick="pushToGitHub()">⬆ 立即上傳至 GitHub</button>
     </div>
     <button class="btn-save" onclick="saveSettings()">儲存設定</button>
     <button class="btn-cancel" onclick="closeModal('settings-modal')">取消</button>
@@ -967,6 +431,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v2.8.0 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ 上傳按鈕加入 120 秒冷卻，防止手癢重複觸發
+        </div>
         <div class="analysis-section-title">v2.7.0 — 2026-03-11</div>
         <div class="analysis-text">
           ✦ 測試自動部署流程
@@ -1003,7 +471,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <div class="analysis-text">
           ✦ 版面重排：VIX + 可部署子彈同一排各50%<br>
           ✦ 版面重排：成長型股票 + 持有ETF同一排各50%<br>
-          ✦ 觀察清單分兩欄：左側個股 / 右側ETF &amp; 波段<br>
+          ✦ 觀察清單分兩欄：左側個股 / 右側ETF & 波段<br>
           ✦ 排除清單：IX0001 等指數型代號不再進入觀察清單
         </div>
       </div>
@@ -1320,6 +788,27 @@ function saveSettings() {
 
 // === GITHUB AUTO PUSH ===
 async function pushToGitHub() {
+  // Cooldown 120 秒防止重複按
+  const btn = document.getElementById('btn-push-github');
+  if(btn && btn.disabled) return;
+  if(btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+    btn.style.cursor = 'not-allowed';
+    let remaining = 120;
+    const orig = '⬆ 立即上傳至 GitHub';
+    const timer = setInterval(() => {
+      remaining--;
+      if(btn) btn.textContent = `⏳ 冷卻中 ${remaining}s`;
+      if(remaining <= 0) {
+        clearInterval(timer);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.textContent = orig;
+      }
+    }, 1000);
+  }
   // 把目前頁面 HTML 上傳到 Google Drive，由 GAS 接手 push 到 GitHub
   if(!googleToken) {
     showToast('⚠️ 請先連結 Google 帳號');
@@ -2397,6 +1886,5 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 init();
 </script>
-
-
-<div id="gh-toast" style="position: fixed; bottom: 24px; right: 24px; background: var(--bg-elevated); border: 1px solid var(--border-bright); color: var(--text-primary); font-family: var(--font-mono); font-size: 11px; padding: 10px 16px; border-radius: 6px; z-index: 9999; opacity: 1; transition: opacity 0.3s;">⏳ 正在準備部署...</div></body></html>
+</body>
+</html>
