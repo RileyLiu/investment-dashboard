@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.3.0</title>
+<title>投資儀錶板 v3.4.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -246,7 +246,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.3.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.4.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -346,10 +346,18 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
   </div>
   <div class="section-header"><span class="section-label">技術監控</span><div class="section-line"></div></div>
-  <div class="risk-grid" id="risk-grid" style="margin-bottom:28px;grid-template-columns:1fr;">
+  <div class="risk-grid" id="risk-grid" style="margin-bottom:28px;grid-template-columns:1fr 1fr 1fr;">
     <div class="risk-card">
-      <div class="risk-title">200MA 偏離</div>
-      <div id="risk-valuation"><div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">載入中...</span></div></div>
+      <div class="risk-title">200MA 偏離（年線）</div>
+      <div id="risk-ma200"></div>
+    </div>
+    <div class="risk-card">
+      <div class="risk-title">50MA 偏離（季線）</div>
+      <div id="risk-ma50"></div>
+    </div>
+    <div class="risk-card">
+      <div class="risk-title">趨勢 ＋ KD 判斷</div>
+      <div id="risk-trend"></div>
     </div>
   </div>
   <div class="section-header">
@@ -492,6 +500,12 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.4.0 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ 技術監控擴展為三欄：200MA偏離 / 50MA偏離 / 趨勢+KD判斷<br>
+          ✦ 200MA、50MA 改為正值大到小排序（超買在上，超賣在下）<br>
+          ✦ 趨勢判斷、KD判斷從 Sheets D、E 欄讀取，顏色自動對應
+        </div>
         <div class="analysis-section-title">v3.3.0 — 2026-03-11</div>
         <div class="analysis-text">
           ✦ Treemap 改為真正二維 Squarified 矩形演算法<br>
@@ -717,7 +731,8 @@ const DEFAULT_SHEET_ID = '1wSie_fKvkfJKXT6WSQh3VSsyzdnCJKRv10DrJMU5F80';
 let githubPAT = null; // 從 設定!B1 讀取
 
 const COLS = { ticker:5, fullCode:6, name:7, shares:10, cost:11, price:13,
-               ma200pct:15, w52low:16, w52high:17, pe:19, peL:20, peH:21 };
+               ma200pct:15, ma50pct:2, trend:3, kd:4,
+               w52low:16, w52high:17, pe:19, peL:20, peH:21 };
 const ETF_TICKERS = ['006208','SMH','QQQ','TQQQ','0050'];
 const TW_TICKERS  = ['2330','6669','5871','006208','IX0001','新立資訊'];
 const TW_NAMES = {'2330':'台積電','6669':'緯穎','5871':'中租KY','006208':'富邦台50','0050':'元大台灣50'};
@@ -1124,12 +1139,15 @@ function parseHoldings(rows) {
     const currency=TW_TICKERS.includes(ticker)?'TWD':'USD';
     // Technical indicators
     const ma200pct = parseFloat((row[COLS.ma200pct]||'').replace(/%/g,'').replace(/,/g,''))||null;
+    const ma50pct  = parseFloat((row[COLS.ma50pct]||'').replace(/%/g,'').replace(/,/g,''))||null;
+    const trend    = (row[COLS.trend]||'').trim()||null;
+    const kd       = (row[COLS.kd]||'').trim()||null;
     const w52low   = parseFloat((row[COLS.w52low]||'').replace(/,/g,''))||null;
     const w52high  = parseFloat((row[COLS.w52high]||'').replace(/,/g,''))||null;
     const pe       = parseFloat((row[COLS.pe]||'').replace(/,/g,''))||null;
     const peL      = parseFloat((row[COLS.peL]||'').replace(/,/g,''))||null;
     const peH      = parseFloat((row[COLS.peH]||'').replace(/,/g,''))||null;
-    out.push({ticker,name,shares,cost,price:price||cost,type,currency,ma200pct,w52low,w52high,pe,peL,peH});
+    out.push({ticker,name,shares,cost,price:price||cost,type,currency,ma200pct,ma50pct,trend,kd,w52low,w52high,pe,peL,peH});
   }
   return out;
 }
@@ -1489,19 +1507,40 @@ function renderCharts(growthVal,etfVal,stockValues){
 // === RISK MONITOR (dynamic) ===
 function renderRiskMonitor() {
   if(!holdingsData.length) return;
-  // 只顯示 200MA 偏離
-  const allMA = holdingsData.filter(h=>h.ma200pct!=null);
-  if(!allMA.length) {
-    document.getElementById('risk-valuation').innerHTML=`<div class="risk-item"><div class="risk-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-muted)">無 200MA 資料</span></div>`;
-    return;
+
+  function maRow(h, pct, label) {
+    const sign = pct > 0 ? '+' : '';
+    const c = pct > 20 ? 'var(--red)' : pct > 10 ? 'var(--yellow)' : pct < -10 ? 'var(--green)' : 'var(--text-muted)';
+    return `<div class="risk-item"><div class="risk-dot" style="background:${c}"></div><span style="color:var(--text-secondary)">${label} <span style="color:${c};font-weight:600">${sign}${pct.toFixed(1)}%</span></span></div>`;
   }
-  const sorted = [...allMA].sort((a,b)=>Math.abs(b.ma200pct)-Math.abs(a.ma200pct));
-  document.getElementById('risk-valuation').innerHTML=sorted.map(h=>{
-    const pct=h.ma200pct;
-    const c=pct>30?'var(--red)':pct>15?'var(--yellow)':pct<-15?'var(--green)':'var(--text-muted)';
-    const sign=pct>0?'+':'';
-    return `<div class="risk-item"><div class="risk-dot" style="background:${c}"></div><span style="color:var(--text-secondary)">${TW_NAMES[h.ticker]||h.ticker} <span style="color:${c};font-weight:600">${sign}${pct?.toFixed(1)}%</span></span></div>`;
-  }).join('');
+
+  // 1. 200MA 偏離 — 正值大到小排序
+  const ma200list = holdingsData.filter(h=>h.ma200pct!=null).sort((a,b)=>b.ma200pct-a.ma200pct);
+  document.getElementById('risk-ma200').innerHTML = ma200list.length
+    ? ma200list.map(h => maRow(h, h.ma200pct, TW_NAMES[h.ticker]||h.ticker)).join('')
+    : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
+
+  // 2. 50MA 偏離 — 正值大到小排序
+  const ma50list = holdingsData.filter(h=>h.ma50pct!=null).sort((a,b)=>b.ma50pct-a.ma50pct);
+  document.getElementById('risk-ma50').innerHTML = ma50list.length
+    ? ma50list.map(h => maRow(h, h.ma50pct, TW_NAMES[h.ticker]||h.ticker)).join('')
+    : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
+
+  // 3. 趨勢 + KD 判斷
+  const trendList = holdingsData.filter(h=>h.trend||h.kd);
+  document.getElementById('risk-trend').innerHTML = trendList.length
+    ? trendList.map(h => {
+        const trendColor = (h.trend||'').includes('強勢') ? 'var(--green)'
+          : (h.trend||'').includes('弱勢') ? 'var(--red)' : 'var(--yellow)';
+        const kdColor = (h.kd||'').includes('轉強') || (h.kd||'').includes('多頭') ? 'var(--green)'
+          : (h.kd||'').includes('弱') || (h.kd||'').includes('空') ? 'var(--red)' : 'var(--yellow)';
+        return `<div class="risk-item" style="flex-direction:column;align-items:flex-start;gap:2px;">
+          <span style="color:var(--text-secondary);font-weight:600">${TW_NAMES[h.ticker]||h.ticker}</span>
+          ${h.trend ? `<span style="font-size:11px;color:${trendColor}">趨勢：${h.trend}</span>` : ''}
+          ${h.kd ? `<span style="font-size:11px;color:${kdColor}">KD：${h.kd}</span>` : ''}
+        </div>`;
+      }).join('')
+    : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
 }
 
 // === RENDER HOLDINGS ===
