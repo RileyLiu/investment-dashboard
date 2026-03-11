@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.1.0</title>
+<title>投資儀錶板 v3.2.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -144,6 +144,39 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .risk-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;}
 .risk-item:last-child{border-bottom:none;}
 .risk-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+/* Risk page */
+.risk-page-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.risk-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.risk-panel-title{font-family:var(--font-mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:14px;}
+.risk-panel-full{grid-column:1/-1;}
+#treemap-container{width:100%;height:280px;position:relative;}
+.treemap-cell{position:absolute;display:flex;flex-direction:column;justify-content:center;align-items:center;border:2px solid #0d1117;border-radius:4px;cursor:default;transition:opacity 0.2s;overflow:hidden;}
+.treemap-cell:hover{opacity:0.85;}
+.treemap-label{font-family:var(--font-mono);font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.8);text-align:center;padding:0 4px;}
+.treemap-pct{font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px;}
+.pe-card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;}
+.pe-card:last-child{margin-bottom:0;}
+.pe-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.pe-ticker{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text-primary);}
+.pe-badge{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:3px;font-weight:600;}
+.pe-badge.high{background:rgba(248,113,113,0.15);color:var(--red);}
+.pe-badge.mid{background:rgba(251,191,36,0.15);color:var(--yellow);}
+.pe-badge.low{background:rgba(52,211,153,0.15);color:var(--green);}
+.pe-bar-wrap{height:6px;background:var(--border);border-radius:3px;position:relative;margin-bottom:6px;}
+.pe-bar-fill{height:100%;border-radius:3px;transition:width 0.5s;}
+.pe-bar-thumb{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;border:2px solid #0d1117;transform:translateX(-50%);}
+.pe-range{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);}
+.pe-fair{font-size:11px;color:var(--text-secondary);margin-top:4px;}
+.pe-margin{font-family:var(--font-mono);font-size:11px;font-weight:600;}
+.pe-margin.safe{color:var(--green);}
+.pe-margin.warn{color:var(--yellow);}
+.pe-margin.danger{color:var(--red);}
+.risk-ai-btn{display:flex;align-items:center;gap:8px;padding:8px 18px;background:var(--accent-glow);border:1px solid var(--accent-dim);border-radius:6px;color:var(--accent);font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;}
+.risk-ai-btn:hover:not(:disabled){background:var(--accent);color:#0d1117;}
+.risk-ai-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.risk-cd-bar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden;}
+.risk-cd-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 1s linear;}
+.risk-ai-status{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:6px;min-height:16px;}
 
 .sync-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;margin-bottom:20px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
 .sync-banner.synced{border-color:var(--green-dim);color:var(--green);}
@@ -213,10 +246,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.1.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.2.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
+    <button class="nav-tab" id="tab-risk" onclick="showPage('risk',this)" style="display:none">風險總覽</button>
   </div>
   <div class="nav-right">
     <div class="status-pill"><div class="status-dot" id="dot-api"></div><span id="txt-api">API未設定</span></div>
@@ -336,6 +370,40 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </div>
 </main>
 
+<!-- RISK PAGE -->
+<div class="page" id="page-risk" style="padding:16px 20px;max-width:1400px;margin:0 auto;">
+
+  <!-- Header with AI button -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div class="section-header" style="margin-bottom:0;flex:1"><span class="section-label">風險總覽</span><div class="section-line"></div></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:16px;">
+      <button class="risk-ai-btn" id="risk-ai-btn" onclick="runRiskAnalysis()">⬡ AI 基本面分析</button>
+      <div class="risk-cd-bar" style="width:160px"><div class="risk-cd-fill" id="risk-cd-fill" style="width:0%"></div></div>
+      <div class="risk-ai-status" id="risk-ai-status">尚未分析</div>
+    </div>
+  </div>
+
+  <!-- Row 1: Treemap (full width) -->
+  <div class="risk-panel risk-panel-full" style="margin-bottom:16px;">
+    <div class="risk-panel-title">產業分布</div>
+    <div id="treemap-container"></div>
+    <div id="treemap-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"></div>
+  </div>
+
+  <!-- Row 2: PE Band + Safety Margin -->
+  <div class="risk-page-grid">
+    <div class="risk-panel">
+      <div class="risk-panel-title">PE Band 估值位階</div>
+      <div id="risk-pe-list"><div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px">按「AI 基本面分析」載入資料</div></div>
+    </div>
+    <div class="risk-panel">
+      <div class="risk-panel-title">安全邊際警示</div>
+      <div id="risk-margin-list"><div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px">按「AI 基本面分析」載入資料</div></div>
+    </div>
+  </div>
+
+</div>
+
 <!-- ANALYSIS MODAL -->
 <div class="modal-overlay" id="analysis-modal">
   <div class="modal">
@@ -433,6 +501,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.2.0 — 2026-03-11</div>
+        <div class="analysis-text">
+          ✦ 新增「風險總覽」第三個 tab<br>
+          ✦ 產業分布 Treemap（AI 自動分類產業）<br>
+          ✦ PE Band 估值位階卡片（歷史區間 + 當前位置）<br>
+          ✦ 安全邊際警示（距公平價值中位 &lt;20% 標紅）<br>
+          ✦ AI 分析 CD 30分鐘，設定!B6 跨裝置同步<br>
+        </div>
         <div class="analysis-section-title">v3.1.0 — 2026-03-11</div>
         <div class="analysis-text">
           ✦ 估值位階升級為五段：深度低估 / 低估買入 / 合理區間 / 偏高注意 / 高估減碼<br>
@@ -738,7 +814,10 @@ const getSheetId = () => ls('sheet_id')||DEFAULT_SHEET_ID;
 // === INIT ===
 function init() {
   const isPublic = new URLSearchParams(window.location.search).get('view')==='public';
-  if (!isPublic) document.getElementById('tab-holdings').style.display='block';
+  if (!isPublic) {
+    document.getElementById('tab-holdings').style.display='block';
+    document.getElementById('tab-risk').style.display='block';
+  }
   loadGoogleToken();
   renderWatchlist();
   updateStatusBar();
@@ -781,6 +860,7 @@ function showPage(name,btn) {
   document.getElementById('page-'+name).classList.add('active');
   if(btn) btn.classList.add('active');
   if(name==='holdings') loadHoldings();
+  if(name==='risk') initRiskPage();
 }
 
 // === SETTINGS ===
@@ -1908,6 +1988,291 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 ['analysis-modal','settings-modal','thesis-modal','changelog-modal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal(id);});
 });
+
+// === RISK PAGE ===
+const TREEMAP_COLORS = ['#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#facc15','#60a5fa','#4ade80','#f87171','#c084fc'];
+const CD_MINUTES = 30;
+let riskCdInterval = null;
+let riskAiData = null;
+
+function initRiskPage() {
+  renderTreemap();
+  checkRiskCd();
+}
+
+// === Treemap (産業分布) ===
+function renderTreemap() {
+  const container = document.getElementById('treemap-container');
+  const legend = document.getElementById('treemap-legend');
+  if (!holdingsData.length) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:20px">載入持股資料後顯示</div>';
+    return;
+  }
+
+  // Use AI-assigned industries if available, fallback to ticker grouping
+  const industryMap = (riskAiData && riskAiData.industries) ? riskAiData.industries : {};
+
+  // Group holdings by industry
+  const groups = {};
+  holdingsData.forEach(h => {
+    const val = h.price * h.shares * (h.currency === 'USD' ? usdTwd : 1);
+    const industry = industryMap[h.ticker] || '其他';
+    if (!groups[industry]) groups[industry] = { val: 0, tickers: [] };
+    groups[industry].val += val;
+    groups[industry].tickers.push(h.ticker);
+  });
+
+  const totalVal = Object.values(groups).reduce((s, g) => s + g.val, 0);
+  const sorted = Object.entries(groups).sort((a, b) => b[1].val - a[1].val);
+
+  // Simple squarified treemap
+  const W = container.offsetWidth || 600;
+  const H = 280;
+  container.innerHTML = '';
+  container.style.position = 'relative';
+
+  let cells = sorted.map(([name, g], i) => ({
+    name, val: g.val, tickers: g.tickers,
+    pct: totalVal > 0 ? (g.val / totalVal * 100) : 0,
+    color: TREEMAP_COLORS[i % TREEMAP_COLORS.length]
+  }));
+
+  // Slice-and-dice layout (simple row-based)
+  let remaining = [...cells];
+  let y = 0;
+  const totalPct = cells.reduce((s, c) => s + c.pct, 0);
+
+  cells.forEach((cell, i) => {
+    const pct = cell.pct / totalPct;
+    // Use squarified approximation: fill rows
+    const cellW = W * pct;
+    const cellH = H;
+    // Actually do a proper row layout
+  });
+
+  // Simple proportional horizontal slicing
+  let x = 0;
+  cells.forEach((cell, i) => {
+    const w = Math.max((cell.pct / 100) * W, 30);
+    const div = document.createElement('div');
+    div.className = 'treemap-cell';
+    div.style.cssText = `left:${x}px;top:0;width:${w-2}px;height:${H}px;background:${cell.color}22;border-color:${cell.color}55;`;
+    div.innerHTML = `<div class="treemap-label" style="color:${cell.color}">${cell.name}</div><div class="treemap-pct" style="color:${cell.color}">${cell.pct.toFixed(1)}%</div><div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px">${cell.tickers.join(' · ')}</div>`;
+    container.appendChild(div);
+    x += w;
+  });
+
+  // Legend
+  legend.innerHTML = cells.map(c =>
+    `<div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;color:var(--text-secondary)">
+      <div style="width:8px;height:8px;border-radius:2px;background:${c.color};flex-shrink:0"></div>
+      ${c.name} ${c.pct.toFixed(1)}%
+    </div>`
+  ).join('');
+}
+
+// === CD Check ===
+async function checkRiskCd() {
+  const btn = document.getElementById('risk-ai-btn');
+  const status = document.getElementById('risk-ai-status');
+  const fill = document.getElementById('risk-cd-fill');
+
+  // Read last analysis time from Sheets B6
+  const sheetId = getSheetId();
+  const token = googleToken;
+  if (!token || !sheetId) { status.textContent = '請先連結 Google Sheets'; return; }
+
+  try {
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/%E8%A8%AD%E5%AE%9A!B6`, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const data = await res.json();
+    const lastRaw = data.values && data.values[0] && data.values[0][0];
+    if (!lastRaw) { status.textContent = '尚未分析'; btn.disabled = false; return; }
+
+    const last = new Date(lastRaw);
+    const now = new Date();
+    const elapsedMin = (now - last) / 60000;
+    const remaining = CD_MINUTES - elapsedMin;
+
+    if (remaining > 0) {
+      startCdTimer(remaining, last);
+    } else {
+      status.textContent = `上次分析：${last.toLocaleDateString('zh-TW')} ${last.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`;
+      fill.style.width = '0%';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    status.textContent = '尚未分析';
+    btn.disabled = false;
+  }
+}
+
+function startCdTimer(remainingMin, lastDate) {
+  const btn = document.getElementById('risk-ai-btn');
+  const status = document.getElementById('risk-ai-status');
+  const fill = document.getElementById('risk-cd-fill');
+  btn.disabled = true;
+  if (riskCdInterval) clearInterval(riskCdInterval);
+
+  const endTime = new Date(lastDate.getTime() + CD_MINUTES * 60000);
+
+  riskCdInterval = setInterval(() => {
+    const now = new Date();
+    const remMs = endTime - now;
+    if (remMs <= 0) {
+      clearInterval(riskCdInterval);
+      btn.disabled = false;
+      btn.textContent = '⬡ AI 基本面分析';
+      status.textContent = `上次分析：${lastDate.toLocaleDateString('zh-TW')} ${lastDate.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`;
+      fill.style.width = '0%';
+      return;
+    }
+    const remMin = Math.floor(remMs / 60000);
+    const remSec = Math.floor((remMs % 60000) / 1000);
+    btn.textContent = `⏳ CD ${remMin}:${String(remSec).padStart(2,'0')}`;
+    const pct = ((CD_MINUTES * 60000 - remMs) / (CD_MINUTES * 60000)) * 100;
+    fill.style.width = pct + '%';
+    status.textContent = `冷卻中，${remMin}分${remSec}秒後可重新分析`;
+  }, 1000);
+}
+
+async function writeRiskCdTime(isoStr) {
+  const sheetId = getSheetId();
+  const token = googleToken;
+  if (!token || !sheetId) return;
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/%E8%A8%AD%E5%AE%9A!B6?valueInputOption=USER_ENTERED`, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values: [[isoStr]] })
+  });
+}
+
+async function runRiskAnalysis() {
+  const btn = document.getElementById('risk-ai-btn');
+  const status = document.getElementById('risk-ai-status');
+  const apiKey = getApiKey();
+  if (!apiKey) { alert('請先在設定中填入 Anthropic API Key'); return; }
+  if (!holdingsData.length) { alert('請先同步持股資料'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⬡ 分析中...';
+  status.textContent = '正在呼叫 AI，約需 15-20 秒...';
+
+  const tickerList = holdingsData.map(h => `${h.ticker}（現價${h.price}${h.currency==='USD'?'USD':'TWD'}）`).join('、');
+
+  const prompt = `你是一位價值投資分析師。以下是投資組合的持股：${tickerList}
+
+請完成兩件事，只輸出 JSON，不要有任何其他文字：
+
+{
+  "industries": {
+    "TICKER": "產業名稱"
+  },
+  "peAnalysis": [
+    {
+      "ticker": "TICKER",
+      "name": "公司名稱（繁體中文）",
+      "currentPE": 數字或null,
+      "peRangeLow": 數字,
+      "peRangeHigh": 數字,
+      "peBand": "低估|合理|偏高",
+      "fairValueLow": 數字,
+      "fairValueHigh": 數字,
+      "currency": "USD或TWD",
+      "currentPrice": 數字
+    }
+  ]
+}
+
+industries 的產業分類請用繁體中文，例如：半導體、科技平台、消費零售、金融、醫療生技、ETF、槓桿ETF。
+peAnalysis 請根據你的知識給出歷史 PE 區間和公平價值區間估算，若數據不確定請給合理估算範圍。`;
+
+  try {
+    const res = await fetch('https://anthropic-proxy.issac0901.workers.dev/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const tb = data.content.find(b => b.type === 'text');
+    const raw = tb ? tb.text : '';
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('解析失敗');
+    riskAiData = JSON.parse(m[0]);
+
+    // Write CD time to Sheets
+    const now = new Date().toISOString();
+    await writeRiskCdTime(now);
+
+    // Render results
+    renderTreemap();
+    renderPEAnalysis(riskAiData.peAnalysis || []);
+
+    // Start CD
+    startCdTimer(CD_MINUTES, new Date());
+    btn.textContent = '⬡ AI 基本面分析';
+    status.textContent = '分析完成！' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '⬡ AI 基本面分析';
+    status.textContent = '分析失敗：' + e.message;
+  }
+}
+
+function renderPEAnalysis(peList) {
+  const peEl = document.getElementById('risk-pe-list');
+  const marginEl = document.getElementById('risk-margin-list');
+  if (!peList.length) return;
+
+  peEl.innerHTML = peList.map(item => {
+    if (!item.peRangeLow || !item.peRangeHigh) return '';
+    const range = item.peRangeHigh - item.peRangeLow;
+    const pos = item.currentPE && range > 0
+      ? Math.min(Math.max(((item.currentPE - item.peRangeLow) / range) * 100, 0), 100)
+      : 50;
+    const band = item.peBand || '合理';
+    const bandClass = band === '低估' ? 'low' : band === '偏高' ? 'high' : 'mid';
+    const barColor = band === '低估' ? 'var(--green)' : band === '偏高' ? 'var(--red)' : 'var(--yellow)';
+    return `<div class="pe-card">
+      <div class="pe-card-header">
+        <span class="pe-ticker">${item.ticker} <span style="color:var(--text-muted);font-size:10px">${item.name||''}</span></span>
+        <span class="pe-badge ${bandClass}">${band}</span>
+      </div>
+      <div class="pe-bar-wrap">
+        <div class="pe-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red))"></div>
+        <div class="pe-bar-thumb" style="left:${pos}%;background:${barColor}"></div>
+      </div>
+      <div class="pe-range"><span>低 ${item.peRangeLow}x</span><span>${item.currentPE?'現在 '+item.currentPE+'x':''}</span><span>高 ${item.peRangeHigh}x</span></div>
+    </div>`;
+  }).join('');
+
+  // Safety margin
+  marginEl.innerHTML = peList.map(item => {
+    if (!item.fairValueLow || !item.fairValueHigh || !item.currentPrice) return '';
+    const fairMid = (item.fairValueLow + item.fairValueHigh) / 2;
+    const margin = ((fairMid - item.currentPrice) / fairMid * 100);
+    const marginClass = margin >= 20 ? 'safe' : margin >= 0 ? 'warn' : 'danger';
+    const marginLabel = margin >= 20 ? '安全' : margin >= 0 ? '偏低' : '高估';
+    const sign = margin >= 0 ? '+' : '';
+    return `<div class="pe-card">
+      <div class="pe-card-header">
+        <span class="pe-ticker">${item.ticker}</span>
+        <span class="pe-margin ${marginClass}">${sign}${margin.toFixed(1)}% ${marginLabel}</span>
+      </div>
+      <div class="pe-fair" style="color:var(--text-muted)">
+        現價 <strong style="color:var(--text-secondary)">${item.currentPrice} ${item.currency}</strong>
+        ｜公平價值區間 <strong style="color:var(--text-secondary)">${item.fairValueLow}–${item.fairValueHigh} ${item.currency}</strong>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 init();
 </script>
