@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.4.1</title>
+<title>投資儀錶板 v3.5.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -246,7 +246,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.4.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.5.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -500,7 +500,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v3.4.1 — 2026-03-11</div>
+        <div class="analysis-section-title">v3.5.0 — 2026-03-12</div>
+        <div class="analysis-text">
+          ✦ 產業分布 Treemap 加入靜態底層分類 mapping<br>
+          ✦ 涵蓋已持有 + 觀察清單所有標的（半導體 / 科技雲端 / 消費零售 / 金融租賃 / 生技醫療 / 金融科技 / ETF-科技 / ETF-防禦收益 / ETF-主題 / 企業軟體AI / 個股-電力銅礦水管理）<br>
+          ✦ 不需 AI 分析即可顯示產業分布，AI 結果可動態覆蓋
+        </div>
+        <div class="analysis-section-title">v3.4.1 — 2026-03-12</div>
         <div class="analysis-text">
           ✦ 50MA 偏離修正：改為用（現價 - 50MA絕對值）/ 50MA × 100% 計算<br>
           ✦ 趨勢+KD 改為橫向一行：股票名稱｜趨勢｜KD，節省版面
@@ -2025,7 +2031,36 @@ function renderTreemap() {
     return;
   }
 
-  const industryMap = (riskAiData && riskAiData.industries) ? riskAiData.industries : {};
+  // 靜態產業分類（底層預設，AI分析結果可覆蓋）
+  const STATIC_INDUSTRY_MAP = {
+    // 半導體
+    'SMH': '半導體', '2330': '半導體', 'MU': '半導體', 'AMD': '半導體',
+    // 科技雲端
+    'MSFT': '科技雲端', 'GOOG': '科技雲端', 'SNPS': '科技雲端', 'CDNS': '科技雲端',
+    // 消費/零售
+    'COST': '消費零售',
+    // 金融租賃
+    '5871': '金融租賃',
+    // 生技醫療
+    'LLY': '生技醫療', 'UNH': '生技醫療',
+    // 金融科技
+    'SOFI': '金融科技',
+    // ETF-科技
+    'QQQ': 'ETF-科技', '006208': 'ETF-科技',
+    // ETF-防禦/收益
+    'JEPI': 'ETF-防禦收益', 'XLU': 'ETF-防禦收益',
+    // ETF-主題
+    'PHO': 'ETF-主題', 'COPX': 'ETF-主題',
+    // 企業軟體/AI
+    'PLTR': '企業軟體AI',
+    // 個股-電力
+    'VST': '個股-電力',
+    // 個股-銅礦
+    'FCX': '個股-銅礦',
+    // 個股-水管理
+    'ECL': '個股-水管理',
+  };
+  const industryMap = Object.assign({}, STATIC_INDUSTRY_MAP, (riskAiData && riskAiData.industries) ? riskAiData.industries : {});
   const groups = {};
   holdingsData.forEach(h => {
     const val = h.price * h.shares * (h.currency === 'USD' ? usdTwd : 1);
