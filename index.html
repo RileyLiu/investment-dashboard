@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.5.0</title>
+<title>投資儀錶板 v3.6.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -118,7 +118,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 /* HOLDINGS */
 .holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:160px 1fr 240px 140px;gap:20px;align-items:center;cursor:pointer;transition:all 0.2s;}
 .holding-entry:hover{background:var(--bg-card-hover);border-color:var(--border-bright);}
-.holding-entry:hover{border-color:var(--border-bright);background:var(--bg-card-hover);}
 .holding-ticker{font-family:var(--font-mono);font-size:17px;font-weight:600;}
 .holding-name{font-size:12px;color:var(--text-muted);margin-top:2px;}
 .holding-metrics{display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
@@ -128,7 +127,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .pnl-value{font-size:16px;font-weight:600;}
 .pnl-pct{font-size:13px;margin-top:2px;}
 
-/* TECHNICAL INDICATORS (in holding-entry) */
+/* TECHNICAL INDICATORS */
 .tech-col{display:flex;flex-direction:column;gap:5px;width:220px;flex-shrink:0;}
 .tech-row{display:flex;align-items:center;gap:6px;}
 .tech-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;width:72px;flex-shrink:0;}
@@ -144,7 +143,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .risk-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;}
 .risk-item:last-child{border-bottom:none;}
 .risk-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
-/* Risk page */
 .risk-page-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
 .risk-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px;}
 .risk-panel-title{font-family:var(--font-mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:14px;}
@@ -178,6 +176,56 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .risk-cd-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 1s linear;}
 .risk-ai-status{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:6px;min-height:16px;}
 
+/* HEALTH PAGE */
+.health-signals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.signal-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;transition:border-color 0.3s;}
+.signal-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;}
+.signal-card.green{border-color:#34d39940;}
+.signal-card.green::after{background:var(--green);}
+.signal-card.yellow{border-color:#fbbf2440;}
+.signal-card.yellow::after{background:var(--yellow);}
+.signal-card.red{border-color:#f8717140;}
+.signal-card.red::after{background:var(--red);}
+.signal-card.neutral{border-color:var(--border);}
+.signal-card.neutral::after{background:var(--text-muted);}
+.signal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.signal-label{font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);}
+.signal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+.signal-dot.green{background:var(--green);box-shadow:0 0 8px var(--green);}
+.signal-dot.yellow{background:var(--yellow);box-shadow:0 0 8px var(--yellow);}
+.signal-dot.red{background:var(--red);box-shadow:0 0 8px var(--red);}
+.signal-dot.neutral{background:var(--text-muted);}
+.signal-value{font-family:var(--font-mono);font-size:22px;font-weight:600;margin-bottom:4px;}
+.signal-value.green{color:var(--green);}
+.signal-value.yellow{color:var(--yellow);}
+.signal-value.red{color:var(--red);}
+.signal-value.neutral{color:var(--text-secondary);}
+.signal-desc{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.5;}
+.signal-bar{height:3px;background:var(--bg-elevated);border-radius:2px;margin-top:10px;overflow:hidden;}
+.signal-bar-fill{height:100%;border-radius:2px;transition:width 0.6s ease;}
+
+/* VALUATION ANOMALY */
+.val-anomaly-list{display:flex;flex-direction:column;gap:8px;}
+.val-anomaly-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;}
+.val-anomaly-ticker{font-family:var(--font-mono);font-size:13px;font-weight:600;}
+.val-anomaly-detail{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+.val-anomaly-pct{font-family:var(--font-mono);font-size:12px;font-weight:600;}
+
+/* ACTION PLAN */
+.action-plan-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.action-priority{margin-bottom:16px;padding:14px 16px;border-radius:8px;border-left:3px solid;}
+.action-priority.urgent{background:#f8717110;border-color:var(--red);}
+.action-priority.secondary{background:#fbbf2410;border-color:var(--yellow);}
+.action-priority.hold{background:#34d39910;border-color:var(--green);}
+.action-priority.wait{background:#38bdf810;border-color:var(--accent);}
+.action-priority-title{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+.action-priority.urgent .action-priority-title{color:var(--red);}
+.action-priority.secondary .action-priority-title{color:var(--yellow);}
+.action-priority.hold .action-priority-title{color:var(--green);}
+.action-priority.wait .action-priority-title{color:var(--accent);}
+.action-item{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);line-height:1.7;padding:3px 0;}
+.action-item::before{content:'→ ';}
+
 .sync-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;margin-bottom:20px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
 .sync-banner.synced{border-color:var(--green-dim);color:var(--green);}
 .sync-banner.error{border-color:var(--red-dim);color:var(--red);}
@@ -209,7 +257,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg-base);}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:3px;}
 .text-green{color:var(--green)}.text-red{color:var(--red)}.text-yellow{color:var(--yellow)}.text-accent{color:var(--accent)}.text-purple{color:var(--purple)}
 
-/* RESPONSIVE */
 @media (max-width: 640px) {
   nav{height:auto;padding:8px 12px;flex-wrap:wrap;gap:6px;}
   .nav-brand{font-size:12px;margin-right:0;width:100%;}
@@ -228,6 +275,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   .chart-wrap{height:180px;}
   .watchlist-grid{grid-template-columns:1fr;gap:10px;}
   .risk-grid{grid-template-columns:1fr !important;gap:8px;}
+  .health-signals-grid{grid-template-columns:1fr 1fr;gap:8px;}
   .holding-entry{grid-template-columns:1fr auto;gap:10px;padding:12px;}
   .holding-entry .tech-col{display:none;}
   .section-header{margin-bottom:10px;}
@@ -240,16 +288,18 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   .holding-entry{grid-template-columns:140px 1fr 200px 120px;}
   .charts-row{grid-template-columns:1fr 1fr;}
   .risk-grid{grid-template-columns:1fr 1fr 1fr;}
+  .health-signals-grid{grid-template-columns:repeat(3,1fr);}
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.5.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.6.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
+    <button class="nav-tab" id="tab-health" onclick="showPage('health',this)" style="display:none">配置健診</button>
     <button class="nav-tab" id="tab-risk" onclick="showPage('risk',this)" style="display:none">風險總覽</button>
   </div>
   <div class="nav-right">
@@ -263,7 +313,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <main>
 <!-- WATCHLIST PAGE -->
 <div class="page active" id="page-watchlist">
-  <!-- 第一排：VIX + 可部署子彈 各50% -->
   <div class="section-header"><span class="section-label">配置進度</span><div class="section-line"></div></div>
   <div class="alloc-row-top" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
     <div id="vix-bar" style="display:flex;align-items:center;gap:8px;padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">
@@ -277,7 +326,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="progress-bar"><div class="progress-fill" id="alloc-cash-bar" style="width:0%;background:var(--green)"></div></div>
     </div>
   </div>
-  <!-- 第二排：成長型股票 + 持有ETF 各50% -->
   <div class="alloc-row-bot" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
     <div class="alloc-card">
       <div class="alloc-label">成長型股票</div>
@@ -293,7 +341,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
   </div>
   <div class="section-header"><span class="section-label">觀察清單</span><div class="section-line"></div></div>
-  <!-- 觀察清單分兩欄：左個股 / 右ETF & 波段 -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
     <div>
       <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase">個股</div>
@@ -338,7 +385,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="chart-wrap"><canvas id="chart-stocks"></canvas></div>
     </div>
   </div>
-  <!-- 資產成長曲線 -->
   <div id="growth-chart-section" style="display:none;margin-bottom:24px">
     <div class="section-header"><span class="section-label">資產成長曲線</span><div class="section-line"></div></div>
     <div class="chart-card" style="padding:20px">
@@ -367,12 +413,54 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   </div>
   <div id="holdings-list"></div>
 </div>
+
+<!-- HEALTH PAGE -->
+<div class="page" id="page-health" style="padding:0;">
+  <div style="padding:16px 0 0 0;max-width:1400px;margin:0 auto;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div class="section-header" style="margin-bottom:0;flex:1"><span class="section-label">配置健診</span><div class="section-line"></div></div>
+    </div>
+
+    <!-- Signal Cards -->
+    <div class="section-header"><span class="section-label">燈號總覽</span><div class="section-line"></div></div>
+    <div class="health-signals-grid" id="health-signals-grid">
+      <div class="signal-card neutral">
+        <div class="signal-top"><span class="signal-label">載入中</span><div class="signal-dot neutral"></div></div>
+        <div class="signal-value neutral">—</div>
+        <div class="signal-desc">請先同步持股資料</div>
+      </div>
+    </div>
+
+    <!-- Valuation Anomaly -->
+    <div class="section-header" style="margin-top:8px"><span class="section-label">估值異常持倉</span><div class="section-line"></div></div>
+    <div id="health-val-anomaly" style="margin-bottom:24px">
+      <div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">請先同步持股資料</div>
+    </div>
+
+    <!-- Action Plan -->
+    <div class="section-header">
+      <span class="section-label">本月行動計畫</span>
+      <div class="section-line"></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:16px;flex-shrink:0">
+        <button class="risk-ai-btn" id="health-ai-btn" onclick="runHealthAnalysis()">⬡ 產出本月行動計畫</button>
+        <div class="risk-cd-bar" style="width:180px"><div class="risk-cd-fill" id="health-cd-fill" style="width:0%"></div></div>
+        <div class="risk-ai-status" id="health-ai-status">尚未分析</div>
+      </div>
+    </div>
+    <div id="health-action-plan" style="margin-bottom:24px">
+      <div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center;line-height:2">
+        按下「產出本月行動計畫」<br>AI 會根據燈號狀態、可用子彈與估值位階<br>給出具體的優先行動清單
+      </div>
+    </div>
+
+  </div>
+</div>
 </main>
 
 <!-- RISK PAGE -->
 <div class="page" id="page-risk" style="padding:16px 20px;max-width:1400px;margin:0 auto;">
-
-  <!-- Header with AI button -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div class="section-header" style="margin-bottom:0;flex:1"><span class="section-label">風險總覽</span><div class="section-line"></div></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:16px;">
@@ -381,15 +469,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="risk-ai-status" id="risk-ai-status">尚未分析</div>
     </div>
   </div>
-
-  <!-- Row 1: Treemap (full width) -->
   <div class="risk-panel risk-panel-full" style="margin-bottom:16px;">
     <div class="risk-panel-title">產業分布</div>
     <div id="treemap-container"></div>
     <div id="treemap-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"></div>
   </div>
-
-  <!-- Row 2: PE Band + Safety Margin -->
   <div class="risk-page-grid">
     <div class="risk-panel">
       <div class="risk-panel-title">PE Band 估值位階</div>
@@ -400,7 +484,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div id="risk-margin-list"><div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px">按「AI 基本面分析」載入資料</div></div>
     </div>
   </div>
-
 </div>
 
 <!-- ANALYSIS MODAL -->
@@ -500,231 +583,69 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.6.0 — 2026-03-16</div>
+        <div class="analysis-text">
+          ✦ 新增「配置健診」第三個 tab（插在風險總覽左側）<br>
+          ✦ 六燈號系統：集中度 / 地區＋美元曝險 / 槓桿風險 / 現金水位 / ETF進度 / 估值健康度<br>
+          ✦ 所有燈號純 JS 計算，不耗 token<br>
+          ✦ 估值異常持倉列表：自動列出 valTier=warn/high 的持倉<br>
+          ✦ 本月行動計畫：AI 根據燈號狀態+子彈金額+估值位階輸出優先行動清單<br>
+          ✦ CD 30 分鐘，狀態存 設定!B8（獨立於風險總覽 B6）
+        </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.5.0 — 2026-03-12</div>
         <div class="analysis-text">
           ✦ 產業分布 Treemap 加入靜態底層分類 mapping<br>
-          ✦ 涵蓋已持有 + 觀察清單所有標的（半導體 / 科技雲端 / 消費零售 / 金融租賃 / 生技醫療 / 金融科技 / ETF-科技 / ETF-防禦收益 / ETF-主題 / 企業軟體AI / 個股-電力銅礦水管理）<br>
           ✦ 不需 AI 分析即可顯示產業分布，AI 結果可動態覆蓋
         </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.4.1 — 2026-03-12</div>
         <div class="analysis-text">
           ✦ 50MA 偏離修正：改為用（現價 - 50MA絕對值）/ 50MA × 100% 計算<br>
           ✦ 趨勢+KD 改為橫向一行：股票名稱｜趨勢｜KD，節省版面
         </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.4.0 — 2026-03-11</div>
         <div class="analysis-text">
-          ✦ 技術監控擴展為三欄：200MA偏離 / 50MA偏離 / 趨勢+KD判斷<br>
-          ✦ 200MA、50MA 改為正值大到小排序（超買在上，超賣在下）<br>
-          ✦ 趨勢判斷、KD判斷從 Sheets D、E 欄讀取，顏色自動對應
+          ✦ 技術監控擴展為三欄：200MA偏離 / 50MA偏離 / 趨勢+KD判斷
         </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.3.0 — 2026-03-11</div>
         <div class="analysis-text">
-          ✦ Treemap 改為真正二維 Squarified 矩形演算法<br>
-          ✦ Treemap 字體放大，小格子自適應顯示<br>
-          ✦ PE Band ETF 改顯示 52週位置替代 PE<br>
-          ✦ 持股管理「風險監控」改名「技術監控」，只保留 200MA 偏離
+          ✦ Treemap 改為真正二維 Squarified 矩形演算法
         </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.2.0 — 2026-03-11</div>
         <div class="analysis-text">
           ✦ 新增「風險總覽」第三個 tab<br>
-          ✦ 產業分布 Treemap（AI 自動分類產業）<br>
-          ✦ PE Band 估值位階卡片（歷史區間 + 當前位置）<br>
-          ✦ 安全邊際警示（距公平價值中位 &lt;20% 標紅）<br>
-          ✦ AI 分析 CD 30分鐘，設定!B6 跨裝置同步
+          ✦ 產業分布 Treemap / PE Band / 安全邊際警示
         </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.1.0 — 2026-03-11</div>
         <div class="analysis-text">
-          ✦ 估值位階升級為五段：深度低估 / 低估買入 / 合理區間 / 偏高注意 / 高估減碼<br>
-          ✦ 判斷基準改為合理股價（G3）× 0.7 / 0.85 / 1.1 / 1.25
+          ✦ 估值位階升級為五段：深度低估 / 低估買入 / 合理區間 / 偏高注意 / 高估減碼
         </div>
-        <div class="analysis-section-title">v3.1.0 — 2026-03-11</div>
-        <div class="analysis-text">
-          ✦ 決策標準顏色判斷修正：移除 emoji 干擾，純中文關鍵字比對<br>
-          ✦ 估值位階確認五段：深度低估 / 低估買入 / 合理區間 / 偏高注意 / 高估減碼
-        </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.0.0 — 2026-03-11</div>
         <div class="analysis-text">
-          ✦ 持股列表 grid 修正，字體放大不跑版<br>
-          ✦ 圓餅圖 tooltip 加入配置金額（NT$X萬）
-        </div>
-        <div class="analysis-section-title">v2.9.0 — 2026-03-11</div>
-        <div class="analysis-text">
-          ✦ 持股列表字體放大 ~110%<br>
-          ✦ 圖表圖例字體放大，個股持倉圖例改為兩行顯示
-        </div>
-        <div class="analysis-section-title">v2.8.0 — 2026-03-11</div>
-        <div class="analysis-text">
-          ✦ 上傳按鈕加入 120 秒冷卻，防止手癢重複觸發
-        </div>
-        <div class="analysis-section-title">v2.7.0 — 2026-03-11</div>
-        <div class="analysis-text">
-          ✦ 測試自動部署流程
-        </div>
-        <div class="analysis-section-title">v2.6.0 — 2026-03-11</div>
-        <div class="analysis-text">
-          ✦ VIX 區塊：市場警戒 / 數值全部改為同色（黃/紅/綠）<br>
-          ✦ 操作提示移至第二行顯示
-        </div>
-        <div class="analysis-section-title">v2.5.0 — 2026-03-10</div>
-        <div class="analysis-text">
-          ✦ 部署改用 Google Drive：繞過 Sheets 50000 字元限制<br>
-          ✦ 「立即上傳」→ 寫進 Drive portfolio_deploy.html → GAS 自動 push<br>
-          ✦ OAuth scope 新增 drive.file 權限（需重新授權）
-        </div>
-        <div class="analysis-section-title">v2.4.0 — 2026-03-10</div>
-        <div class="analysis-text">
-          ✦ 全自動部署：「立即上傳」改為寫入 Google Sheets 設定!C1<br>
-          ✦ GAS 偵測 C1 有內容 → 自動 push 到 GitHub Pages<br>
-          ✦ 完全不需手動操作
-        </div>
-        <div class="analysis-section-title">v2.3.0 — 2026-03-10</div>
-        <div class="analysis-text">
-          ✦ GitHub PAT 改從 Google Sheets「設定」分頁 B1 讀取，跨裝置同步<br>
-          ✦ sync 時自動載入 PAT，無需每台電腦手動設定
-        </div>
-        <div class="analysis-section-title">v2.2.0 — 2026-03-10</div>
-        <div class="analysis-text">
-          ✦ GitHub 自動上傳：Settings 新增 PAT 欄位，儲存後可一鍵 push 到 GitHub Pages<br>
-          ✦ 新增「立即上傳至 GitHub」按鈕<br>
-          ✦ 上傳成功 / 失敗 toast 提示
-        </div>
-        <div class="analysis-section-title">v2.1.0 — 2026-03-10</div>
-        <div class="analysis-text">
-          ✦ 版面重排：VIX + 可部署子彈同一排各50%<br>
-          ✦ 版面重排：成長型股票 + 持有ETF同一排各50%<br>
-          ✦ 觀察清單分兩欄：左側個股 / 右側ETF & 波段<br>
-          ✦ 排除清單：IX0001 等指數型代號不再進入觀察清單
+          ✦ 持股列表 grid 修正，字體放大不跑版
         </div>
       </div>
       <div class="analysis-section">
-        <div class="analysis-section-title">v2.0.0 — 2026-03-10</div>
+        <div class="analysis-section-title">v2.x — 2026-03-10</div>
         <div class="analysis-text">
-          ✦ 觀察清單完全動態化：掃描 Sheets G 欄自動建立，不再寫死<br>
-          ✦ 排除已持股標的，觀察清單只顯示尚未建倉的股票<br>
-          ✦ 自動判斷類型：Yahoo Finance quoteType 識別 ETF/個股，longName 含 2x/3x/leveraged 識別為波段<br>
-          ✦ DCF 分頁對應改為動態推斷，新增個股無需修改程式碼<br>
-          ✦ 同步狀態列顯示觀察清單股票數量
+          ✦ 全自動部署 / Google Drive / 配置進度動態化 / 觀察清單完全動態化
         </div>
       </div>
       <div class="analysis-section">
-        <div class="analysis-section-title">v1.9.0 — 2026-03-10</div>
-        <div class="analysis-text">
-          ✦ 觀察清單：決策標準直接顯示 Sheets G4 文字，不再自行計算<br>
-          ✦ 觀察清單：安全邊際改用 G3（DCF合理股價）統一計算<br>
-          ✦ 觀察清單：決策標準顏色正確對應賣出/建倉/持有/觀望<br>
-          ✦ 配置進度：現金水位改從 TTO（B7）動態抓取，不再寫死<br>
-          ✦ 配置進度：成長型/ETF 目標金額以 TTO × 目標比例計算<br>
-          ✦ 配置進度：保留現金從 C8 動態抓取
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.8.2 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ 儲存買入論文時自動同步寫入 Google Sheets「論文庫」分頁<br>
-          ✦ 欄位：代號 / 買入論文 / 賣出觸發條件 / 論文狀態<br>
-          ✦ 為 Gmail 週報 Apps Script 讀取論文資料做準備
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.8.1 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ 資產成長曲線加入「目標年末」黃色虛線（來源：財富規劃分頁第18行）<br>
-          ✦ 顯示近5年目標錨點（2026-2030），一眼看出超前或落後進度<br>
-          ✦ 單位統一：財富規劃元 → 萬TWD 換算後與實際線對齊
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.8.0 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ 資產成長曲線：每次同步自動寫入「資產快照」分頁，同一天只寫一次<br>
-          ✦ 持股管理頁新增折線圖，顯示歷史總資產（萬TWD）變化趨勢<br>
-          ✦ 快照欄位：日期 / 總資產 / 美股損益 / 台股損益 / VIX<br>
-          ✦ 資料存 Google Sheets，換裝置也能同步查看<br>
-          ✦ OAuth scope 升級為讀寫權限（spreadsheets）
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.7.2 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ DCF 現價修正：從 G2 抓（非 F2）<br>
-          ✦ 安全邊際動態計算：(G3合理股價 - G2現價) / G2現價<br>
-          ✦ 估值位階動態判斷：現價 vs 保守/合理價自動分低估/合理/高估<br>
-          ✦ ETF/波段（SMH/TQQQ）52週資料從 Yahoo Finance 即時抓，頁面載入自動執行<br>
-          ✦ VIX 狀態列文字全部改為 18px<br>
-          ✦ 持股管理左側欄位固定寬度，解決現價跑版問題
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.7.1 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ 修正 renderWatchlist bug（stock → s）觀察清單恢復正常<br>
-          ✦ VIX 載入失敗時顯示提示文字<br>
-          ✦ 持股管理列表佈局重排：技術指標移至中右欄、損益獨立最右欄
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.7.0 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ SMH/TQQQ watchlist 卡片改顯示52週高低橫條（移除「尚無DCF資料」）<br>
-          ✦ 觀察清單個股安全邊際改為動態計算：(DCF合理價-現價)/現價<br>
-          ✦ DCF 橫條現價修正：優先從持股資訊即時現價抓，fallback DCF分頁<br>
-          ✦ 持股管理右側技術指標欄位對齊修正<br>
-          ✦ VIX 從 Cloudflare Worker 自動抓取（頁面載入即顯示，不需同步Sheets）
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.6.0 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ VIX 恐慌指數狀態列（觀察清單頁頂部，從 Sheets G10 即時抓取）<br>
-          ✦ DCF 欄位修正：決策標準改抓 G4，價格帶改抓 J2/J3/J4<br>
-          ✦ 6669 DCF 分頁名稱修正（對應 6669(緯穎)）<br>
-          ✦ SMH/TQQQ 安全邊際改為52週動態位置計算<br>
-          ✦ 持股列表欄位對齊修正（現價/技術指標三欄固定寬度）<br>
-          ✦ 移除買入論文欄位顯示、移除能力圈與護城河卡片<br>
-          ✦ 技術指標更名：52周高低 / 200MA偏離度（三欄對齊）<br>
-          ✦ 信仰檢核：持股顯示天數倒數，Thesis Modal 加入標記按鈕<br>
-          ✦ Prompt 強化：整合 GEM 六大框架（反向思考/Lollapalooza/具體點位/管理層）<br>
-          ✦ API 改走 Cloudflare Proxy
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.4.0 — 2026-03-08</div>
-        <div class="analysis-text">
-          ✦ 觀察清單新增 DCF 估值橫條（保守/合理/樂觀價格帶，現價位置標示）<br>
-          ✦ 自動偵測試算表 DCF 分頁（依代號或自訂名稱對應）<br>
-          ✦ 持股列表新增技術指標欄（PE位階 / 52週位置 / 200MA偏離度）<br>
-          ✦ 持股欄位對齊優化，消除空白<br>
-          ✦ 損益格式統一：台股 NT$ / 美股 US$<br>
-          ✦ 風險監控區塊動態化（集中度/估值/前3大持股自動計算）<br>
-          ✦ 移除 Lollapalooza 區塊<br>
-          ✦ 配置進度卡片動態化（ID 化，便於 JS 更新）
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.3.0 — 2026-03-10</div>
-        <div class="analysis-text">
-          ✦ 匯率動態化：從 Google Sheets 即時抓取 CURRENCY:USDTWD<br>
-          ✦ 配置進度卡片動態化：自動計算總現金、可部署子彈<br>
-          ✦ 加入版本號顯示與 Changelog
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.2.0 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ 損益排序：台幣換算後由高到低<br>
-          ✦ 顏色台灣習慣：紅=獲利、綠=虧損<br>
-          ✦ 圓餅圖 tooltip 改為百分比<br>
-          ✦ 台股個股顯示中文名稱
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.1.0 — 2026-03-09</div>
-        <div class="analysis-text">
-          ✦ 總損益橫幅卡片 / 圓餅圖 / 響應式設計 / 字體放大
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v1.0.0 — 2026-03-08</div>
+        <div class="analysis-section-title">v1.x — 2026-03-08~09</div>
         <div class="analysis-text">
           ✦ 初始版本：Google Sheets OAuth / 觀察清單 / AI分析 / 持股管理 / GitHub Pages
         </div>
@@ -739,7 +660,7 @@ const GOOGLE_CLIENT_ID = '956633966031-5sek3munlvoif3nbt0kr1qo52c5k8krk.apps.goo
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 const SHEET_NAME = '持股資訊';
 const DEFAULT_SHEET_ID = '1wSie_fKvkfJKXT6WSQh3VSsyzdnCJKRv10DrJMU5F80';
-let githubPAT = null; // 從 設定!B1 讀取
+let githubPAT = null;
 
 const COLS = { ticker:5, fullCode:6, name:7, shares:10, cost:11, price:13,
                ma200pct:15, ma50pct:2, trend:3, kd:4,
@@ -749,40 +670,27 @@ const TW_TICKERS  = ['2330','6669','5871','006208','IX0001','新立資訊'];
 const TW_NAMES = {'2330':'台積電','6669':'緯穎','5871':'中租KY','006208':'富邦台50','0050':'元大台灣50'};
 const CASH_ROWS = ['中信銀','DH投','NNB','Richart','日美韓幣持有'];
 const ALLOC_ROWS = { growth:'成長型股票', etf:'持有ETF', cash:'現金' };
+const WATCHLIST_EXCLUDE = ['IX0001','TWSE','SPX','NDX','DJI','VIX'];
 
-// DCF 分頁名稱對應（動態從 sheetTabNames 推斷）
-// 格式：分頁名稱若含 ticker 就視為該 ticker 的 DCF 分頁
-function getDCFSheetName(ticker) {
-  // 優先完全匹配
-  if(sheetTabNames.includes(ticker)) return ticker;
-  // 次優：分頁名稱包含 ticker（如 '6669(緯穎)'）
-  const match = sheetTabNames.find(n => n.includes(ticker));
-  return match || null;
-}
-
-// === WATCHLIST（動態，從 Sheets G 欄建立）===
+// === WATCHLIST ===
 let WATCHLIST = [];
 
-// 從 Sheets rows 的 G 欄解析觀察清單（排除已持股）
 async function buildWatchlistFromSheets(rows) {
   const heldTickers = new Set(holdingsData.map(h => h.ticker.toUpperCase()));
   const seen = new Set();
   const candidates = [];
-
   for(const row of rows) {
-    const fullCode = (row[6]||'').trim(); // G欄 代號全名，如 NASDAQ:AMD
-    const displayName = (row[7]||'').trim(); // H欄 名稱
+    const fullCode = (row[6]||'').trim();
+    const displayName = (row[7]||'').trim();
     if(!fullCode || !fullCode.includes(':')) continue;
     const ticker = fullCode.split(':').pop().trim().toUpperCase();
     if(!ticker || ticker.length < 1) continue;
-    if(WATCHLIST_EXCLUDE.includes(ticker)) continue; // 排除指數型代號
-    if(heldTickers.has(ticker)) continue; // 已持股，跳過
+    if(WATCHLIST_EXCLUDE.includes(ticker)) continue;
+    if(heldTickers.has(ticker)) continue;
     if(seen.has(ticker)) continue;
     seen.add(ticker);
     candidates.push({ ticker, displayName });
   }
-
-  // 批次查詢 Worker 取得 quoteType + longName
   const results = [];
   for(const c of candidates) {
     try {
@@ -794,27 +702,12 @@ async function buildWatchlistFromSheets(rows) {
       if(isLeveraged) type = 'wave';
       else if(q.quoteType === 'ETF') type = 'etf';
       const name = c.displayName || q.longName || c.ticker;
-      results.push({
-        ticker: c.ticker,
-        name,
-        type,
-        ability: 'know',
-        moat: type === 'value' ? '🟡' : '—',
-        trend: '—',
-        val: 'mid',
-        mos: type === 'value' ? 'dynamic' : 'dynamic',
-      });
-      // 同時填充 dcfCache 的 ETF/波段行情
+      results.push({ ticker: c.ticker, name, type, ability: 'know', moat: type === 'value' ? '🟡' : '—', trend: '—', val: 'mid', mos: type === 'value' ? 'dynamic' : 'dynamic' });
       if((type === 'etf' || type === 'wave') && q.price && q.low52 && q.high52) {
         dcfCache[c.ticker] = { currentPrice: q.price, w52low: q.low52, w52high: q.high52, isETF: true };
       }
     } catch(e) {
-      // 抓取失敗仍加入，類型預設 value
-      results.push({
-        ticker: c.ticker,
-        name: c.displayName || c.ticker,
-        type: 'value', ability: 'know', moat: '🟡', trend: '—', val: 'mid', mos: 'dynamic',
-      });
+      results.push({ ticker: c.ticker, name: c.displayName || c.ticker, type: 'value', ability: 'know', moat: '🟡', trend: '—', val: 'mid', mos: 'dynamic' });
     }
   }
   WATCHLIST = results;
@@ -823,12 +716,13 @@ async function buildWatchlistFromSheets(rows) {
 // === STATE ===
 let googleToken = null;
 let holdingsData = [];
+let currentMeta = null;
 let currentTicker = null;
 let currentThesisTicker = null;
 let thesisStatus = 'yes';
 let usdTwd = 32;
-let dcfCache = {}; // ticker → dcf data
-let sheetTabNames = []; // all tab names from spreadsheet
+let dcfCache = {};
+let sheetTabNames = [];
 
 // === LOCALSTORAGE ===
 const ls = (k,v) => v===undefined ? localStorage.getItem(k) : (v===null ? localStorage.removeItem(k) : localStorage.setItem(k,v));
@@ -840,18 +734,18 @@ function init() {
   const isPublic = new URLSearchParams(window.location.search).get('view')==='public';
   if (!isPublic) {
     document.getElementById('tab-holdings').style.display='block';
+    document.getElementById('tab-health').style.display='block';
     document.getElementById('tab-risk').style.display='block';
   }
   loadGoogleToken();
   renderWatchlist();
   updateStatusBar();
   fetchVIX();
-  fetchETFQuotes(); // 不需登入，直接抓 ETF/波段
+  fetchETFQuotes();
   if (googleToken) fetchAllDCF();
 }
 
 async function fetchETFQuotes() {
-  // 登入前 WATCHLIST 為空，靜默跳過
   if(!WATCHLIST.length) return;
   for(const s of WATCHLIST) {
     if(s.type === 'etf' || s.type === 'wave') {
@@ -861,7 +755,7 @@ async function fetchETFQuotes() {
         if(q.price && q.low52 && q.high52) {
           dcfCache[s.ticker] = { currentPrice: q.price, w52low: q.low52, w52high: q.high52, isETF: true };
         }
-      } catch(e) { console.log('ETF quote failed:', s.ticker); }
+      } catch(e) {}
     }
   }
   renderWatchlist();
@@ -885,6 +779,7 @@ function showPage(name,btn) {
   if(btn) btn.classList.add('active');
   if(name==='holdings') loadHoldings();
   if(name==='risk') initRiskPage();
+  if(name==='health') initHealthPage();
 }
 
 // === SETTINGS ===
@@ -914,7 +809,6 @@ function saveSettings() {
 
 // === GITHUB AUTO PUSH ===
 async function pushToGitHub() {
-  // Cooldown 120 秒防止重複按
   const btn = document.getElementById('btn-push-github');
   if(btn && btn.disabled) return;
   if(btn) {
@@ -935,11 +829,7 @@ async function pushToGitHub() {
       }
     }, 1000);
   }
-  // 把目前頁面 HTML 上傳到 Google Drive，由 GAS 接手 push 到 GitHub
-  if(!googleToken) {
-    showToast('⚠️ 請先連結 Google 帳號');
-    return;
-  }
+  if(!googleToken) { showToast('⚠️ 請先連結 Google 帳號'); return; }
   try {
     showToast('⏳ 正在準備部署...');
     const html = document.documentElement.outerHTML;
@@ -954,17 +844,12 @@ async function pushToGitHub() {
       body: formData
     });
     if(res.ok) {
-      console.log('[GitHub] ✅ HTML 已上傳至 Google Drive，GAS 將自動 push');
       showToast('✅ 已觸發自動部署，約 1 分鐘後 GitHub Pages 更新');
     } else {
       const err = await res.json();
-      console.error('[GitHub] Drive 上傳失敗:', err);
       showToast('⚠️ 上傳失敗：' + (err.error?.message || '未知錯誤'));
     }
-  } catch(e) {
-    console.error('[GitHub] 錯誤:', e);
-    showToast('⚠️ 部署觸發失敗');
-  }
+  } catch(e) { showToast('⚠️ 部署觸發失敗'); }
 }
 
 function showToast(msg) {
@@ -1026,7 +911,7 @@ async function fetchSheetRows() {
     if(res.status===401){ googleToken=null; ls('google_token',null); ls('google_token_exp',null); updateStatusBar(); return null; }
     const data=await res.json();
     return data.values||[];
-  } catch(e){ console.error(e); return null; }
+  } catch(e){ return null; }
 }
 
 async function fetchSheetTabNames() {
@@ -1048,31 +933,31 @@ async function fetchDCFSheet(sheetName) {
     if(!res.ok) return null;
     const data=await res.json();
     const rows=data.values||[];
-    // 欄位對應（抓 F2:J5，所以 index 從0開始）
-    // row[0] = 第2行：F2=現價label, G2=現價數值, ..., J2=保守估計
-    // row[1] = 第3行：F3=合理股價label, G3=合理股價數值, ..., J3=合理預估
-    // row[2] = 第4行：F4=決策標準label, G4=決策標準, ..., J4=樂觀溢價
     const parseN = s => parseFloat((s||'').replace(/,/g,'').replace(/[^\d.-]/g,''))||0;
-    const currentPrice = parseN(rows[0]?.[1]); // G2 現價
-    const fairPrice    = parseN(rows[1]?.[1]); // G3 合理股價
-    const decision     = (rows[2]?.[1]||'').trim(); // G4 決策標準
-    const conservative = parseN(rows[0]?.[4]); // J2 保守估計
-    const fair         = parseN(rows[1]?.[4]); // J3 合理預估
-    const optimistic   = parseN(rows[2]?.[4]); // J4 樂觀溢價
+    const currentPrice = parseN(rows[0]?.[1]);
+    const fairPrice    = parseN(rows[1]?.[1]);
+    const decision     = (rows[2]?.[1]||'').trim();
+    const conservative = parseN(rows[0]?.[4]);
+    const fair         = parseN(rows[1]?.[4]);
+    const optimistic   = parseN(rows[2]?.[4]);
     if(!conservative && !fair && !optimistic) return null;
-    // 安全邊際：(G3合理股價 - G2現價) / G2現價
     const mos = currentPrice > 0 ? ((fairPrice - currentPrice) / currentPrice * 100) : null;
-    // 估值位階：動態判斷
     let valTier = 'mid';
     if(currentPrice > 0 && fairPrice > 0) {
-      if(currentPrice < fairPrice * 0.7)       valTier = 'deep';
-      else if(currentPrice < fairPrice * 0.85) valTier = 'low';
-      else if(currentPrice <= fairPrice * 1.1) valTier = 'mid';
+      if(currentPrice < fairPrice * 0.7)        valTier = 'deep';
+      else if(currentPrice < fairPrice * 0.85)  valTier = 'low';
+      else if(currentPrice <= fairPrice * 1.1)  valTier = 'mid';
       else if(currentPrice <= fairPrice * 1.25) valTier = 'warn';
-      else                                      valTier = 'high';
+      else                                       valTier = 'high';
     }
     return { conservative, fair, optimistic, currentPrice, fairPrice, decision, mos, valTier };
   } catch(e){ return null; }
+}
+
+function getDCFSheetName(ticker) {
+  if(sheetTabNames.includes(ticker)) return ticker;
+  const match = sheetTabNames.find(n => n.includes(ticker));
+  return match || null;
 }
 
 async function fetchAllDCF() {
@@ -1080,21 +965,14 @@ async function fetchAllDCF() {
   sheetTabNames = await fetchSheetTabNames();
   for(const s of WATCHLIST) {
     if(s.type === 'etf' || s.type === 'wave') {
-      // ETF/波段：從 Yahoo Finance 抓即時52週資料
       try {
         const res = await fetch(`https://anthropic-proxy.issac0901.workers.dev/quote/${s.ticker}`);
         const q = await res.json();
         if(q.price && q.low52 && q.high52) {
-          dcfCache[s.ticker] = {
-            currentPrice: q.price,
-            w52low: q.low52,
-            w52high: q.high52,
-            isETF: true
-          };
+          dcfCache[s.ticker] = { currentPrice: q.price, w52low: q.low52, w52high: q.high52, isETF: true };
         }
-      } catch(e) { console.log('Quote fetch failed:', s.ticker, e); }
+      } catch(e) {}
     } else {
-      // 個股：從 DCF 分頁抓
       const sheetName = getDCFSheetName(s.ticker);
       if(sheetName && sheetTabNames.includes(sheetName)) {
         const d = await fetchDCFSheet(sheetName);
@@ -1116,11 +994,8 @@ function parseMeta(rows) {
     const iVal=(row[8]||'').trim();
     const gVal=parseFloat((row[6]||'').replace(/,/g,''));
     if(fVal>25&&fVal<45) usdTwd=fVal;
-    // B2:B6 各銀行現金加總 → 可部署子彈用
     if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0) pureCash+=bVal;
-    // TTO 行 → 配置進度目標用
     if(label==='TTO'&&!isNaN(bVal)&&bVal>0) tto=bVal;
-    // 現金行 C欄 = 保留現金
     if(label==='現金'&&!isNaN(cVal)&&cVal>0) reserveCash=cVal;
     if(label===ALLOC_ROWS.growth&&!isNaN(bVal)) growthTarget=bVal/100;
     if(label===ALLOC_ROWS.etf&&!isNaN(bVal)) etfTarget=bVal/100;
@@ -1148,7 +1023,6 @@ function parseHoldings(rows) {
     const name=(row[COLS.name]||row[COLS.fullCode]||ticker).trim().split('\n')[0];
     const type=ticker==='TQQQ'?'wave':ETF_TICKERS.includes(ticker)?'etf':'growth';
     const currency=TW_TICKERS.includes(ticker)?'TWD':'USD';
-    // Technical indicators
     const ma200pct = parseFloat((row[COLS.ma200pct]||'').replace(/%/g,'').replace(/,/g,''))||null;
     const ma50raw  = parseFloat((row[COLS.ma50pct]||'').replace(/,/g,''))||null;
     const ma50pct  = (ma50raw && price) ? parseFloat(((price - ma50raw) / ma50raw * 100).toFixed(2)) : null;
@@ -1176,47 +1050,37 @@ async function syncSheets() {
     banner.innerHTML=`<div class="sync-banner error">⚠ 同步失敗，Token 可能已過期，請重新授權 <button class="btn-nav" style="margin-left:auto;font-size:9px" onclick="openSettings()">重新授權</button></div>`;
     return;
   }
-  // 讀取 設定!B1 GitHub PAT
   try {
     const patRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B1`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const patJson = await patRes.json();
     const patVal = patJson.values?.[0]?.[0]?.trim();
-    if(patVal) { githubPAT = patVal; console.log('[GitHub] PAT 已從 Sheets 載入'); }
-  } catch(e) { console.warn('[GitHub] 無法讀取 設定!B1:', e); }
+    if(patVal) { githubPAT = patVal; }
+  } catch(e) {}
   holdingsData=parseHoldings(rows);
   const meta=parseMeta(rows);
+  currentMeta = meta;
   ls('holdings_cache',JSON.stringify({data:holdingsData,meta,ts:Date.now()}));
   renderHoldings();
   updateAllocCards(meta);
-
-  // 動態建立觀察清單（從 G 欄掃描，排除已持股）
   banner.innerHTML=`<div class="sync-banner"><div class="loading-spinner" style="width:14px;height:14px;border-width:1.5px;margin:0"></div>&nbsp;正在建立觀察清單...</div>`;
   await buildWatchlistFromSheets(rows);
   await fetchAllDCF();
   renderWatchlist();
-
   const now=new Date().toLocaleTimeString('zh-TW');
   banner.innerHTML=`<div class="sync-banner synced">✓ 已同步 ${holdingsData.length} 筆持股 · 觀察清單 ${WATCHLIST.length} 支 · ${now} &nbsp;<span style="cursor:pointer;opacity:0.7;text-decoration:underline" onclick="syncSheets()">重新同步</span></div>`;
-  // 清除本週快照記錄，強制重新寫入
   ls('last_snapshot_week', null);
-  // 自動寫入資產快照（每天一次）
   await writeAssetSnapshot();
-  // 批量同步論文庫到 Sheets
   await syncAllThesisToSheets();
-  // 渲染成長曲線
   renderGrowthChart();
 }
 
 // === 資產快照 ===
 async function writeAssetSnapshot() {
   if(!googleToken || !holdingsData.length) return;
-  // 計算本週週次（年份+週數），同一週只寫一次
   const now = new Date();
-  const weekKey = now.toISOString().split('T')[0]; // 同一天只寫一次
+  const weekKey = now.toISOString().split('T')[0];
   const lastKey = ls('last_snapshot_week');
-  if(lastKey === weekKey) return; // 本週已寫過
-
-  // 計算總資產、各損益
+  if(lastKey === weekKey) return;
   let totalTWD=0, usdPnl=0, twPnl=0;
   for(const h of holdingsData){
     const pnl=(h.price-h.cost)*h.shares;
@@ -1227,34 +1091,21 @@ async function writeAssetSnapshot() {
   const totalMW = (totalTWD/10000).toFixed(1);
   const dateStr = now.toISOString().split('T')[0];
   const vixVal = document.getElementById('vix-bar')?.dataset?.vix || '';
-
-  // 抓現有快照找下一行
   try {
     const rangeCheck = encodeURIComponent(`資產快照!A:A`);
     const checkRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${rangeCheck}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const checkData = await checkRes.json();
-    console.log('[快照] checkData:', JSON.stringify(checkData).slice(0,200));
     const nextRow = (checkData.values||[]).length + 1;
-    console.log('[快照] 準備寫入第', nextRow, '行');
-
-    // 寫入新一行
     const writeRange = encodeURIComponent(`資產快照!A${nextRow}:E${nextRow}`);
     const writeBody = {values:[[dateStr, totalMW, usdPnl.toFixed(0), twPnl.toFixed(0), vixVal]]};
-    console.log('[快照] 寫入內容:', JSON.stringify(writeBody));
     const writeRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${writeRange}?valueInputOption=USER_ENTERED`,{
       method:'PUT',
       headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
       body:JSON.stringify(writeBody)
     });
     const writeData = await writeRes.json();
-    console.log('[快照] 寫入結果:', JSON.stringify(writeData).slice(0,300));
-    if(writeData.updatedCells) {
-      ls('last_snapshot_week', weekKey);
-      console.log('資產快照已寫入:', dateStr, totalMW+'萬');
-    } else {
-      console.error('[快照] 寫入失敗:', writeData);
-    }
-  } catch(e){ console.error('快照寫入失敗:', e); }
+    if(writeData.updatedCells) ls('last_snapshot_week', weekKey);
+  } catch(e){}
 }
 
 async function fetchAssetSnapshots() {
@@ -1264,11 +1115,8 @@ async function fetchAssetSnapshots() {
     const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const data = await res.json();
     return (data.values||[]).map(r=>({
-      date: r[0]||'',
-      total: parseFloat(r[1])||0,
-      usdPnl: parseFloat(r[2])||0,
-      twPnl: parseFloat(r[3])||0,
-      vix: parseFloat(r[4])||null,
+      date: r[0]||'', total: parseFloat(r[1])||0,
+      usdPnl: parseFloat(r[2])||0, twPnl: parseFloat(r[3])||0, vix: parseFloat(r[4])||null,
     })).filter(r=>r.date&&r.total>0);
   } catch(e){ return []; }
 }
@@ -1278,6 +1126,7 @@ async function loadHoldings() {
     const c=JSON.parse(ls('holdings_cache')||'{}');
     if(c.data&&c.ts&&Date.now()-c.ts<5*60*1000){
       holdingsData=c.data;
+      currentMeta=c.meta||null;
       if(c.meta) updateAllocCards(c.meta);
       renderHoldings();
       const ago=Math.floor((Date.now()-c.ts)/60000);
@@ -1302,8 +1151,7 @@ function updateAllocCards(meta) {
     if(h.type==='etf'||h.type==='wave') etfVal+=val;
     else growthVal+=val;
   }
-  // TTO = 總現金（含持股），配置目標以 TTO 為基準
-  const tto = totalCash; // parseMeta 已改為抓 TTO 行
+  const tto = totalCash;
   const growthTargetAmt = tto * growthTarget;
   const etfTargetAmt = tto * etfTarget;
   const growthPct = growthTargetAmt>0 ? Math.min(100,(growthVal/growthTargetAmt*100)) : 0;
@@ -1332,7 +1180,6 @@ async function fetchVIX() {
     const data = await res.json();
     if(data.vix) updateVIX(data.vix);
   } catch(e) {
-    console.log('VIX fetch failed:', e);
     const el=document.getElementById('vix-bar');
     if(el) el.innerHTML=`<span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">VIX 載入失敗</span>`;
   }
@@ -1365,7 +1212,6 @@ let chartGrowth = null;
 async function fetchWealthTargets() {
   if(!googleToken) return [];
   try {
-    // 抓第12行(年份)和第18行(年末投資)，B到F欄（近5年 2026-2030）
     const r12 = encodeURIComponent('財富規劃!B12:F12');
     const r18 = encodeURIComponent('財富規劃!B18:F18');
     const [res12, res18] = await Promise.all([
@@ -1379,12 +1225,10 @@ async function fetchWealthTargets() {
     for(let i=0;i<years.length;i++){
       const yr = parseInt((years[i]||'').toString().replace(/,/g,''));
       const val = parseFloat((targets[i]||'').toString().replace(/,/g,''));
-      if(yr >= 2026 && yr <= 2030 && !isNaN(val) && val > 0) {
-        result.push({ year: yr, target: val / 10000 }); // 元 → 萬
-      }
+      if(yr >= 2026 && yr <= 2030 && !isNaN(val) && val > 0) result.push({ year: yr, target: val / 10000 });
     }
     return result;
-  } catch(e) { console.error('財富規劃抓取失敗:', e); return []; }
+  } catch(e){ return []; }
 }
 
 async function renderGrowthChart() {
@@ -1392,67 +1236,30 @@ async function renderGrowthChart() {
   const section = document.getElementById('growth-chart-section');
   if(!snapshots.length || !section) return;
   section.style.display = 'block';
-
-  // 實際資產：日期 + 萬
   const actualLabels = snapshots.map(s => s.date);
   const actualValues = snapshots.map(s => s.total);
-
-  // 目標線：把年末目標對齊到 x 軸（以 YYYY-12-31 為錨點）
-  // 合併所有 x 軸 label
   const targetMap = {};
   for(const t of targets) targetMap[`${t.year}-12-31`] = t.target;
-
-  // 建立合併 label 集合（實際日期 + 目標年末日期）
   const allLabels = [...new Set([...actualLabels, ...Object.keys(targetMap)])].sort();
-
   const actualData = allLabels.map(l => actualLabels.includes(l) ? actualValues[actualLabels.indexOf(l)] : null);
   const targetData = allLabels.map(l => targetMap[l] !== undefined ? targetMap[l] : null);
-
   const ctx = document.getElementById('chart-growth').getContext('2d');
   if(chartGrowth) chartGrowth.destroy();
-
   const fontMono = { family: 'IBM Plex Mono', size: 10 };
   chartGrowth = new Chart(ctx, {
     type: 'line',
     data: {
       labels: allLabels,
       datasets: [
-        {
-          label: '實際總資產',
-          data: actualData,
-          borderColor: '#38bdf8',
-          backgroundColor: '#38bdf815',
-          borderWidth: 2,
-          pointRadius: 4,
-          pointBackgroundColor: '#38bdf8',
-          fill: true,
-          tension: 0.3,
-          spanGaps: false,
-        },
-        {
-          label: '目標年末（財富規劃）',
-          data: targetData,
-          borderColor: '#fbbf24',
-          backgroundColor: 'transparent',
-          borderWidth: 2,
-          borderDash: [6, 4],
-          pointRadius: 5,
-          pointBackgroundColor: '#fbbf24',
-          pointStyle: 'triangle',
-          fill: false,
-          tension: 0,
-          spanGaps: false,
-        }
+        { label: '實際總資產', data: actualData, borderColor: '#38bdf8', backgroundColor: '#38bdf815', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#38bdf8', fill: true, tension: 0.3, spanGaps: false },
+        { label: '目標年末（財富規劃）', data: targetData, borderColor: '#fbbf24', backgroundColor: 'transparent', borderWidth: 2, borderDash: [6, 4], pointRadius: 5, pointBackgroundColor: '#fbbf24', pointStyle: 'triangle', fill: false, tension: 0, spanGaps: false }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { labels: { color: '#7a9abf', font: { family: 'IBM Plex Mono', size: 13 }, usePointStyle: true, padding: 14 } },
-        tooltip: {
-          bodyFont: { family: 'IBM Plex Mono' },
-          callbacks: { label: ctx => ` NT$${ctx.parsed.y?.toFixed(1)}萬` }
-        }
+        tooltip: { bodyFont: { family: 'IBM Plex Mono' }, callbacks: { label: ctx => ` NT$${ctx.parsed.y?.toFixed(1)}萬` } }
       },
       scales: {
         x: { ticks: { color: '#7a9abf', font: fontMono, maxTicksLimit: 8 }, grid: { color: '#1e3050' } },
@@ -1461,14 +1268,11 @@ async function renderGrowthChart() {
     }
   });
 }
+
 let chartCategory=null, chartStocks=null;
 
 function computeAndRenderPnL() {
-  if(!holdingsData.length){
-    document.getElementById('total-pnl-card').style.display='none';
-    document.getElementById('charts-row').style.display='none';
-    return;
-  }
+  if(!holdingsData.length){ document.getElementById('total-pnl-card').style.display='none'; document.getElementById('charts-row').style.display='none'; return; }
   let twdPnl=0,twdCost=0,usdPnl=0,usdCost=0,twPnl=0,twCost=0;
   let growthVal=0,etfVal=0;
   const stockValues=[];
@@ -1513,39 +1317,26 @@ function renderCharts(growthVal,etfVal,stockValues){
   chartCategory=new Chart(document.getElementById('chart-category'),{type:'doughnut',data:{labels:['成長型股票','持有ETF'],datasets:[{data:[growthVal,etfVal],backgroundColor:['#38bdf8','#a78bfa'],borderColor:'#0d1526',borderWidth:2}]},options:{...opts,cutout:'60%'}});
   if(chartStocks) chartStocks.destroy();
   const sorted=stockValues.sort((a,b)=>b.val-a.val);
-  chartStocks=new Chart(document.getElementById('chart-stocks'),{type:'doughnut',data:{labels:sorted.map(s=>TW_NAMES[s.ticker]||s.ticker),datasets:[{data:sorted.map(s=>Math.round(s.val)),backgroundColor:COLORS.slice(0,sorted.length),borderColor:'#0d1526',borderWidth:2}]},options:{...opts,cutout:'55%',plugins:{...opts.plugins,tooltip:{bodyFont:{family:'IBM Plex Mono'},titleFont:{family:'IBM Plex Mono'},callbacks:{label:function(ctx){const total=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=total>0?((ctx.parsed/total)*100).toFixed(1):0;const amt=Math.round(ctx.parsed/10000);return ` ${ctx.label}: ${pct}% (NT$${amt}萬)`;}}}}}});
+  chartStocks=new Chart(document.getElementById('chart-stocks'),{type:'doughnut',data:{labels:sorted.map(s=>TW_NAMES[s.ticker]||s.ticker),datasets:[{data:sorted.map(s=>Math.round(s.val)),backgroundColor:COLORS.slice(0,sorted.length),borderColor:'#0d1526',borderWidth:2}]},options:{...opts,cutout:'55%',plugins:{...opts.plugins,tooltip:{bodyFont:{family:'IBM Plex Mono'},titleFont:{family:'IBM Plex Mono'},callbacks:{label:function(ctx){const total=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=total>0?((ctx.parsed/total)*100).toFixed(1):0;const amt=Math.round(ctx.parsed/10000);return ` ${ctx.label}: ${pct}% (NT$${amt}萬)`;}}}}}}); 
 }
 
-// === RISK MONITOR (dynamic) ===
+// === RISK MONITOR ===
 function renderRiskMonitor() {
   if(!holdingsData.length) return;
-
   function maRow(h, pct, label) {
     const sign = pct > 0 ? '+' : '';
     const c = pct > 20 ? 'var(--red)' : pct > 10 ? 'var(--yellow)' : pct < -10 ? 'var(--green)' : 'var(--text-muted)';
     return `<div class="risk-item"><div class="risk-dot" style="background:${c}"></div><span style="color:var(--text-secondary)">${label} <span style="color:${c};font-weight:600">${sign}${pct.toFixed(1)}%</span></span></div>`;
   }
-
-  // 1. 200MA 偏離 — 正值大到小排序
   const ma200list = holdingsData.filter(h=>h.ma200pct!=null).sort((a,b)=>b.ma200pct-a.ma200pct);
-  document.getElementById('risk-ma200').innerHTML = ma200list.length
-    ? ma200list.map(h => maRow(h, h.ma200pct, TW_NAMES[h.ticker]||h.ticker)).join('')
-    : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
-
-  // 2. 50MA 偏離 — 正值大到小排序
+  document.getElementById('risk-ma200').innerHTML = ma200list.length ? ma200list.map(h => maRow(h, h.ma200pct, TW_NAMES[h.ticker]||h.ticker)).join('') : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
   const ma50list = holdingsData.filter(h=>h.ma50pct!=null).sort((a,b)=>b.ma50pct-a.ma50pct);
-  document.getElementById('risk-ma50').innerHTML = ma50list.length
-    ? ma50list.map(h => maRow(h, h.ma50pct, TW_NAMES[h.ticker]||h.ticker)).join('')
-    : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
-
-  // 3. 趨勢 + KD 判斷 — 橫向一行
+  document.getElementById('risk-ma50').innerHTML = ma50list.length ? ma50list.map(h => maRow(h, h.ma50pct, TW_NAMES[h.ticker]||h.ticker)).join('') : `<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
   const trendList = holdingsData.filter(h=>h.trend||h.kd);
   document.getElementById('risk-trend').innerHTML = trendList.length
     ? trendList.map(h => {
-        const trendColor = (h.trend||'').includes('強勢') ? 'var(--green)'
-          : (h.trend||'').includes('弱勢') || (h.trend||'').includes('空頭') ? 'var(--red)' : 'var(--yellow)';
-        const kdColor = (h.kd||'').includes('轉強') || (h.kd||'').includes('多頭') ? 'var(--green)'
-          : (h.kd||'').includes('弱') || (h.kd||'').includes('空') || (h.kd||'').includes('轉弱') ? 'var(--red)' : 'var(--yellow)';
+        const trendColor = (h.trend||'').includes('強勢') ? 'var(--green)' : (h.trend||'').includes('弱勢') || (h.trend||'').includes('空頭') ? 'var(--red)' : 'var(--yellow)';
+        const kdColor = (h.kd||'').includes('轉強') || (h.kd||'').includes('多頭') ? 'var(--green)' : (h.kd||'').includes('弱') || (h.kd||'').includes('空') || (h.kd||'').includes('轉弱') ? 'var(--red)' : 'var(--yellow)';
         return `<div class="risk-item" style="justify-content:space-between;">
           <span style="color:var(--text-secondary);font-weight:600;min-width:60px">${TW_NAMES[h.ticker]||h.ticker}</span>
           ${h.trend ? `<span style="font-size:11px;color:${trendColor};flex:1;text-align:center">${h.trend}</span>` : '<span style="flex:1"></span>'}
@@ -1576,8 +1367,6 @@ function renderHoldings() {
     const col=pnl>=0?'var(--red)':'var(--green)';
     const sign=pnl>=0?'+':'';
     const curr=h.currency==='TWD'?'NT$':'US$';
-    const thesis=getThesisDisplay(h.ticker);
-    const techHTML=renderTechIndicators(h);
     const faithData=JSON.parse(localStorage.getItem('faithCheck')||'{}');
     const lastCheck=faithData[h.ticker];
     let faithHTML='';
@@ -1596,7 +1385,7 @@ function renderHoldings() {
         <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
         <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">${curr}${h.price.toLocaleString()}</div></div>
       </div>
-      <div class="tech-col">${techHTML}</div>
+      <div class="tech-col">${renderTechIndicators(h)}</div>
       <div class="holding-pnl" style="text-align:right">
         <div class="pnl-value" style="color:${col}">${sign}${curr}${Math.abs(pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
         <div class="pnl-pct" style="color:${col}">${sign}${pct}%</div>
@@ -1607,55 +1396,30 @@ function renderHoldings() {
 
 function renderTechIndicators(h) {
   let html='';
-
-  // PE 位階橫條
   if(h.pe!==null && h.peL!==null && h.peH!==null && h.peH>h.peL) {
     const range=h.peH-h.peL;
     const pos=Math.max(0,Math.min(100,((h.pe-h.peL)/range)*100));
     const markerColor=pos<33?'#34d399':pos<66?'#fbbf24':'#f87171';
-    html+=`<div class="tech-row">
-      <span class="tech-label" >PE位階</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:${pos}%;background:${markerColor}"></div>
-      </div>
-      <span class="tech-val">${h.pe.toFixed(1)}x</span>
-    </div>`;
+    html+=`<div class="tech-row"><span class="tech-label">PE位階</span><div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)"><div class="tech-dot" style="left:${pos}%;background:${markerColor}"></div></div><span class="tech-val">${h.pe.toFixed(1)}x</span></div>`;
   }
-
-  // 52週位置
   if(h.price!==null && h.w52low!==null && h.w52high!==null && h.w52high>h.w52low) {
     const range=h.w52high-h.w52low;
     const pos=Math.max(0,Math.min(100,((h.price-h.w52low)/range)*100));
     const markerColor=pos<30?'#34d399':pos<70?'#fbbf24':'#f87171';
-    html+=`<div class="tech-row">
-      <span class="tech-label" >52周高低</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)">
-        <div class="tech-dot" style="left:${pos}%;background:${markerColor}"></div>
-      </div>
-      <span class="tech-val">${pos.toFixed(0)}%</span>
-    </div>`;
+    html+=`<div class="tech-row"><span class="tech-label">52周高低</span><div class="tech-track" style="background:linear-gradient(to right,#34d399,#fbbf24,#f87171)"><div class="tech-dot" style="left:${pos}%;background:${markerColor}"></div></div><span class="tech-val">${pos.toFixed(0)}%</span></div>`;
   }
-
-  // 200MA 偏離度
   if(h.ma200pct!==null) {
     const ma=h.ma200pct;
     const maColor=ma>20?'#f87171':ma>10?'#fbbf24':ma<-10?'#34d399':'#7a9abf';
     const warn=Math.abs(ma)>20?'⚠':'';
     const barPos=Math.max(2,Math.min(98,50+ma*1.2));
-    html+=`<div class="tech-row">
-      <span class="tech-label" >200MA偏離</span>
-      <div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)">
-        <div class="tech-dot" style="left:${barPos}%;background:${maColor}"></div>
-      </div>
-      <span class="tech-val" style="color:${maColor}">${ma>0?'+':''}${ma.toFixed(1)}%${warn}</span>
-    </div>`;
+    html+=`<div class="tech-row"><span class="tech-label">200MA偏離</span><div class="tech-track" style="background:linear-gradient(to right,#34d399,#7a9abf,#f87171)"><div class="tech-dot" style="left:${barPos}%;background:${maColor}"></div></div><span class="tech-val" style="color:${maColor}">${ma>0?'+':''}${ma.toFixed(1)}%${warn}</span></div>`;
   }
-
   if(!html) html=`<div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">—</div>`;
   return html;
 }
 
-// === DCF BAND (watchlist) ===
+// === DCF BAND ===
 function getLivePrice(ticker) {
   const h = holdingsData.find(x => x.ticker === ticker);
   if(h && h.price) return h.price;
@@ -1667,42 +1431,18 @@ function getLivePrice(ticker) {
 function renderDCFBand(ticker) {
   const stock = WATCHLIST.find(s => s.ticker === ticker);
   const curr = TW_TICKERS.includes(ticker) ? 'NT$' : '$';
-
-  // ETF / 波段：顯示 52 週高低橫條
   if(stock && (stock.type === 'etf' || stock.type === 'wave')) {
-    // 優先從 dcfCache（Yahoo Finance）抓，fallback holdingsData
     const d = dcfCache[ticker];
     let price, low52, high52;
-    if(d && d.isETF) {
-      price = d.currentPrice; low52 = d.w52low; high52 = d.w52high;
-    } else {
-      const h = holdingsData.find(x => x.ticker === ticker);
-      if(h) { price = h.price; low52 = h.w52low; high52 = h.w52high; }
-    }
-    if(!price || !low52 || !high52 || high52 <= low52) {
-      return `<div class="dcf-band-wrap"><div class="dcf-no-data">載入52週資料中...</div></div>`;
-    }
+    if(d && d.isETF) { price = d.currentPrice; low52 = d.w52low; high52 = d.w52high; }
+    else { const h = holdingsData.find(x => x.ticker === ticker); if(h) { price = h.price; low52 = h.w52low; high52 = h.w52high; } }
+    if(!price || !low52 || !high52 || high52 <= low52) return `<div class="dcf-band-wrap"><div class="dcf-no-data">載入52週資料中...</div></div>`;
     const pos = Math.max(2, Math.min(98, ((price - low52) / (high52 - low52)) * 100));
     const markerColor = pos < 30 ? '#34d399' : pos < 70 ? '#fbbf24' : '#f87171';
     const zone = pos < 30 ? '相對低點區' : pos < 70 ? '中間區間' : '相對高點區';
     const zoneColor = pos < 30 ? 'var(--green)' : pos < 70 ? 'var(--yellow)' : 'var(--red)';
-    return `<div class="dcf-band-wrap">
-      <div class="dcf-band-label">
-        <span>52 週高低位置</span>
-        <span style="color:${zoneColor};font-weight:600">${zone}</span>
-      </div>
-      <div class="dcf-track">
-        <div class="dcf-marker" style="left:${pos}%;background:${markerColor}"></div>
-      </div>
-      <div class="dcf-prices">
-        <span>低 ${curr}${low52.toLocaleString()}</span>
-        <span>▲ 現價 ${curr}${price.toLocaleString()} (${pos.toFixed(0)}%)</span>
-        <span>高 ${curr}${high52.toLocaleString()}</span>
-      </div>
-    </div>`;
+    return `<div class="dcf-band-wrap"><div class="dcf-band-label"><span>52 週高低位置</span><span style="color:${zoneColor};font-weight:600">${zone}</span></div><div class="dcf-track"><div class="dcf-marker" style="left:${pos}%;background:${markerColor}"></div></div><div class="dcf-prices"><span>低 ${curr}${low52.toLocaleString()}</span><span>▲ 現價 ${curr}${price.toLocaleString()} (${pos.toFixed(0)}%)</span><span>高 ${curr}${high52.toLocaleString()}</span></div></div>`;
   }
-
-  // 個股：DCF 估值位階
   const d = dcfCache[ticker];
   if(!d) return `<div class="dcf-band-wrap"><div class="dcf-no-data">尚無 DCF 資料</div></div>`;
   const {conservative, fair, optimistic, decision} = d;
@@ -1713,29 +1453,12 @@ function renderDCFBand(ticker) {
   const pos = range > 0 ? Math.max(2, Math.min(98, ((currentPrice - low) / range) * 100)) : 50;
   const markerColor = currentPrice < conservative ? '#34d399' : currentPrice < fair ? '#fbbf24' : '#f87171';
   const _dec = decision.replace(/[^\u4e00-\u9fff]/g,'');
-  const decColor = (_dec.includes('賣出') || _dec.includes('減碼')) ? 'var(--red)' 
-    : (_dec.includes('建倉') || _dec.includes('買入')) ? 'var(--green)' 
-    : (_dec.includes('觀望') || _dec.includes('持有')) ? 'var(--yellow)' 
-    : 'var(--text-muted)';
-  return `<div class="dcf-band-wrap">
-    <div class="dcf-band-label">
-      <span>DCF 估值位階</span>
-      <span style="color:${decColor};font-weight:600">${decision}</span>
-    </div>
-    <div class="dcf-track">
-      <div class="dcf-marker" style="left:${pos}%;background:${markerColor}"></div>
-    </div>
-    <div class="dcf-prices">
-      <span>保守 ${curr}${conservative.toLocaleString()}</span>
-      <span>▲ 現價 ${curr}${currentPrice.toLocaleString()}</span>
-      <span>樂觀 ${curr}${optimistic.toLocaleString()}</span>
-    </div>
-  </div>`;
+  const decColor = (_dec.includes('賣出') || _dec.includes('減碼')) ? 'var(--red)' : (_dec.includes('建倉') || _dec.includes('買入')) ? 'var(--green)' : (_dec.includes('觀望') || _dec.includes('持有')) ? 'var(--yellow)' : 'var(--text-muted)';
+  return `<div class="dcf-band-wrap"><div class="dcf-band-label"><span>DCF 估值位階</span><span style="color:${decColor};font-weight:600">${decision}</span></div><div class="dcf-track"><div class="dcf-marker" style="left:${pos}%;background:${markerColor}"></div></div><div class="dcf-prices"><span>保守 ${curr}${conservative.toLocaleString()}</span><span>▲ 現價 ${curr}${currentPrice.toLocaleString()}</span><span>樂觀 ${curr}${optimistic.toLocaleString()}</span></div></div>`;
 }
 
-
-// === THESIS (Sheets-based) ===
-let thesisCache = {}; // 同步後的論文快取，當次 session 用
+// === THESIS ===
+let thesisCache = {};
 
 async function loadThesisFromSheets() {
   if(!googleToken) return;
@@ -1748,14 +1471,9 @@ async function loadThesisFromSheets() {
       const ticker = (row[0]||'').trim();
       if(!ticker) continue;
       const statusMap = {'成立':'yes','部分':'partial','不成立':'no'};
-      thesisCache[ticker] = {
-        thesis: row[1]||'',
-        sellTrigger: row[2]||'',
-        status: statusMap[row[3]||''] || 'yes'
-      };
+      thesisCache[ticker] = { thesis: row[1]||'', sellTrigger: row[2]||'', status: statusMap[row[3]||''] || 'yes' };
     }
-    console.log('[論文庫] 已載入', Object.keys(thesisCache).length, '筆');
-  } catch(e){ console.error('[論文庫] 載入失敗:', e); }
+  } catch(e){}
 }
 
 function getThesisDisplay(ticker){
@@ -1783,10 +1501,8 @@ function saveThesis(){
   if(!currentThesisTicker) return;
   const thesisText = document.getElementById('thesis-input').value;
   const sellTrigger = document.getElementById('sell-trigger-input').value;
-  // 更新本地 cache
   thesisCache[currentThesisTicker] = {thesis:thesisText, sellTrigger, status:thesisStatus};
   closeModal('thesis-modal'); renderHoldings();
-  // 寫入 Sheets
   if(googleToken) saveThesisToSheets(currentThesisTicker, thesisText, sellTrigger, thesisStatus);
 }
 
@@ -1797,26 +1513,18 @@ async function saveThesisToSheets(ticker, thesis, sellTrigger, status) {
     const data = await res.json();
     const rows = data.values || [];
     let targetRow = -1;
-    for(let i=1;i<rows.length;i++){
-      if((rows[i][0]||'').trim() === ticker) { targetRow = i+1; break; }
-    }
+    for(let i=1;i<rows.length;i++){ if((rows[i][0]||'').trim() === ticker) { targetRow = i+1; break; } }
     const statusText = status==='yes'?'成立':status==='partial'?'部分':'不成立';
-    const writeRange = targetRow > 0
-      ? encodeURIComponent(`論文庫!A${targetRow}:D${targetRow}`)
-      : encodeURIComponent(`論文庫!A${rows.length+1}:D${rows.length+1}`);
+    const writeRange = targetRow > 0 ? encodeURIComponent(`論文庫!A${targetRow}:D${targetRow}`) : encodeURIComponent(`論文庫!A${rows.length+1}:D${rows.length+1}`);
     await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${writeRange}?valueInputOption=USER_ENTERED`,{
-      method:'PUT',
-      headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
+      method:'PUT', headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
       body:JSON.stringify({values:[[ticker, thesis, sellTrigger, statusText]]})
     });
-    console.log('[論文庫] 已儲存:', ticker);
-  } catch(e){ console.error('[論文庫] 寫入失敗:', e); }
+  } catch(e){}
 }
 
-async function syncAllThesisToSheets() {
-  // 已改用 Sheets 為主，同步時只需載入
-  await loadThesisFromSheets();
-}
+async function syncAllThesisToSheets() { await loadThesisFromSheets(); }
+
 function markFaithCheck(ticker){
   const d=JSON.parse(localStorage.getItem('faithCheck')||'{}');
   d[ticker]=new Date().toISOString();
@@ -1827,15 +1535,10 @@ function markFaithCheck(ticker){
 
 // === WATCHLIST RENDER ===
 function get52WPosition(ticker) {
-  // 從 holdingsData 找對應資料（SMH/TQQQ 可能不在持股，嘗試從 watchlist holdings cache 找）
   const h = holdingsData.find(x=>x.ticker===ticker);
   if(!h||!h.w52low||!h.w52high||!h.price||h.w52high<=h.w52low) return null;
-  const pos = Math.max(0,Math.min(100,((h.price-h.w52low)/(h.w52high-h.w52low))*100));
-  return pos;
+  return Math.max(0,Math.min(100,((h.price-h.w52low)/(h.w52high-h.w52low))*100));
 }
-
-// 排除清單：指數型代號不進觀察清單
-const WATCHLIST_EXCLUDE = ['IX0001','TWSE','SPX','NDX','DJI','VIX'];
 
 function renderWatchlist(){
   const valueList = WATCHLIST.filter(s => s.type === 'value');
@@ -1843,15 +1546,10 @@ function renderWatchlist(){
   const renderCard = s => {
     const tc=s.type==='value'?'badge-value':s.type==='etf'?'badge-etf':'badge-wave';
     const tt=s.type==='value'?'價值投資':s.type==='etf'?'ETF':'波段';
-    // 估值位階：個股從 DCF 動態算，ETF/波段維持寫死
     let valTier = s.val;
-    if(s.type === 'value') {
-      const d = dcfCache[s.ticker];
-      if(d && d.valTier) valTier = d.valTier;
-    }
+    if(s.type === 'value') { const d = dcfCache[s.ticker]; if(d && d.valTier) valTier = d.valTier; }
     const vc = valTier==='deep'?'val-deep':valTier==='low'?'val-low':valTier==='mid'?'val-mid':valTier==='warn'?'val-warn':'val-high';
     const vt = valTier==='deep'?'深度低估':valTier==='low'?'低估買入':valTier==='mid'?'合理區間':valTier==='warn'?'偏高注意':'高估減碼';
-    // 安全邊際：ETF/波段用52週位置，個股用DCF動態計算
     let mosDisplay, mosColor;
     if(s.type === 'etf' || s.type === 'wave') {
       const pos52 = get52WPosition(s.ticker);
@@ -1859,42 +1557,30 @@ function renderWatchlist(){
         mosColor = pos52 < 30 ? 'var(--green)' : pos52 < 70 ? 'var(--yellow)' : 'var(--red)';
         mosDisplay = `52週 ${pos52.toFixed(0)}% 位置`;
       } else {
-        // 嘗試從 dcfCache（Yahoo Finance）抓
         const d = dcfCache[s.ticker];
         if(d && d.isETF && d.w52low && d.w52high && d.currentPrice) {
           const pos = Math.max(0,Math.min(100,((d.currentPrice-d.w52low)/(d.w52high-d.w52low))*100));
           mosColor = pos < 30 ? 'var(--green)' : pos < 70 ? 'var(--yellow)' : 'var(--red)';
           mosDisplay = `52週 ${pos.toFixed(0)}% 位置`;
-        } else {
-          mosColor = 'var(--text-muted)'; mosDisplay = '—';
-        }
+        } else { mosColor = 'var(--text-muted)'; mosDisplay = '—'; }
       }
     } else {
       const d = dcfCache[s.ticker];
       if(d && d.mos !== null && d.mos !== undefined) {
         mosColor = d.mos >= 20 ? 'var(--green)' : d.mos >= 0 ? 'var(--yellow)' : 'var(--red)';
         mosDisplay = (d.mos >= 0 ? '+' : '') + d.mos.toFixed(0) + '%';
-      } else {
-        mosColor = s.mos.startsWith('+') ? 'var(--green)' : s.mos === '—' ? 'var(--text-muted)' : 'var(--red)';
-        mosDisplay = s.mos;
-      }
+      } else { mosColor = 'var(--text-muted)'; mosDisplay = '—'; }
     }
     const ci=getCacheInfo('analysis_'+s.ticker);
     const dcfBand=renderDCFBand(s.ticker);
     return `<div class="stock-card" onclick="openAnalysis('${s.ticker}')">
-      <div class="stock-header">
-        <div><div class="stock-ticker">${s.ticker}</div><div class="stock-name">${s.name}</div></div>
-        <span class="type-badge ${tc}">${tt}</span>
-      </div>
+      <div class="stock-header"><div><div class="stock-ticker">${s.ticker}</div><div class="stock-name">${s.name}</div></div><span class="type-badge ${tc}">${tt}</span></div>
       <div class="stock-metrics">
         <div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:${mosColor}">${mosDisplay}</div></div>
         <div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge ${vc}">${vt}</span></div></div>
       </div>
       ${dcfBand}
-      <div class="stock-footer">
-        <span class="cache-info">${ci?'快取：'+ci:'尚未分析'}</span>
-        <button class="analyze-btn">AI 分析 →</button>
-      </div>
+      <div class="stock-footer"><span class="cache-info">${ci?'快取：'+ci:'尚未分析'}</span><button class="analyze-btn">AI 分析 →</button></div>
     </div>`;
   };
   const vGrid = document.getElementById('watchlist-grid-value');
@@ -1905,20 +1591,10 @@ function renderWatchlist(){
 
 // === CACHE ===
 function getCacheInfo(key){
-  try{
-    const d=JSON.parse(ls(key)||'{}');
-    if(!d.ts) return null;
-    const m=Math.floor((Date.now()-d.ts)/60000);
-    if(m>24*60){ls(key,null);return null;}
-    return m<60?m+'分鐘前':Math.floor(m/60)+'小時前';
-  }catch{return null;}
+  try{ const d=JSON.parse(ls(key)||'{}'); if(!d.ts) return null; const m=Math.floor((Date.now()-d.ts)/60000); if(m>24*60){ls(key,null);return null;} return m<60?m+'分鐘前':Math.floor(m/60)+'小時前'; }catch{return null;}
 }
 function getCache(key){
-  try{
-    const d=JSON.parse(ls(key)||'{}');
-    if(!d.ts||Date.now()-d.ts>24*60*60*1000){ls(key,null);return null;}
-    return d;
-  }catch{return null;}
+  try{ const d=JSON.parse(ls(key)||'{}'); if(!d.ts||Date.now()-d.ts>24*60*60*1000){ls(key,null);return null;} return d; }catch{return null;}
 }
 function setCache(key,content){ls(key,JSON.stringify({content,ts:Date.now()}));}
 
@@ -1940,48 +1616,24 @@ function openAnalysis(ticker){
     runAnalysis(ticker,s);
   }
 }
-function refreshAnalysis(){
-  if(!currentTicker) return;
-  ls('analysis_'+currentTicker,null);
-  document.getElementById('modal-cache-badge').style.display='none';
-  runAnalysis(currentTicker,WATCHLIST.find(x=>x.ticker===currentTicker));
-}
+function refreshAnalysis(){ if(!currentTicker) return; ls('analysis_'+currentTicker,null); document.getElementById('modal-cache-badge').style.display='none'; runAnalysis(currentTicker,WATCHLIST.find(x=>x.ticker===currentTicker)); }
+
 async function runAnalysis(ticker,stock){
   const apiKey=getApiKey();
   const body=document.getElementById('modal-body');
-  if(!apiKey){
-    body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--font-mono);font-size:12px">請先在設定中填入 Anthropic API Key<br><br><button class="btn-nav" onclick="openSettings()">⚙ 開啟設定</button></div>`;
-    return;
-  }
+  if(!apiKey){ body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--font-mono);font-size:12px">請先在設定中填入 Anthropic API Key<br><br><button class="btn-nav" onclick="openSettings()">⚙ 開啟設定</button></div>`; return; }
   body.innerHTML=`<div class="analysis-loading"><div class="loading-spinner"></div><div class="loading-text">正在分析 ${ticker}...</div></div>`;
   const dcf=dcfCache[ticker];
   const dcfContext=dcf?`當前DCF資料：保守價$${dcf.conservative}、合理價$${dcf.fair}、樂觀價$${dcf.optimistic}、現價$${dcf.currentPrice}。`:'';
   const prompts={
     wave:`你是波段交易者，分析 TQQQ（Nasdaq 3倍槓桿ETF），不做基本面分析。繁體中文，只輸出JSON無其他文字：{"type":"wave","sections":[{"title":"⚡ 槓桿特性提醒","content":"..."},{"title":"📊 當前市場位置","content":"..."},{"title":"🎯 波段操作建議","content":"..."},{"title":"🛡 風險控管","content":"..."}]}`,
     etf:`你是半導體產業分析師，分析 SMH（VanEck半導體ETF）。繁體中文，只輸出JSON無其他文字：{"type":"etf","sections":[{"title":"📋 成分股集中度","content":"..."},{"title":"🔄 半導體週期位置","content":"..."},{"title":"💡 核心持倉分析","content":"..."},{"title":"🎯 建倉時機","content":"..."}]}`,
-    value:`你是一位有25年經驗的價值投資基金經理，核心思想承襲 Warren Buffett 與 Charlie Munger。你拒絕短期投機，專注能力圈內的企業價值發現。分析風格：穩重理性、邏輯嚴密、具備長期視角。
-
-規則：
-1. 不確定的數字必須明說「數據不確定，僅供參考」，不可臆測
-2. 所有估值必須給具體價格區間，不可用「偏高」「合理」等模糊字眼
-3. 若標的超出商業邏輯或過於投機，主動提示「可能超出穩定能力圈」
-4. 忽略短期波動，專注未來5-10年內在價值
-
-請搜尋 ${ticker}（${stock.name}）最新財報與新聞後，用繁體中文只輸出JSON無其他文字：
-{"type":"value","sections":[
-{"title":"⚠️ 現況風險","content":"宏觀環境風險 + 產業競爭態勢 + 財務健全度（負債比、現金流品質）"},
-{"title":"🏰 護城河分析","content":"無形資產/轉換成本/網絡效應/成本優勢四維度評估，給出護城河強度：強/中/弱，並說明趨勢方向"},
-{"title":"💰 價值位階與DCF審核","content":"PE/PB歷史Band位置（低/中/高）+ DCF合理價區間 + 若有${dcfContext}請審核FCF品質是否樂觀偏誤、成長率假設是否合理、WACC提高0.5%時估值縮水% + 安全邊際與現價比較"},
-{"title":"❌ 反向思考","content":"如果這筆投資在三年後徹底失敗，最可能的2-3個原因是什麼？"},
-{"title":"✨ Lollapalooza共振","content":"分析是否有複數正面因素同時共振（護城河+成長+管理層+估值低），若有請說明共振效應；若無請指出缺乏的關鍵因素"},
-{"title":"🎯 建倉策略","content":"管理層品質評估（資本配置紀錄、誠信度、創辦人是否在位）+ 三個具體建倉點位：保守（安全邊際≥30%）/ 合理（安全邊際≥20%）/ 積極（安全邊際≥10%）+ 5-10年投資邏輯一句話總結"}
-]}`
+    value:`你是一位有25年經驗的價值投資基金經理，核心思想承襲 Warren Buffett 與 Charlie Munger。分析 ${ticker}（${stock.name}）最新財報與新聞後，用繁體中文只輸出JSON無其他文字：{"type":"value","sections":[{"title":"⚠️ 現況風險","content":"..."},{"title":"🏰 護城河分析","content":"..."},{"title":"💰 價值位階與DCF審核","content":"${dcfContext}..."},{"title":"❌ 反向思考","content":"..."},{"title":"✨ Lollapalooza共振","content":"..."},{"title":"🎯 建倉策略","content":"..."}]}`
   };
   const pk=stock.type==='wave'?'wave':stock.type==='etf'?'etf':'value';
   try{
     const res=await fetch('https://anthropic-proxy.issac0901.workers.dev/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompts[pk]}]})
     });
     const data=await res.json();
@@ -1999,6 +1651,7 @@ async function runAnalysis(ticker,stock){
     body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--red);font-family:var(--font-mono);font-size:12px">分析失敗：${err.message}<br><br><button class="refresh-btn" onclick="refreshAnalysis()">↻ 重試</button></div>`;
   }
 }
+
 function renderAnalysis(data){
   const body=document.getElementById('modal-body');
   if(!data?.sections){body.innerHTML='<div style="color:var(--red);padding:20px;font-family:var(--font-mono);font-size:12px">資料格式錯誤</div>';return;}
@@ -2011,6 +1664,323 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal(id);});
 });
 
+// ============================================================
+// === HEALTH PAGE ===
+// ============================================================
+
+function initHealthPage() {
+  if(!holdingsData.length) {
+    // Try to load from cache
+    try {
+      const c=JSON.parse(ls('holdings_cache')||'{}');
+      if(c.data && c.data.length) { holdingsData=c.data; currentMeta=c.meta||null; }
+    } catch{}
+  }
+  renderHealthCards();
+  renderValAnomalies();
+  checkHealthCd();
+}
+
+function computeHealthSignals() {
+  if(!holdingsData.length) return null;
+
+  const totalTWD = holdingsData.reduce((s,h) => s + h.price*h.shares*(h.currency==='USD'?usdTwd:1), 0);
+  if(totalTWD <= 0) return null;
+
+  // 1. 集中度：前3大持股市值佔比
+  const vals = holdingsData.map(h=>({ticker:h.ticker, name:TW_NAMES[h.ticker]||h.ticker, val:h.price*h.shares*(h.currency==='USD'?usdTwd:1)})).sort((a,b)=>b.val-a.val);
+  const top3Val = vals.slice(0,3).reduce((s,v)=>s+v.val,0);
+  const concentrationPct = top3Val / totalTWD * 100;
+  const concentrationSignal = concentrationPct < 50 ? 'green' : concentrationPct < 65 ? 'yellow' : 'red';
+
+  // 2. 地區分布 + 美元曝險
+  const usdVal = holdingsData.filter(h=>h.currency==='USD').reduce((s,h)=>s+h.price*h.shares*usdTwd,0);
+  const usdPct = usdVal / totalTWD * 100;
+  const usdSignal = usdPct < 70 ? 'green' : usdPct < 80 ? 'yellow' : 'red';
+
+  // 3. 槓桿風險（TQQQ）
+  const leverageVal = holdingsData.filter(h=>h.type==='wave').reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
+  const leveragePct = leverageVal / totalTWD * 100;
+  const leverageSignal = leveragePct < 5 ? 'green' : leveragePct < 10 ? 'yellow' : 'red';
+
+  // 4. 現金水位
+  let cashSignal = 'neutral', cashPct = 0, deployable = 0;
+  if(currentMeta) {
+    const { pureCash, reserveCash, totalCash } = currentMeta;
+    deployable = Math.max(0, pureCash - reserveCash);
+    cashPct = totalCash > 0 ? (pureCash / totalCash * 100) : 0;
+    cashSignal = (cashPct >= 15 && cashPct <= 25) ? 'green' : (cashPct >= 10 && cashPct <= 35) ? 'yellow' : 'red';
+  }
+
+  // 5. ETF 進度
+  let etfSignal = 'neutral', etfPct = 0;
+  if(currentMeta) {
+    const etfVal = holdingsData.filter(h=>h.type==='etf'||h.type==='wave').reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
+    const etfTarget = currentMeta.totalCash * (currentMeta.etfTarget||0.35);
+    etfPct = etfTarget > 0 ? Math.min(100, etfVal/etfTarget*100) : 0;
+    etfSignal = etfPct >= 70 ? 'green' : etfPct >= 50 ? 'yellow' : 'red';
+  }
+
+  // 6. 估值健康度：有多少持倉在 mid 以內（deep/low/mid = 健康）
+  const dcfHoldings = holdingsData.filter(h => h.type !== 'etf' && h.type !== 'wave');
+  let healthyCount = 0, warnCount = 0;
+  for(const h of dcfHoldings) {
+    const d = dcfCache[h.ticker];
+    if(!d || !d.valTier) continue;
+    if(['deep','low','mid'].includes(d.valTier)) healthyCount++;
+    else warnCount++;
+  }
+  const valTotal = healthyCount + warnCount;
+  const valHealthPct = valTotal > 0 ? (healthyCount/valTotal*100) : 100;
+  const valSignal = valHealthPct >= 80 ? 'green' : valHealthPct >= 60 ? 'yellow' : 'red';
+
+  return {
+    concentration: { signal: concentrationSignal, value: concentrationPct.toFixed(1)+'%', desc: `前3大：${vals.slice(0,3).map(v=>v.name).join('、')}`, barPct: Math.min(100,concentrationPct) },
+    usdExposure: { signal: usdSignal, value: usdPct.toFixed(1)+'%', desc: `TWD ${(100-usdPct).toFixed(1)}% ／ USD ${usdPct.toFixed(1)}%`, barPct: Math.min(100,usdPct) },
+    leverage: { signal: leverageSignal, value: leveragePct.toFixed(1)+'%', desc: leveragePct < 0.1 ? '無槓桿部位' : `槓桿ETF佔總市值`, barPct: Math.min(100,leveragePct*5) },
+    cash: { signal: cashSignal, value: cashPct > 0 ? cashPct.toFixed(1)+'%' : '—', desc: cashPct > 0 ? `目標 15~25%，可部署 NT$${(deployable/10000).toFixed(0)}萬` : '請同步持股資料', barPct: Math.min(100,cashPct) },
+    etf: { signal: etfSignal, value: etfPct > 0 ? etfPct.toFixed(1)+'%' : '—', desc: etfPct > 0 ? `ETF目標執行進度` : '請同步持股資料', barPct: Math.min(100,etfPct) },
+    valHealth: { signal: valSignal, value: valTotal > 0 ? valHealthPct.toFixed(0)+'%' : '—', desc: valTotal > 0 ? `合理區間以內 ${healthyCount}/${valTotal} 個持倉` : '需 DCF 資料', barPct: Math.min(100,valHealthPct) },
+  };
+}
+
+function renderHealthCards() {
+  const grid = document.getElementById('health-signals-grid');
+  if(!grid) return;
+
+  const signals = computeHealthSignals();
+  if(!signals) {
+    grid.innerHTML = `<div class="signal-card neutral" style="grid-column:1/-1"><div class="signal-top"><span class="signal-label">尚無資料</span><div class="signal-dot neutral"></div></div><div class="signal-value neutral">—</div><div class="signal-desc">請先前往「持股管理」同步試算表</div></div>`;
+    return;
+  }
+
+  const CARDS = [
+    { key:'concentration', label:'集中度風險', thresholds:['<50% 健康','50-65% 偏高','>65% 危險'] },
+    { key:'usdExposure',   label:'地區＋美元曝險', thresholds:['<70% 健康','70-80% 偏高','>80% 危險'] },
+    { key:'leverage',      label:'槓桿風險', thresholds:['<5% 安全','5-10% 注意','>10% 危險'] },
+    { key:'cash',          label:'現金水位', thresholds:['15-25% 目標','偏離目標','嚴重偏離'] },
+    { key:'etf',           label:'ETF目標進度', thresholds:['>70% 達標','50-70% 進行中','<50% 落後'] },
+    { key:'valHealth',     label:'估值健康度', thresholds:['>80% 健康','60-80% 注意','<60% 危險'] },
+  ];
+
+  const signalLabel = { green:'健康', yellow:'注意', red:'警示', neutral:'無資料' };
+  const barColor = { green:'var(--green)', yellow:'var(--yellow)', red:'var(--red)', neutral:'var(--text-muted)' };
+
+  grid.innerHTML = CARDS.map(card => {
+    const s = signals[card.key];
+    return `<div class="signal-card ${s.signal}">
+      <div class="signal-top">
+        <span class="signal-label">${card.label}</span>
+        <div class="signal-dot ${s.signal}"></div>
+      </div>
+      <div class="signal-value ${s.signal}">${s.value}</div>
+      <div class="signal-desc">${s.desc}</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:${s.barPct}%;background:${barColor[s.signal]}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderValAnomalies() {
+  const el = document.getElementById('health-val-anomaly');
+  if(!el) return;
+
+  const anomalies = holdingsData.filter(h => {
+    if(h.type === 'etf' || h.type === 'wave') return false;
+    const d = dcfCache[h.ticker];
+    return d && (d.valTier === 'warn' || d.valTier === 'high');
+  });
+
+  if(!anomalies.length) {
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--bg-card);border:1px solid var(--green-dim);border-radius:8px;color:var(--green);font-family:var(--font-mono);font-size:12px">✓ 所有持倉估值在合理區間內</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="val-anomaly-list">${anomalies.map(h => {
+    const d = dcfCache[h.ticker];
+    const curr = h.currency === 'TWD' ? 'NT$' : '$';
+    const overPct = d.fairPrice > 0 ? ((h.price - d.fairPrice) / d.fairPrice * 100) : 0;
+    const tierLabel = d.valTier === 'high' ? '高估減碼' : '偏高注意';
+    const tierColor = d.valTier === 'high' ? 'var(--red)' : 'var(--yellow)';
+    return `<div class="val-anomaly-row">
+      <div>
+        <div class="val-anomaly-ticker">${TW_NAMES[h.ticker]||h.ticker}</div>
+        <div class="val-anomaly-detail">現價 ${curr}${h.price.toLocaleString()} ／ 合理價 ${curr}${(d.fairPrice||0).toLocaleString()}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="val-anomaly-pct" style="color:${tierColor}">+${overPct.toFixed(1)}%</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:${tierColor};margin-top:2px">${tierLabel}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// === HEALTH AI ACTION PLAN ===
+const HEALTH_CD_MINUTES = 30;
+let healthCdInterval = null;
+
+async function checkHealthCd() {
+  const btn = document.getElementById('health-ai-btn');
+  const status = document.getElementById('health-ai-status');
+  const fill = document.getElementById('health-cd-fill');
+  const token = googleToken;
+  if(!token) { status.textContent = '請先連結 Google Sheets'; return; }
+  try {
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B8`, { headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json();
+    const lastRaw = data.values && data.values[0] && data.values[0][0];
+    if(!lastRaw) { status.textContent = '尚未分析'; btn.disabled = false; return; }
+    const last = new Date(lastRaw);
+    const elapsedMin = (new Date() - last) / 60000;
+    const remaining = HEALTH_CD_MINUTES - elapsedMin;
+    if(remaining > 0) startHealthCdTimer(remaining, last);
+    else { status.textContent = `上次分析：${last.toLocaleDateString('zh-TW')} ${last.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`; fill.style.width='0%'; btn.disabled=false; }
+  } catch(e) { status.textContent = '尚未分析'; btn.disabled = false; }
+}
+
+function startHealthCdTimer(remainingMin, lastDate) {
+  const btn = document.getElementById('health-ai-btn');
+  const status = document.getElementById('health-ai-status');
+  const fill = document.getElementById('health-cd-fill');
+  btn.disabled = true;
+  if(healthCdInterval) clearInterval(healthCdInterval);
+  const endTime = new Date(lastDate.getTime() + HEALTH_CD_MINUTES * 60000);
+  healthCdInterval = setInterval(() => {
+    const remMs = endTime - new Date();
+    if(remMs <= 0) {
+      clearInterval(healthCdInterval);
+      btn.disabled = false;
+      btn.textContent = '⬡ 產出本月行動計畫';
+      status.textContent = `上次分析：${lastDate.toLocaleDateString('zh-TW')} ${lastDate.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`;
+      fill.style.width = '0%';
+      return;
+    }
+    const remMin = Math.floor(remMs/60000);
+    const remSec = Math.floor((remMs%60000)/1000);
+    btn.textContent = `⏳ CD ${remMin}:${String(remSec).padStart(2,'0')}`;
+    fill.style.width = ((HEALTH_CD_MINUTES*60000-remMs)/(HEALTH_CD_MINUTES*60000)*100) + '%';
+    status.textContent = `冷卻中，${remMin}分${remSec}秒後可重新分析`;
+  }, 1000);
+}
+
+async function writeHealthCdTime(isoStr) {
+  const token = googleToken;
+  if(!token) return;
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B8?valueInputOption=USER_ENTERED`, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values: [[isoStr]] })
+  });
+}
+
+async function runHealthAnalysis() {
+  const btn = document.getElementById('health-ai-btn');
+  const status = document.getElementById('health-ai-status');
+  const planEl = document.getElementById('health-action-plan');
+  const apiKey = getApiKey();
+  if(!apiKey) { alert('請先在設定中填入 Anthropic API Key'); return; }
+  if(!holdingsData.length) { alert('請先同步持股資料'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⬡ 分析中...';
+  status.textContent = '正在產出行動計畫，約需 15-20 秒...';
+  planEl.innerHTML = `<div class="analysis-loading"><div class="loading-spinner"></div><div class="loading-text">AI 正在分析你的配置...</div></div>`;
+
+  // Build context
+  const signals = computeHealthSignals();
+  const redSignals = [], yellowSignals = [];
+  if(signals) {
+    const labelMap = { concentration:'集中度', usdExposure:'美元曝險', leverage:'槓桿風險', cash:'現金水位', etf:'ETF進度', valHealth:'估值健康度' };
+    for(const [k,v] of Object.entries(signals)) {
+      if(v.signal==='red') redSignals.push(`${labelMap[k]}（${v.value}）`);
+      else if(v.signal==='yellow') yellowSignals.push(`${labelMap[k]}（${v.value}）`);
+    }
+  }
+
+  const deployable萬 = currentMeta ? ((Math.max(0,(currentMeta.pureCash||0)-(currentMeta.reserveCash||0)))/10000).toFixed(0) : '未知';
+  const etfGap萬 = currentMeta ? (Math.max(0, currentMeta.totalCash*(currentMeta.etfTarget||0.35) - holdingsData.filter(h=>h.type==='etf'||h.type==='wave').reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0))/10000).toFixed(0) : '未知';
+  const growthGap萬 = currentMeta ? (Math.max(0, currentMeta.totalCash*(currentMeta.growthTarget||0.45) - holdingsData.filter(h=>h.type!=='etf'&&h.type!=='wave').reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0))/10000).toFixed(0) : '未知';
+
+  const anomalies = holdingsData.filter(h => { const d=dcfCache[h.ticker]; return d && (d.valTier==='warn'||d.valTier==='high'); }).map(h => { const d=dcfCache[h.ticker]; return `${TW_NAMES[h.ticker]||h.ticker}（${d.valTier==='high'?'高估減碼':'偏高注意'}，超合理價 ${d.fairPrice>0?((h.price-d.fairPrice)/d.fairPrice*100).toFixed(1)+'%':'-'}）`; });
+
+  const holdings摘要 = holdingsData.map(h=>`${TW_NAMES[h.ticker]||h.ticker}（${h.type==='etf'?'ETF':h.type==='wave'?'槓桿ETF':'個股'}，${h.currency==='TWD'?'NT$':'$'}${h.price}，市值佔比 ${(h.price*h.shares*(h.currency==='USD'?usdTwd:1)/holdingsData.reduce((s,x)=>s+x.price*x.shares*(x.currency==='USD'?usdTwd:1),0)*100).toFixed(1)}%）`).join('、');
+
+  const prompt = `你是一位專業價值投資組合顧問。以下是投資者當前的配置狀況：
+
+【燈號警示】
+紅燈：${redSignals.length ? redSignals.join('、') : '無'}
+黃燈：${yellowSignals.length ? yellowSignals.join('、') : '無'}
+
+【資金狀況】
+可部署子彈：NT$${deployable萬}萬
+ETF還差目標：NT$${etfGap萬}萬
+成長股還差目標：NT$${growthGap萬}萬
+
+【估值異常持倉】
+${anomalies.length ? anomalies.join('、') : '無異常，所有持倉在合理區間'}
+
+【持股摘要】
+${holdings摘要}
+
+請用繁體中文，只輸出JSON，無任何其他文字：
+{
+  "urgent": ["本週優先執行的具體動作，格式：動作 + 標的 + 金額或數量 + 一句理由"],
+  "secondary": ["本月次要執行的動作"],
+  "hold": ["本月按兵不動的標的與理由"],
+  "trigger": ["等待特定條件再動的條件→動作描述"]
+}
+
+注意：
+1. urgent/secondary/hold/trigger 每個陣列最多3筆
+2. 動作要非常具體，如「加倉 JEPI NT$5萬」、「減碼 TQQQ 1/3部位」
+3. 若無需執行就留空陣列
+4. 不要給模糊建議，每筆都要有具體金額或比例`;
+
+  try {
+    const res = await fetch('https://anthropic-proxy.issac0901.workers.dev/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const tb = data.content.find(b=>b.type==='text');
+    const raw = tb ? tb.text : '';
+    const m = raw.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('解析失敗，請重試');
+    const plan = JSON.parse(m[0]);
+
+    await writeHealthCdTime(new Date().toISOString());
+    startHealthCdTimer(HEALTH_CD_MINUTES, new Date());
+    btn.textContent = '⬡ 產出本月行動計畫';
+    status.textContent = '計畫已產出！' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+
+    renderActionPlan(plan);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '⬡ 產出本月行動計畫';
+    status.textContent = '分析失敗：' + e.message;
+    planEl.innerHTML = `<div style="color:var(--red);font-family:var(--font-mono);font-size:11px;padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">分析失敗：${e.message}</div>`;
+  }
+}
+
+function renderActionPlan(plan) {
+  const el = document.getElementById('health-action-plan');
+  if(!el) return;
+  const sections = [
+    { key:'urgent',    cls:'urgent',    title:'🔴 優先執行（本週）',   emptyMsg:'本週無需緊急操作' },
+    { key:'secondary', cls:'secondary', title:'🟡 次要執行（本月）',   emptyMsg:'本月無次要操作' },
+    { key:'hold',      cls:'hold',      title:'⏸ 本月按兵不動',       emptyMsg:'無特別說明' },
+    { key:'trigger',   cls:'wait',      title:'🎯 等待觸發再動',       emptyMsg:'無等待條件' },
+  ];
+  el.innerHTML = `<div class="action-plan-wrap">${sections.map(s => {
+    const items = plan[s.key] || [];
+    return `<div class="action-priority ${s.cls}">
+      <div class="action-priority-title">${s.title}</div>
+      ${items.length ? items.map(i=>`<div class="action-item">${i}</div>`).join('') : `<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);padding:4px 0">${s.emptyMsg}</div>`}
+    </div>`;
+  }).join('')}</div>`;
+}
+
 // === RISK PAGE ===
 const TREEMAP_COLORS = ['#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#facc15','#60a5fa','#4ade80','#f87171','#c084fc'];
 const CD_MINUTES = 30;
@@ -2022,398 +1992,179 @@ function initRiskPage() {
   checkRiskCd();
 }
 
-// === Treemap (産業分布) ===
 function renderTreemap() {
   const container = document.getElementById('treemap-container');
   const legend = document.getElementById('treemap-legend');
-  if (!holdingsData.length) {
-    container.innerHTML = '<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:20px">載入持股資料後顯示</div>';
-    return;
-  }
-
-  // 靜態產業分類（底層預設，AI分析結果可覆蓋）
+  if(!holdingsData.length) { container.innerHTML = '<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:20px">載入持股資料後顯示</div>'; return; }
   const STATIC_INDUSTRY_MAP = {
-    // 半導體
-    'SMH': '半導體', '2330': '半導體', 'MU': '半導體', 'AMD': '半導體',
-    // 科技雲端
-    'MSFT': '科技雲端', 'GOOG': '科技雲端', 'SNPS': '科技雲端', 'CDNS': '科技雲端',
-    // 消費/零售
-    'COST': '消費零售',
-    // 金融租賃
-    '5871': '金融租賃',
-    // 生技醫療
-    'LLY': '生技醫療', 'UNH': '生技醫療',
-    // 金融科技
-    'SOFI': '金融科技',
-    // ETF-科技
-    'QQQ': 'ETF-科技', '006208': 'ETF-科技',
-    // ETF-防禦/收益
-    'JEPI': 'ETF-防禦收益', 'XLU': 'ETF-防禦收益',
-    // ETF-主題
-    'PHO': 'ETF-主題', 'COPX': 'ETF-主題',
-    // 企業軟體/AI
-    'PLTR': '企業軟體AI',
-    // 個股-電力
-    'VST': '個股-電力',
-    // 個股-銅礦
-    'FCX': '個股-銅礦',
-    // 個股-水管理
-    'ECL': '個股-水管理',
+    'SMH':'半導體','2330':'半導體','MU':'半導體','AMD':'半導體',
+    'MSFT':'科技雲端','GOOG':'科技雲端','SNPS':'科技雲端','CDNS':'科技雲端',
+    'COST':'消費零售','5871':'金融租賃','LLY':'生技醫療','UNH':'生技醫療',
+    'SOFI':'金融科技','QQQ':'ETF-科技','006208':'ETF-科技',
+    'JEPI':'ETF-防禦收益','XLU':'ETF-防禦收益','PHO':'ETF-主題','COPX':'ETF-主題',
+    'PLTR':'企業軟體AI','VST':'個股-電力','FCX':'個股-銅礦','ECL':'個股-水管理',
   };
   const industryMap = Object.assign({}, STATIC_INDUSTRY_MAP, (riskAiData && riskAiData.industries) ? riskAiData.industries : {});
   const groups = {};
   holdingsData.forEach(h => {
     const val = h.price * h.shares * (h.currency === 'USD' ? usdTwd : 1);
     const industry = industryMap[h.ticker] || '其他';
-    if (!groups[industry]) groups[industry] = { val: 0, tickers: [] };
+    if(!groups[industry]) groups[industry] = { val: 0, tickers: [] };
     groups[industry].val += val;
     groups[industry].tickers.push(TW_NAMES[h.ticker] || h.ticker);
   });
-
-  const totalVal = Object.values(groups).reduce((s, g) => s + g.val, 0);
-  const sorted = Object.entries(groups)
-    .sort((a, b) => b[1].val - a[1].val)
-    .map(([name, g], i) => ({
-      name, val: g.val, tickers: g.tickers,
-      pct: totalVal > 0 ? (g.val / totalVal * 100) : 0,
-      color: TREEMAP_COLORS[i % TREEMAP_COLORS.length]
-    }));
-
+  const totalVal = Object.values(groups).reduce((s,g)=>s+g.val,0);
+  const sorted = Object.entries(groups).sort((a,b)=>b[1].val-a[1].val).map(([name,g],i)=>({ name, val:g.val, tickers:g.tickers, pct:totalVal>0?(g.val/totalVal*100):0, color:TREEMAP_COLORS[i%TREEMAP_COLORS.length] }));
   const W = container.offsetWidth || 700;
   const H = 300;
   container.innerHTML = '';
   container.style.position = 'relative';
   container.style.height = H + 'px';
-
-  // Squarified treemap algorithm
-  function squarify(items, x, y, w, h) {
-    if (!items.length) return [];
-    const total = items.reduce((s, i) => s + i.pct, 0);
-    const results = [];
-
-    function layoutRow(row, x, y, w, h, horizontal) {
-      const rowTotal = row.reduce((s, i) => s + i.pct, 0);
-      let pos = horizontal ? x : y;
-      row.forEach(item => {
-        const size = (item.pct / rowTotal) * (horizontal ? w : h);
-        results.push({
-          ...item,
-          x: horizontal ? pos : x,
-          y: horizontal ? y : pos,
-          w: horizontal ? size : w,
-          h: horizontal ? h : size
-        });
-        pos += size;
-      });
-    }
-
-    // Simple slice-and-dice with aspect ratio optimization
-    function processItems(items, x, y, w, h) {
-      if (!items.length) return;
-      if (items.length === 1) {
-        results.push({ ...items[0], x, y, w, h });
-        return;
-      }
-      const total = items.reduce((s, i) => s + i.pct, 0);
-      const horizontal = w >= h;
-
-      // Find best split point
-      let bestSplit = 1;
-      let bestRatio = Infinity;
-      let cumPct = 0;
-      for (let i = 0; i < items.length - 1; i++) {
-        cumPct += items[i].pct;
-        const r1 = cumPct / total;
-        const r2 = 1 - r1;
-        const dim1 = horizontal ? w * r1 : h * r1;
-        const dim2 = horizontal ? w * r2 : h * r2;
-        const cross = horizontal ? h : w;
-        // Aspect ratio of worst cell in each half
-        const worstR1 = items.slice(0, i + 1).reduce((worst, item) => {
-          const cellSize = (item.pct / cumPct) * (horizontal ? dim1 * cross : dim1 * cross);
-          const cellW = horizontal ? (item.pct / cumPct) * dim1 : cross;
-          const cellH = horizontal ? cross : (item.pct / cumPct) * dim1;
-          return Math.max(worst, Math.max(cellW, cellH) / Math.min(cellW, cellH));
-        }, 0);
-        if (worstR1 < bestRatio) { bestRatio = worstR1; bestSplit = i + 1; }
-      }
-
-      const split1 = items.slice(0, bestSplit);
-      const split2 = items.slice(bestSplit);
-      const pct1 = split1.reduce((s, i) => s + i.pct, 0) / total;
-
-      if (horizontal) {
-        const w1 = w * pct1;
-        layoutRow(split1, x, y, w1, h, false);
-        processItems(split2, x + w1, y, w - w1, h);
-      } else {
-        const h1 = h * pct1;
-        layoutRow(split1, x, y, w, h1, true);
-        processItems(split2, x, y + h1, w, h - h1);
-      }
-    }
-
-    processItems(items, x, y, w, h);
-    return results;
+  function layoutRow(row, x, y, w, h, horizontal, results) {
+    const rowTotal = row.reduce((s,i)=>s+i.pct,0);
+    let pos = horizontal ? x : y;
+    row.forEach(item => {
+      const size = (item.pct/rowTotal)*(horizontal?w:h);
+      results.push({...item, x:horizontal?pos:x, y:horizontal?y:pos, w:horizontal?size:w, h:horizontal?h:size});
+      pos += size;
+    });
   }
-
-  const cells = squarify(sorted, 0, 0, W, H);
-
-  cells.forEach(cell => {
-    const div = document.createElement('div');
-    div.className = 'treemap-cell';
-    const cellW = Math.max(cell.w - 3, 10);
-    const cellH = Math.max(cell.h - 3, 10);
-    div.style.cssText = `left:${cell.x}px;top:${cell.y}px;width:${cellW}px;height:${cellH}px;background:${cell.color}20;border-color:${cell.color}50;`;
-
-    const isSmall = cellW < 60 || cellH < 50;
-    const isTiny = cellW < 35 || cellH < 30;
-
-    if (!isTiny) {
-      div.innerHTML = `
-        <div style="font-family:var(--font-mono);font-size:${isSmall?10:13}px;font-weight:700;color:${cell.color};text-align:center;padding:0 6px;line-height:1.3">${cell.name}</div>
-        <div style="font-family:var(--font-mono);font-size:${isSmall?9:12}px;color:${cell.color}cc;margin-top:2px">${cell.pct.toFixed(1)}%</div>
-        ${!isSmall ? `<div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px;text-align:center;padding:0 4px">${cell.tickers.join(' · ')}</div>` : ''}
-      `;
+  const results = [];
+  function processItems(items, x, y, w, h) {
+    if(!items.length) return;
+    if(items.length===1){results.push({...items[0],x,y,w,h});return;}
+    const total=items.reduce((s,i)=>s+i.pct,0);
+    const horizontal=w>=h;
+    let bestSplit=1,bestRatio=Infinity,cumPct=0;
+    for(let i=0;i<items.length-1;i++){
+      cumPct+=items[i].pct;
+      const r1=cumPct/total;
+      const dim1=horizontal?w*r1:h*r1;
+      const cross=horizontal?h:w;
+      const worstR1=items.slice(0,i+1).reduce((worst,item)=>{
+        const cellW=horizontal?(item.pct/cumPct)*dim1:cross;
+        const cellH=horizontal?cross:(item.pct/cumPct)*dim1;
+        return Math.max(worst,Math.max(cellW,cellH)/Math.min(cellW,cellH));
+      },0);
+      if(worstR1<bestRatio){bestRatio=worstR1;bestSplit=i+1;}
     }
+    const s1=items.slice(0,bestSplit),s2=items.slice(bestSplit);
+    const pct1=s1.reduce((s,i)=>s+i.pct,0)/total;
+    if(horizontal){layoutRow(s1,x,y,w*pct1,h,false,results);processItems(s2,x+w*pct1,y,w-w*pct1,h);}
+    else{layoutRow(s1,x,y,w,h*pct1,true,results);processItems(s2,x,y+h*pct1,w,h-h*pct1);}
+  }
+  processItems(sorted,0,0,W,H);
+  results.forEach(cell=>{
+    const div=document.createElement('div');
+    div.className='treemap-cell';
+    const cellW=Math.max(cell.w-3,10),cellH=Math.max(cell.h-3,10);
+    div.style.cssText=`left:${cell.x}px;top:${cell.y}px;width:${cellW}px;height:${cellH}px;background:${cell.color}20;border-color:${cell.color}50;`;
+    const isSmall=cellW<60||cellH<50,isTiny=cellW<35||cellH<30;
+    if(!isTiny) div.innerHTML=`<div style="font-family:var(--font-mono);font-size:${isSmall?10:13}px;font-weight:700;color:${cell.color};text-align:center;padding:0 6px;line-height:1.3">${cell.name}</div><div style="font-family:var(--font-mono);font-size:${isSmall?9:12}px;color:${cell.color}cc;margin-top:2px">${cell.pct.toFixed(1)}%</div>${!isSmall?`<div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px;text-align:center;padding:0 4px">${cell.tickers.join(' · ')}</div>`:''}`;
     container.appendChild(div);
   });
-
-  legend.innerHTML = sorted.map(c =>
-    `<div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)">
-      <div style="width:8px;height:8px;border-radius:2px;background:${c.color};flex-shrink:0"></div>
-      ${c.name} ${c.pct.toFixed(1)}%
-    </div>`
-  ).join('');
+  legend.innerHTML=sorted.map(c=>`<div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)"><div style="width:8px;height:8px;border-radius:2px;background:${c.color};flex-shrink:0"></div>${c.name} ${c.pct.toFixed(1)}%</div>`).join('');
 }
 
-// === CD Check ===
 async function checkRiskCd() {
-  const btn = document.getElementById('risk-ai-btn');
-  const status = document.getElementById('risk-ai-status');
-  const fill = document.getElementById('risk-cd-fill');
-
-  // Read last analysis time from Sheets B6
-  const sheetId = getSheetId();
-  const token = googleToken;
-  if (!token || !sheetId) { status.textContent = '請先連結 Google Sheets'; return; }
-
+  const btn=document.getElementById('risk-ai-btn');
+  const status=document.getElementById('risk-ai-status');
+  const fill=document.getElementById('risk-cd-fill');
+  const token=googleToken;
+  if(!token||!getSheetId()){status.textContent='請先連結 Google Sheets';return;}
   try {
-    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/%E8%A8%AD%E5%AE%9A!B6`, {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    const data = await res.json();
-    const lastRaw = data.values && data.values[0] && data.values[0][0];
-    if (!lastRaw) { status.textContent = '尚未分析'; btn.disabled = false; return; }
-
-    const last = new Date(lastRaw);
-    const now = new Date();
-    const elapsedMin = (now - last) / 60000;
-    const remaining = CD_MINUTES - elapsedMin;
-
-    if (remaining > 0) {
-      startCdTimer(remaining, last);
-    } else {
-      status.textContent = `上次分析：${last.toLocaleDateString('zh-TW')} ${last.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`;
-      fill.style.width = '0%';
-      btn.disabled = false;
-    }
-  } catch(e) {
-    status.textContent = '尚未分析';
-    btn.disabled = false;
-  }
+    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B6`,{headers:{Authorization:'Bearer '+token}});
+    const data=await res.json();
+    const lastRaw=data.values&&data.values[0]&&data.values[0][0];
+    if(!lastRaw){status.textContent='尚未分析';btn.disabled=false;return;}
+    const last=new Date(lastRaw);
+    const remaining=CD_MINUTES-(new Date()-last)/60000;
+    if(remaining>0) startCdTimer(remaining,last);
+    else{status.textContent=`上次分析：${last.toLocaleDateString('zh-TW')} ${last.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`;fill.style.width='0%';btn.disabled=false;}
+  }catch(e){status.textContent='尚未分析';btn.disabled=false;}
 }
 
-function startCdTimer(remainingMin, lastDate) {
-  const btn = document.getElementById('risk-ai-btn');
-  const status = document.getElementById('risk-ai-status');
-  const fill = document.getElementById('risk-cd-fill');
-  btn.disabled = true;
-  if (riskCdInterval) clearInterval(riskCdInterval);
-
-  const endTime = new Date(lastDate.getTime() + CD_MINUTES * 60000);
-
-  riskCdInterval = setInterval(() => {
-    const now = new Date();
-    const remMs = endTime - now;
-    if (remMs <= 0) {
-      clearInterval(riskCdInterval);
-      btn.disabled = false;
-      btn.textContent = '⬡ AI 基本面分析';
-      status.textContent = `上次分析：${lastDate.toLocaleDateString('zh-TW')} ${lastDate.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}`;
-      fill.style.width = '0%';
-      return;
-    }
-    const remMin = Math.floor(remMs / 60000);
-    const remSec = Math.floor((remMs % 60000) / 1000);
-    btn.textContent = `⏳ CD ${remMin}:${String(remSec).padStart(2,'0')}`;
-    const pct = ((CD_MINUTES * 60000 - remMs) / (CD_MINUTES * 60000)) * 100;
-    fill.style.width = pct + '%';
-    status.textContent = `冷卻中，${remMin}分${remSec}秒後可重新分析`;
-  }, 1000);
+function startCdTimer(remainingMin,lastDate){
+  const btn=document.getElementById('risk-ai-btn');
+  const status=document.getElementById('risk-ai-status');
+  const fill=document.getElementById('risk-cd-fill');
+  btn.disabled=true;
+  if(riskCdInterval) clearInterval(riskCdInterval);
+  const endTime=new Date(lastDate.getTime()+CD_MINUTES*60000);
+  riskCdInterval=setInterval(()=>{
+    const remMs=endTime-new Date();
+    if(remMs<=0){clearInterval(riskCdInterval);btn.disabled=false;btn.textContent='⬡ AI 基本面分析';status.textContent=`上次分析：${lastDate.toLocaleDateString('zh-TW')}`;fill.style.width='0%';return;}
+    const remMin=Math.floor(remMs/60000),remSec=Math.floor((remMs%60000)/1000);
+    btn.textContent=`⏳ CD ${remMin}:${String(remSec).padStart(2,'0')}`;
+    fill.style.width=((CD_MINUTES*60000-remMs)/(CD_MINUTES*60000)*100)+'%';
+    status.textContent=`冷卻中，${remMin}分${remSec}秒後可重新分析`;
+  },1000);
 }
 
-async function writeRiskCdTime(isoStr) {
-  const sheetId = getSheetId();
-  const token = googleToken;
-  if (!token || !sheetId) return;
-  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/%E8%A8%AD%E5%AE%9A!B6?valueInputOption=USER_ENTERED`, {
-    method: 'PUT',
-    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ values: [[isoStr]] })
-  });
+async function writeRiskCdTime(isoStr){
+  const token=googleToken;
+  if(!token) return;
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B6?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({values:[[isoStr]]})});
 }
 
-async function runRiskAnalysis() {
-  const btn = document.getElementById('risk-ai-btn');
-  const status = document.getElementById('risk-ai-status');
-  const apiKey = getApiKey();
-  if (!apiKey) { alert('請先在設定中填入 Anthropic API Key'); return; }
-  if (!holdingsData.length) { alert('請先同步持股資料'); return; }
-
-  btn.disabled = true;
-  btn.textContent = '⬡ 分析中...';
-  status.textContent = '正在呼叫 AI，約需 15-20 秒...';
-
-  const tickerList = holdingsData.map(h => `${h.ticker}（現價${h.price}${h.currency==='USD'?'USD':'TWD'}）`).join('、');
-
-  const prompt = `你是一位價值投資分析師。以下是投資組合的持股：${tickerList}
-
-請完成兩件事，只輸出 JSON，不要有任何其他文字：
-
-{
-  "industries": {
-    "TICKER": "產業名稱"
-  },
-  "peAnalysis": [
-    {
-      "ticker": "TICKER",
-      "name": "公司名稱（繁體中文）",
-      "currentPE": 數字或null,
-      "peRangeLow": 數字,
-      "peRangeHigh": 數字,
-      "peBand": "低估|合理|偏高",
-      "fairValueLow": 數字,
-      "fairValueHigh": 數字,
-      "currency": "USD或TWD",
-      "currentPrice": 數字
-    }
-  ]
-}
-
-industries 的產業分類請用繁體中文，例如：半導體、科技平台、消費零售、金融、醫療生技、ETF、槓桿ETF。
-peAnalysis 請根據你的知識給出歷史 PE 區間和公平價值區間估算，若數據不確定請給合理估算範圍。`;
-
-  try {
-    const res = await fetch('https://anthropic-proxy.issac0901.workers.dev/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    const tb = data.content.find(b => b.type === 'text');
-    const raw = tb ? tb.text : '';
-    const m = raw.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('解析失敗');
-    riskAiData = JSON.parse(m[0]);
-
-    // Write CD time to Sheets
-    const now = new Date().toISOString();
-    await writeRiskCdTime(now);
-
-    // Render results
+async function runRiskAnalysis(){
+  const btn=document.getElementById('risk-ai-btn');
+  const status=document.getElementById('risk-ai-status');
+  const apiKey=getApiKey();
+  if(!apiKey){alert('請先在設定中填入 Anthropic API Key');return;}
+  if(!holdingsData.length){alert('請先同步持股資料');return;}
+  btn.disabled=true;btn.textContent='⬡ 分析中...';status.textContent='正在呼叫 AI，約需 15-20 秒...';
+  const tickerList=holdingsData.map(h=>`${h.ticker}（現價${h.price}${h.currency==='USD'?'USD':'TWD'}）`).join('、');
+  const prompt=`你是一位價值投資分析師。以下是投資組合的持股：${tickerList}\n請完成兩件事，只輸出 JSON，不要有任何其他文字：\n{"industries":{"TICKER":"產業名稱"},"peAnalysis":[{"ticker":"TICKER","name":"公司名稱（繁體中文）","currentPE":數字或null,"peRangeLow":數字,"peRangeHigh":數字,"peBand":"低估|合理|偏高","fairValueLow":數字,"fairValueHigh":數字,"currency":"USD或TWD","currentPrice":數字}]}`;
+  try{
+    const res=await fetch('https://anthropic-proxy.issac0901.workers.dev/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const tb=data.content.find(b=>b.type==='text');
+    const m=(tb?tb.text:'').match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('解析失敗');
+    riskAiData=JSON.parse(m[0]);
+    await writeRiskCdTime(new Date().toISOString());
     renderTreemap();
-    renderPEAnalysis(riskAiData.peAnalysis || []);
-
-    // Start CD
-    startCdTimer(CD_MINUTES, new Date());
-    btn.textContent = '⬡ AI 基本面分析';
-    status.textContent = '分析完成！' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-
-  } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '⬡ AI 基本面分析';
-    status.textContent = '分析失敗：' + e.message;
-  }
+    renderPEAnalysis(riskAiData.peAnalysis||[]);
+    startCdTimer(CD_MINUTES,new Date());
+    btn.textContent='⬡ AI 基本面分析';
+    status.textContent='分析完成！'+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){btn.disabled=false;btn.textContent='⬡ AI 基本面分析';status.textContent='分析失敗：'+e.message;}
 }
 
-function renderPEAnalysis(peList) {
-  const peEl = document.getElementById('risk-pe-list');
-  const marginEl = document.getElementById('risk-margin-list');
-  if (!peList.length) return;
-
-  // ETF tickers that should show 52-week position instead of PE
-  const ETF_TICKERS = ['QQQ','SMH','006208','TQQQ','JEPI','VTI','SPY','IVV','VOO','富邦台50'];
-
-  peEl.innerHTML = peList.map(item => {
-    const isETF = ETF_TICKERS.includes(item.ticker) || item.peBand === 'ETF';
-
-    if (isETF) {
-      // 52-week position from holdingsData
-      const h = holdingsData.find(x => x.ticker === item.ticker);
-      const w52pct = h && h.w52pct != null ? h.w52pct : null;
-      if (w52pct == null) return '';
-      const band = w52pct >= 80 ? '相對高點' : w52pct >= 50 ? '中間位置' : '相對低點';
-      const bandClass = w52pct >= 80 ? 'high' : w52pct >= 50 ? 'mid' : 'low';
-      const barColor = w52pct >= 80 ? 'var(--red)' : w52pct >= 50 ? 'var(--yellow)' : 'var(--green)';
-      return `<div class="pe-card">
-        <div class="pe-card-header">
-          <span class="pe-ticker">${item.ticker} <span style="color:var(--text-muted);font-size:10px">${item.name||''}</span></span>
-          <span class="pe-badge ${bandClass}">${band}</span>
-        </div>
-        <div class="pe-bar-wrap">
-          <div class="pe-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red))"></div>
-          <div class="pe-bar-thumb" style="left:${w52pct}%;background:${barColor}"></div>
-        </div>
-        <div class="pe-range"><span>52週低</span><span style="font-size:10px">52週位置 ${w52pct.toFixed(0)}%</span><span>52週高</span></div>
-      </div>`;
+function renderPEAnalysis(peList){
+  const peEl=document.getElementById('risk-pe-list');
+  const marginEl=document.getElementById('risk-margin-list');
+  if(!peList.length) return;
+  const ETF_T=['QQQ','SMH','006208','TQQQ','JEPI','VTI','SPY','IVV','VOO','富邦台50'];
+  peEl.innerHTML=peList.map(item=>{
+    const isETF=ETF_T.includes(item.ticker)||item.peBand==='ETF';
+    if(isETF){
+      const h=holdingsData.find(x=>x.ticker===item.ticker);
+      const w52pct=h&&h.w52pct!=null?h.w52pct:null;
+      if(w52pct==null) return '';
+      const band=w52pct>=80?'相對高點':w52pct>=50?'中間位置':'相對低點';
+      const bc=w52pct>=80?'high':w52pct>=50?'mid':'low';
+      const barC=w52pct>=80?'var(--red)':w52pct>=50?'var(--yellow)':'var(--green)';
+      return `<div class="pe-card"><div class="pe-card-header"><span class="pe-ticker">${item.ticker} <span style="color:var(--text-muted);font-size:10px">${item.name||''}</span></span><span class="pe-badge ${bc}">${band}</span></div><div class="pe-bar-wrap"><div class="pe-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red))"></div><div class="pe-bar-thumb" style="left:${w52pct}%;background:${barC}"></div></div><div class="pe-range"><span>52週低</span><span style="font-size:10px">52週位置 ${w52pct.toFixed(0)}%</span><span>52週高</span></div></div>`;
     }
-
-    // Individual stocks — PE Band
-    if (!item.peRangeLow || !item.peRangeHigh) return '';
-    const range = item.peRangeHigh - item.peRangeLow;
-    const pos = item.currentPE && range > 0
-      ? Math.min(Math.max(((item.currentPE - item.peRangeLow) / range) * 100, 0), 100)
-      : 50;
-    const band = item.peBand || '合理';
-    const bandClass = band === '低估' ? 'low' : band === '偏高' ? 'high' : 'mid';
-    const barColor = band === '低估' ? 'var(--green)' : band === '偏高' ? 'var(--red)' : 'var(--yellow)';
-    return `<div class="pe-card">
-      <div class="pe-card-header">
-        <span class="pe-ticker">${item.ticker} <span style="color:var(--text-muted);font-size:10px">${item.name||''}</span></span>
-        <span class="pe-badge ${bandClass}">${band}</span>
-      </div>
-      <div class="pe-bar-wrap">
-        <div class="pe-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red))"></div>
-        <div class="pe-bar-thumb" style="left:${pos}%;background:${barColor}"></div>
-      </div>
-      <div class="pe-range"><span>低 ${item.peRangeLow}x</span><span>${item.currentPE?'現在 '+item.currentPE+'x':''}</span><span>高 ${item.peRangeHigh}x</span></div>
-    </div>`;
+    if(!item.peRangeLow||!item.peRangeHigh) return '';
+    const range=item.peRangeHigh-item.peRangeLow;
+    const pos=item.currentPE&&range>0?Math.min(Math.max(((item.currentPE-item.peRangeLow)/range)*100,0),100):50;
+    const band=item.peBand||'合理';
+    const bc=band==='低估'?'low':band==='偏高'?'high':'mid';
+    const barC=band==='低估'?'var(--green)':band==='偏高'?'var(--red)':'var(--yellow)';
+    return `<div class="pe-card"><div class="pe-card-header"><span class="pe-ticker">${item.ticker} <span style="color:var(--text-muted);font-size:10px">${item.name||''}</span></span><span class="pe-badge ${bc}">${band}</span></div><div class="pe-bar-wrap"><div class="pe-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red))"></div><div class="pe-bar-thumb" style="left:${pos}%;background:${barC}"></div></div><div class="pe-range"><span>低 ${item.peRangeLow}x</span><span>${item.currentPE?'現在 '+item.currentPE+'x':''}</span><span>高 ${item.peRangeHigh}x</span></div></div>`;
   }).join('');
-
-  // Safety margin
-  marginEl.innerHTML = peList.map(item => {
-    if (!item.fairValueLow || !item.fairValueHigh || !item.currentPrice) return '';
-    const fairMid = (item.fairValueLow + item.fairValueHigh) / 2;
-    const margin = ((fairMid - item.currentPrice) / fairMid * 100);
-    const marginClass = margin >= 20 ? 'safe' : margin >= 0 ? 'warn' : 'danger';
-    const marginLabel = margin >= 20 ? '安全' : margin >= 0 ? '偏低' : '高估';
-    const sign = margin >= 0 ? '+' : '';
-    return `<div class="pe-card">
-      <div class="pe-card-header">
-        <span class="pe-ticker">${item.ticker}</span>
-        <span class="pe-margin ${marginClass}">${sign}${margin.toFixed(1)}% ${marginLabel}</span>
-      </div>
-      <div class="pe-fair" style="color:var(--text-muted)">
-        現價 <strong style="color:var(--text-secondary)">${item.currentPrice} ${item.currency}</strong>
-        ｜公平價值區間 <strong style="color:var(--text-secondary)">${item.fairValueLow}–${item.fairValueHigh} ${item.currency}</strong>
-      </div>
-    </div>`;
+  marginEl.innerHTML=peList.map(item=>{
+    if(!item.fairValueLow||!item.fairValueHigh||!item.currentPrice) return '';
+    const fairMid=(item.fairValueLow+item.fairValueHigh)/2;
+    const margin=((fairMid-item.currentPrice)/fairMid*100);
+    const mc=margin>=20?'safe':margin>=0?'warn':'danger';
+    const ml=margin>=20?'安全':margin>=0?'偏低':'高估';
+    const sign=margin>=0?'+':'';
+    return `<div class="pe-card"><div class="pe-card-header"><span class="pe-ticker">${item.ticker}</span><span class="pe-margin ${mc}">${sign}${margin.toFixed(1)}% ${ml}</span></div><div class="pe-fair" style="color:var(--text-muted)">現價 <strong style="color:var(--text-secondary)">${item.currentPrice} ${item.currency}</strong> ｜公平價值區間 <strong style="color:var(--text-secondary)">${item.fairValueLow}–${item.fairValueHigh} ${item.currency}</strong></div></div>`;
   }).join('');
 }
 
