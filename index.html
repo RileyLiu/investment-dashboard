@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.6.1</title>
+<title>投資儀錶板 v3.6.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -295,7 +295,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.6.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.6.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -582,6 +582,16 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.6.2 — 2026-03-16</div>
+        <div class="analysis-text">
+          ✦ 現金水位燈號重新定義：≥20% 綠燈 / 10~20% 黃燈 / &lt;10% 紅燈（少才危險，多是等待部署）<br>
+          ✦ 現金水位描述改為「緊急備用底線 20%，目前安全/注意/危險」<br>
+          ✦ 現金水位卡片拿掉進度條（語意不適合線性進度條）<br>
+          ✦ ETF目標進度燈號改為 ≥50% 綠燈（方向對就算健康，不用等到 70%）<br>
+          ✦ AI 行動計畫 context 更新：現金改說「高於底線 X%，等待部署狀態」
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.6.1 — 2026-03-16</div>
         <div class="analysis-text">
@@ -1715,15 +1725,13 @@ function computeHealthSignals() {
   const leveragePct = leverageVal / totalTWD * 100;
   const leverageSignal = leveragePct < 5 ? 'green' : leveragePct < 10 ? 'yellow' : 'red';
 
-  // 4. 現金水位
+  // 4. 現金水位（緊急備用底線邏輯：少才危險，多是等待部署）
   let cashSignal = 'neutral', cashPct = 0, deployable = 0;
   if(currentMeta) {
     const { pureCash, reserveCash, totalCash } = currentMeta;
     deployable = Math.max(0, pureCash - reserveCash);
-    const cashTarget = currentMeta.totalCash > 0 ? ((1 - (currentMeta.growthTarget||0.45) - (currentMeta.etfTarget||0.35)) * 100) : 20;
     cashPct = totalCash > 0 ? (pureCash / totalCash * 100) : 0;
-    const cashDiff = cashPct - cashTarget;
-    cashSignal = Math.abs(cashDiff) <= 10 ? 'green' : Math.abs(cashDiff) <= 25 ? 'yellow' : 'red';
+    cashSignal = cashPct >= 20 ? 'green' : cashPct >= 10 ? 'yellow' : 'red';
   }
 
   // 5. ETF 進度
@@ -1732,7 +1740,7 @@ function computeHealthSignals() {
     const etfVal = holdingsData.filter(h=>h.type==='etf'||h.type==='wave').reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
     const etfTarget = currentMeta.totalCash * (currentMeta.etfTarget||0.35);
     etfPct = etfTarget > 0 ? Math.min(100, etfVal/etfTarget*100) : 0;
-    etfSignal = etfPct >= 70 ? 'green' : etfPct >= 50 ? 'yellow' : 'red';
+    etfSignal = etfPct >= 50 ? 'green' : etfPct >= 30 ? 'yellow' : 'red';
   }
 
   // 6. 估值健康度：有多少持倉在 mid 以內（deep/low/mid = 健康）
@@ -1751,8 +1759,8 @@ function computeHealthSignals() {
   return {
     concentration: { signal: concentrationSignal, value: concentrationPct.toFixed(1)+'%', desc: `前3大：${vals.slice(0,3).map(v=>v.name).join('、')}`, barPct: Math.min(100,concentrationPct) },
     usdExposure: { signal: usdSignal, value: usdPct.toFixed(1)+'%', desc: `TWD ${(100-usdPct).toFixed(1)}% ／ USD ${usdPct.toFixed(1)}%`, barPct: Math.min(100,usdPct) },
-    leverage: { signal: leverageSignal, value: leveragePct.toFixed(1)+'%', desc: leveragePct < 0.1 ? '無槓桿部位' : `槓桿ETF佔總市值`, barPct: Math.min(100,leveragePct*5) },
-    cash: { signal: cashSignal, value: cashPct > 0 ? cashPct.toFixed(1)+'%' : '—', desc: cashPct > 0 ? `目標 ${Math.round((1-(currentMeta?.growthTarget||0.45)-(currentMeta?.etfTarget||0.35))*100)}%，可部署 NT$${(deployable/10000).toFixed(0)}萬` : '請同步持股資料', barPct: Math.min(100,cashPct) },
+    leverage: { signal: leverageSignal, value: leveragePct.toFixed(1)+'%', desc: leveragePct < 0.1 ? '無槓桿部位' : `WAVE 類型佔總市值`, barPct: Math.min(100,leveragePct*5) },
+    cash: { signal: cashSignal, value: cashPct > 0 ? cashPct.toFixed(1)+'%' : '—', desc: cashPct > 0 ? `緊急備用底線 20%，目前${cashSignal==='green'?'安全，高於底線 +'+(cashPct-20).toFixed(1)+'%':cashSignal==='yellow'?'注意，接近底線':'危險，已跌破底線'}` : '請同步持股資料', barPct: 0 },
     etf: { signal: etfSignal, value: etfPct > 0 ? etfPct.toFixed(1)+'%' : '—', desc: etfPct > 0 ? `ETF目標執行進度` : '請同步持股資料', barPct: Math.min(100,etfPct) },
     valHealth: { signal: valSignal, value: valTotal > 0 ? valHealthPct.toFixed(0)+'%' : '—', desc: valTotal > 0 ? `合理區間以內 ${healthyCount}/${valTotal} 個持倉` : '需 DCF 資料', barPct: Math.min(100,valHealthPct) },
   };
@@ -1772,8 +1780,8 @@ function renderHealthCards() {
     { key:'concentration', label:'集中度風險', thresholds:['<50% 健康','50-65% 偏高','>65% 危險'] },
     { key:'usdExposure',   label:'地區＋美元曝險', thresholds:['<70% 健康','70-80% 偏高','>80% 危險'] },
     { key:'leverage',      label:'槓桿風險（WAVE）', thresholds:['<5% 安全','5-10% 注意','>10% 危險'] },
-    { key:'cash',          label:'現金水位', thresholds:['目標±10% 健康','偏離10~25%','偏離>25%'] },
-    { key:'etf',           label:'ETF目標進度', thresholds:['>70% 達標','50-70% 進行中','<50% 落後'] },
+    { key:'cash',          label:'現金水位', thresholds:['≥20% 安全','10~20% 注意','<10% 危險'] },
+    { key:'etf',           label:'ETF目標進度', thresholds:['>50% 健康','30-50% 進行中','<30% 落後'] },
     { key:'valHealth',     label:'估值健康度', thresholds:['>80% 健康','60-80% 注意','<60% 危險'] },
   ];
 
@@ -1782,8 +1790,9 @@ function renderHealthCards() {
 
   grid.innerHTML = CARDS.map(card => {
     const s = signals[card.key];
-    // ETF進度條永遠綠色（越高越好），其他跟燈號同色
+    // ETF進度條永遠綠色（越高越好），現金卡片不顯示進度條，其他跟燈號同色
     const progressColor = card.key === 'etf' ? 'var(--green)' : barColor[s.signal];
+    const showBar = card.key !== 'cash';
     return `<div class="signal-card ${s.signal}">
       <div class="signal-top">
         <span class="signal-label">${card.label}</span>
@@ -1791,7 +1800,7 @@ function renderHealthCards() {
       </div>
       <div class="signal-value ${s.signal}">${s.value}</div>
       <div class="signal-desc">${s.desc}</div>
-      <div class="signal-bar"><div class="signal-bar-fill" style="width:${s.barPct}%;background:${progressColor}"></div></div>
+      ${showBar ? `<div class="signal-bar"><div class="signal-bar-fill" style="width:${s.barPct}%;background:${progressColor}"></div></div>` : ''}
     </div>`;
   }).join('');
 }
@@ -1913,6 +1922,7 @@ async function runHealthAnalysis() {
   }
 
   const deployable萬 = currentMeta ? ((Math.max(0,(currentMeta.pureCash||0)-(currentMeta.reserveCash||0)))/10000).toFixed(0) : '未知';
+  const cashAboveFloor = currentMeta ? ((currentMeta.pureCash||0)/currentMeta.totalCash*100 - 20).toFixed(1) : '未知';
   const etfGap萬 = currentMeta ? (Math.max(0, currentMeta.totalCash*(currentMeta.etfTarget||0.35) - holdingsData.filter(h=>h.type==='etf'||h.type==='wave').reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0))/10000).toFixed(0) : '未知';
   const growthGap萬 = currentMeta ? (Math.max(0, currentMeta.totalCash*(currentMeta.growthTarget||0.45) - holdingsData.filter(h=>h.type!=='etf'&&h.type!=='wave').reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0))/10000).toFixed(0) : '未知';
 
@@ -1927,7 +1937,7 @@ async function runHealthAnalysis() {
 黃燈：${yellowSignals.length ? yellowSignals.join('、') : '無'}
 
 【資金狀況】
-可部署子彈：NT$${deployable萬}萬
+可部署子彈：NT$${deployable萬}萬（現金高於緊急底線 20%，超出 +${cashAboveFloor}%，屬於等待部署狀態）
 ETF還差目標：NT$${etfGap萬}萬
 成長股還差目標：NT$${growthGap萬}萬
 
