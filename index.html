@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.6.0</title>
+<title>投資儀錶板 v3.6.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -295,7 +295,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.6.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.6.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -583,6 +583,16 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.6.1 — 2026-03-16</div>
+        <div class="analysis-text">
+          ✦ TQQQ 強制 wave 類型（加入 FORCE_WAVE 白名單：TQQQ/SOXL/UPRO/SPXL/FNGU/LABU），不再被 Yahoo Finance quoteType=ETF 誤判<br>
+          ✦ 正則補上「三倍」「二倍」中文辨識<br>
+          ✦ 槓桿風險卡片標題改為「槓桿風險（WAVE）」<br>
+          ✦ 現金水位燈號改為對照 Sheets 目標比例動態計算（目標±10%綠/±25%黃/超過紅），不再寫死 15~25%<br>
+          ✦ ETF目標進度條顏色改為綠色（越高越好，不再隨燈號變色）
+        </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.6.0 — 2026-03-16</div>
         <div class="analysis-text">
           ✦ 新增「配置健診」第三個 tab（插在風險總覽左側）<br>
@@ -697,9 +707,11 @@ async function buildWatchlistFromSheets(rows) {
       const res = await fetch(`https://anthropic-proxy.issac0901.workers.dev/quote/${c.ticker}`);
       const q = await res.json();
       const longName = (q.longName||'').toLowerCase();
-      const isLeveraged = /2x|3x|2倍|3倍|leveraged|槓桿/.test(longName) || /2x|3x/i.test(c.ticker);
+      const isLeveraged = /2x|3x|2倍|3倍|三倍|二倍|leveraged|槓桿/.test(longName) || /2x|3x/i.test(c.ticker);
+      const FORCE_WAVE = ['TQQQ','SOXL','UPRO','SPXL','FNGU','LABU'];
       let type = 'value';
-      if(isLeveraged) type = 'wave';
+      if(FORCE_WAVE.includes(c.ticker)) type = 'wave';
+      else if(isLeveraged) type = 'wave';
       else if(q.quoteType === 'ETF') type = 'etf';
       const name = c.displayName || q.longName || c.ticker;
       results.push({ ticker: c.ticker, name, type, ability: 'know', moat: type === 'value' ? '🟡' : '—', trend: '—', val: 'mid', mos: type === 'value' ? 'dynamic' : 'dynamic' });
@@ -1708,8 +1720,10 @@ function computeHealthSignals() {
   if(currentMeta) {
     const { pureCash, reserveCash, totalCash } = currentMeta;
     deployable = Math.max(0, pureCash - reserveCash);
+    const cashTarget = currentMeta.totalCash > 0 ? ((1 - (currentMeta.growthTarget||0.45) - (currentMeta.etfTarget||0.35)) * 100) : 20;
     cashPct = totalCash > 0 ? (pureCash / totalCash * 100) : 0;
-    cashSignal = (cashPct >= 15 && cashPct <= 25) ? 'green' : (cashPct >= 10 && cashPct <= 35) ? 'yellow' : 'red';
+    const cashDiff = cashPct - cashTarget;
+    cashSignal = Math.abs(cashDiff) <= 10 ? 'green' : Math.abs(cashDiff) <= 25 ? 'yellow' : 'red';
   }
 
   // 5. ETF 進度
@@ -1738,7 +1752,7 @@ function computeHealthSignals() {
     concentration: { signal: concentrationSignal, value: concentrationPct.toFixed(1)+'%', desc: `前3大：${vals.slice(0,3).map(v=>v.name).join('、')}`, barPct: Math.min(100,concentrationPct) },
     usdExposure: { signal: usdSignal, value: usdPct.toFixed(1)+'%', desc: `TWD ${(100-usdPct).toFixed(1)}% ／ USD ${usdPct.toFixed(1)}%`, barPct: Math.min(100,usdPct) },
     leverage: { signal: leverageSignal, value: leveragePct.toFixed(1)+'%', desc: leveragePct < 0.1 ? '無槓桿部位' : `槓桿ETF佔總市值`, barPct: Math.min(100,leveragePct*5) },
-    cash: { signal: cashSignal, value: cashPct > 0 ? cashPct.toFixed(1)+'%' : '—', desc: cashPct > 0 ? `目標 15~25%，可部署 NT$${(deployable/10000).toFixed(0)}萬` : '請同步持股資料', barPct: Math.min(100,cashPct) },
+    cash: { signal: cashSignal, value: cashPct > 0 ? cashPct.toFixed(1)+'%' : '—', desc: cashPct > 0 ? `目標 ${Math.round((1-(currentMeta?.growthTarget||0.45)-(currentMeta?.etfTarget||0.35))*100)}%，可部署 NT$${(deployable/10000).toFixed(0)}萬` : '請同步持股資料', barPct: Math.min(100,cashPct) },
     etf: { signal: etfSignal, value: etfPct > 0 ? etfPct.toFixed(1)+'%' : '—', desc: etfPct > 0 ? `ETF目標執行進度` : '請同步持股資料', barPct: Math.min(100,etfPct) },
     valHealth: { signal: valSignal, value: valTotal > 0 ? valHealthPct.toFixed(0)+'%' : '—', desc: valTotal > 0 ? `合理區間以內 ${healthyCount}/${valTotal} 個持倉` : '需 DCF 資料', barPct: Math.min(100,valHealthPct) },
   };
@@ -1757,8 +1771,8 @@ function renderHealthCards() {
   const CARDS = [
     { key:'concentration', label:'集中度風險', thresholds:['<50% 健康','50-65% 偏高','>65% 危險'] },
     { key:'usdExposure',   label:'地區＋美元曝險', thresholds:['<70% 健康','70-80% 偏高','>80% 危險'] },
-    { key:'leverage',      label:'槓桿風險', thresholds:['<5% 安全','5-10% 注意','>10% 危險'] },
-    { key:'cash',          label:'現金水位', thresholds:['15-25% 目標','偏離目標','嚴重偏離'] },
+    { key:'leverage',      label:'槓桿風險（WAVE）', thresholds:['<5% 安全','5-10% 注意','>10% 危險'] },
+    { key:'cash',          label:'現金水位', thresholds:['目標±10% 健康','偏離10~25%','偏離>25%'] },
     { key:'etf',           label:'ETF目標進度', thresholds:['>70% 達標','50-70% 進行中','<50% 落後'] },
     { key:'valHealth',     label:'估值健康度', thresholds:['>80% 健康','60-80% 注意','<60% 危險'] },
   ];
@@ -1768,6 +1782,8 @@ function renderHealthCards() {
 
   grid.innerHTML = CARDS.map(card => {
     const s = signals[card.key];
+    // ETF進度條永遠綠色（越高越好），其他跟燈號同色
+    const progressColor = card.key === 'etf' ? 'var(--green)' : barColor[s.signal];
     return `<div class="signal-card ${s.signal}">
       <div class="signal-top">
         <span class="signal-label">${card.label}</span>
@@ -1775,7 +1791,7 @@ function renderHealthCards() {
       </div>
       <div class="signal-value ${s.signal}">${s.value}</div>
       <div class="signal-desc">${s.desc}</div>
-      <div class="signal-bar"><div class="signal-bar-fill" style="width:${s.barPct}%;background:${barColor[s.signal]}"></div></div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:${s.barPct}%;background:${progressColor}"></div></div>
     </div>`;
   }).join('');
 }
