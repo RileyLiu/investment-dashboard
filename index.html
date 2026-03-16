@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.7.0</title>
+<title>投資儀錶板 v3.7.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -186,7 +186,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .action-trigger{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:4px;}
 
 /* MACRO BAR */
-.macro-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+.macro-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
 .macro-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:10px 12px;text-align:center;}
 .macro-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
 .macro-value{font-family:var(--font-mono);font-size:16px;font-weight:600;}
@@ -261,7 +261,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.7.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.7.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -393,15 +393,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     </div>
   </div>
 
-  <!-- Macro data bar (shown after FRED fetch) -->
+  <!-- Macro data bar (shown after fetch) -->
   <div id="macro-bar" style="display:none;margin-bottom:16px;">
-    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">宏觀環境指標 · FRED</div>
+    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">宏觀環境指標 · Yahoo Finance</div>
     <div class="macro-grid">
-      <div class="macro-card"><div class="macro-label">聯邦基金利率</div><div class="macro-value" id="fred-fedfunds">—</div><div class="macro-sub">FEDFUNDS</div></div>
-      <div class="macro-card"><div class="macro-label">10年期公債</div><div class="macro-value" id="fred-dgs10">—</div><div class="macro-sub">DGS10</div></div>
-      <div class="macro-card"><div class="macro-label">殖利率曲線</div><div class="macro-value" id="fred-t10y2y">—</div><div class="macro-sub">T10Y2Y（倒掛警示）</div></div>
-      <div class="macro-card"><div class="macro-label">CPI 通膨</div><div class="macro-value" id="fred-cpi">—</div><div class="macro-sub">CPIAUCSL YoY</div></div>
-      <div class="macro-card"><div class="macro-label">失業率</div><div class="macro-value" id="fred-unrate">—</div><div class="macro-sub">UNRATE</div></div>
+      <div class="macro-card"><div class="macro-label">短期利率</div><div class="macro-value" id="fred-fedfunds">—</div><div class="macro-sub">^IRX 13週國庫券</div></div>
+      <div class="macro-card"><div class="macro-label">10年期公債</div><div class="macro-value" id="fred-dgs10">—</div><div class="macro-sub">^TNX</div></div>
+      <div class="macro-card"><div class="macro-label">殖利率曲線</div><div class="macro-value" id="fred-t10y2y">—</div><div class="macro-sub">TNX - FVX（倒掛警示）</div></div>
+      <div class="macro-card"><div class="macro-label">VIX 恐慌</div><div class="macro-value" id="fred-vix">—</div><div class="macro-sub">^VIX</div></div>
     </div>
   </div>
 
@@ -513,6 +512,17 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.7.1 — 2026-03-16</div>
+        <div class="analysis-text">
+          ✦ 宏觀數據來源從 FRED 改為 Yahoo Finance（FRED 封鎖 Cloudflare IP）<br>
+          ✦ 抓取指標：^IRX（短期利率）/ ^TNX（10年期公債）/ ^FVX（5年期）/ ^VIX<br>
+          ✦ 殖利率曲線改為 TNX - FVX 自行計算<br>
+          ✦ 移除 CPI / 失業率欄位（Yahoo Finance 無此數據）<br>
+          ✦ 宏觀欄由 5 欄改為 4 欄<br>
+          ✦ 不再需要 FRED API Key
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.7.0 — 2026-03-16</div>
         <div class="analysis-text">
@@ -841,55 +851,30 @@ async function fetchAllDCF() {
   renderWatchlist();
 }
 
-// === FRED API ===
-async function fetchFredKey() {
-  if(!googleToken) return null;
+// === 宏觀數據（Yahoo Finance）===
+async function fetchMacroQuote(symbol) {
   try {
-    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B7`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const res = await fetch(`https://anthropic-proxy.issac0901.workers.dev/quote/${encodeURIComponent(symbol)}`);
     const data = await res.json();
-    return data.values?.[0]?.[0]?.trim() || null;
+    return data.price || null;
   } catch(e) { return null; }
 }
 
-async function fetchFredSeries(seriesId, fredKey) {
-  try {
-    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${fredKey}&sort_order=desc&limit=2&file_type=json`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const obs = (data.observations || []).filter(o => o.value !== '.');
-    return obs.length > 0 ? parseFloat(obs[0].value) : null;
-  } catch(e) { return null; }
-}
-
-async function fetchAllFred(fredKey) {
-  const [fedfunds, dgs10, t10y2y, cpi, unrate] = await Promise.all([
-    fetchFredSeries('FEDFUNDS', fredKey),
-    fetchFredSeries('DGS10', fredKey),
-    fetchFredSeries('T10Y2Y', fredKey),
-    fetchFredSeries('CPIAUCSL', fredKey),
-    fetchFredSeries('UNRATE', fredKey),
+async function fetchAllFred() {
+  const [irx, tnx, fvx, vix] = await Promise.all([
+    fetchMacroQuote('^IRX'),
+    fetchMacroQuote('^TNX'),
+    fetchMacroQuote('^FVX'),
+    fetchMacroQuote('^VIX'),
   ]);
-
-  // CPI YoY：需要兩期計算
-  let cpiYoY = null;
-  try {
-    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&sort_order=desc&limit=14&file_type=json`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const obs = (data.observations || []).filter(o => o.value !== '.');
-    if(obs.length >= 13) {
-      cpiYoY = ((parseFloat(obs[0].value) - parseFloat(obs[12].value)) / parseFloat(obs[12].value) * 100);
-    }
-  } catch(e) {}
-
-  fredData = { fedfunds, dgs10, t10y2y, cpiYoY, unrate };
+  const t10y2y = (tnx !== null && fvx !== null) ? parseFloat((tnx - fvx).toFixed(3)) : null;
+  fredData = { fedfunds: irx, dgs10: tnx, t10y2y, vix, cpiYoY: null, unrate: null };
   return fredData;
 }
 
 function renderMacroBar(fd) {
   const bar = document.getElementById('macro-bar');
   if(!bar) return;
-
   const fmt = (v, suffix='%') => v !== null ? v.toFixed(2) + suffix : '—';
   const col = (v, low, high) => {
     if(v === null) return 'var(--text-muted)';
@@ -897,23 +882,16 @@ function renderMacroBar(fd) {
     if(v < low) return 'var(--green)';
     return 'var(--yellow)';
   };
-
   document.getElementById('fred-fedfunds').textContent = fmt(fd.fedfunds);
   document.getElementById('fred-fedfunds').style.color = col(fd.fedfunds, 2, 4);
-
   document.getElementById('fred-dgs10').textContent = fmt(fd.dgs10);
   document.getElementById('fred-dgs10').style.color = col(fd.dgs10, 3, 5);
-
   const t10 = fd.t10y2y;
   document.getElementById('fred-t10y2y').textContent = fmt(t10);
   document.getElementById('fred-t10y2y').style.color = t10 !== null ? (t10 < 0 ? 'var(--red)' : 'var(--green)') : 'var(--text-muted)';
-
-  document.getElementById('fred-cpi').textContent = fmt(fd.cpiYoY);
-  document.getElementById('fred-cpi').style.color = col(fd.cpiYoY, 1.5, 3);
-
-  document.getElementById('fred-unrate').textContent = fmt(fd.unrate);
-  document.getElementById('fred-unrate').style.color = col(fd.unrate, 3.5, 5);
-
+  const vix = fd.vix;
+  document.getElementById('fred-vix').textContent = vix !== null ? vix.toFixed(2) : '—';
+  document.getElementById('fred-vix').style.color = vix !== null ? (vix >= 30 ? 'var(--red)' : vix >= 20 ? 'var(--yellow)' : 'var(--green)') : 'var(--text-muted)';
   bar.style.display = 'block';
 }
 
@@ -1762,25 +1740,19 @@ async function runRiskAnalysis() {
 
   btn.disabled = true;
   btn.textContent = '⬡ 抓取宏觀數據...';
-  status.textContent = '正在從 FRED 抓取宏觀指標...';
+  status.textContent = '正在從 Yahoo Finance 抓取宏觀指標...';
 
-  // 1. 抓 FRED key
-  const fredKey = await fetchFredKey();
-  let macroContext = '';
-  if (fredKey) {
-    const fd = await fetchAllFred(fredKey);
-    renderMacroBar(fd);
-    const t10y2yLabel = fd.t10y2y !== null ? (fd.t10y2y < 0 ? `${fd.t10y2y?.toFixed(2)}%（倒掛警示）` : `${fd.t10y2y?.toFixed(2)}%（正常）`) : '無資料';
-    macroContext = `
-當前美國宏觀環境（FRED 數據）：
-- 聯邦基金利率：${fd.fedfunds?.toFixed(2) ?? '無資料'}%
+  // 1. 抓宏觀數據（Yahoo Finance）
+  const fd = await fetchAllFred();
+  renderMacroBar(fd);
+  const t10y2yLabel = fd.t10y2y !== null ? (fd.t10y2y < 0 ? `${fd.t10y2y?.toFixed(2)}%（倒掛警示）` : `${fd.t10y2y?.toFixed(2)}%（正常）`) : '無資料';
+  const macroContext = `
+當前美國宏觀環境（Yahoo Finance 即時數據）：
+- 短期利率（13週國庫券）：${fd.fedfunds?.toFixed(2) ?? '無資料'}%
 - 10年期公債殖利率：${fd.dgs10?.toFixed(2) ?? '無資料'}%
-- 殖利率曲線（10Y-2Y）：${t10y2yLabel}
-- CPI 通膨率（YoY）：${fd.cpiYoY?.toFixed(2) ?? '無資料'}%
-- 失業率：${fd.unrate?.toFixed(2) ?? '無資料'}%`;
-  } else {
-    macroContext = '（FRED API Key 未設定，無宏觀數據）';
-  }
+- 殖利率曲線（TNX - FVX）：${t10y2yLabel}
+- VIX 恐慌指數：${fd.vix?.toFixed(2) ?? '無資料'}
+- CPI 通膨率 / 失業率：請根據你的訓練資料補充最新背景`;
 
   // 2. 組合持倉 context
   const tickerList = holdingsData.map(h => {
