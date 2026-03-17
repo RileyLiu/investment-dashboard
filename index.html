@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.7.1</title>
+<title>投資儀錶板 v3.7.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -192,6 +192,20 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .macro-value{font-family:var(--font-mono);font-size:16px;font-weight:600;}
 .macro-sub{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:2px;}
 
+/* ACTION LOG */
+.action-log-wrap{margin-top:20px;border-top:1px solid var(--border);padding-top:16px;}
+.action-log-title{font-family:var(--font-mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.action-log-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;transition:all 0.2s;}
+.action-log-date{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);white-space:nowrap;padding-top:2px;}
+.action-log-body{flex:1;}
+.action-log-ticker{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-primary);}
+.action-log-desc{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.action-log-status{font-family:var(--font-mono);font-size:9px;font-weight:600;padding:2px 8px;border-radius:3px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:2px;transition:all 0.2s;}
+.status-pending{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow-dim);}
+.status-done{background:var(--green-dim);color:var(--green);border:1px solid var(--green-dim);}
+.status-skip{background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border);}
+.btn-save-actions{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--green-dim);border:1px solid var(--green-dim);border-radius:6px;color:var(--green);font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;margin-top:14px;}
+.btn-save-actions:hover{background:var(--green);color:#0d1117;}
 .sync-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;margin-bottom:20px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
 .sync-banner.synced{border-color:var(--green-dim);color:var(--green);}
 .sync-banner.error{border-color:var(--red-dim);color:var(--red);}
@@ -261,7 +275,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <body>
 
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.7.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.7.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -339,6 +353,12 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="total-pnl-value" id="total-pnl-tw" style="font-size:22px">—</div>
       <div class="total-pnl-sub" id="total-pnl-tw-pct">—</div>
     </div>
+    <div class="pnl-divider"></div>
+    <div>
+      <div class="total-pnl-label">匯兌損益（TWD）</div>
+      <div class="total-pnl-value" id="total-pnl-fx" style="font-size:22px">—</div>
+      <div class="total-pnl-sub" id="total-pnl-fx-sub">美元換匯損益</div>
+    </div>
   </div>
   <div class="charts-row" id="charts-row" style="display:none">
     <div class="chart-card">
@@ -413,6 +433,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 
   <!-- AI Analysis Result -->
   <div id="risk-analysis-result" style="display:none;"></div>
+
+  <!-- 行動紀錄歷史 -->
+  <div id="action-log-section" style="display:none;margin-top:20px;">
+    <div class="risk-panel">
+      <div class="risk-panel-title">歷史行動紀錄</div>
+      <div id="action-log-list"></div>
+    </div>
+  </div>
 
 </div>
 
@@ -512,6 +540,15 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <button class="modal-close" onclick="closeModal('changelog-modal')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.7.2 — 2026-03-17</div>
+        <div class="analysis-text">
+          ✦ 新增行動紀錄功能：AI 分析完成後可一鍵儲存行動清單至 Sheets「行動紀錄」分頁<br>
+          ✦ 歷史行動紀錄區塊：顯示最近 10 筆，可點擊切換狀態（待執行 / 已執行 / 已略過）<br>
+          ✦ 新增匯兌損益欄：總損益橫幅第四欄，從 Sheets L欄「USD匯兌損益」標籤自動讀取<br>
+          ✦ parseMeta() 新增掃描 L 欄邏輯，不寫死行號
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.7.1 — 2026-03-16</div>
         <div class="analysis-text">
@@ -851,7 +888,115 @@ async function fetchAllDCF() {
   renderWatchlist();
 }
 
-// === 宏觀數據（Yahoo Finance）===
+// === 行動紀錄 ===
+let currentActionItems = []; // 本次 AI 分析的行動清單
+
+async function saveActionLog(items) {
+  if(!googleToken || !items.length) return;
+  try {
+    // 找下一個空行
+    const rangeCheck = encodeURIComponent('行動紀錄!A:A');
+    const checkRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${rangeCheck}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const checkData = await checkRes.json();
+    let nextRow = (checkData.values||[]).length + 1;
+    if(nextRow === 1) nextRow = 2; // 跳過標題行
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('zh-TW');
+    const tsStr = now.toISOString();
+
+    const rows = items.map(item => [
+      dateStr,
+      item.priority || '',
+      item.ticker || '',
+      item.action || '',
+      item.trigger || '',
+      '待執行',
+      tsStr
+    ]);
+
+    const writeRange = encodeURIComponent(`行動紀錄!A${nextRow}:G${nextRow + rows.length - 1}`);
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${writeRange}?valueInputOption=USER_ENTERED`,{
+      method:'PUT',
+      headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify({values: rows})
+    });
+    showToast('✅ 行動清單已儲存至 Sheets');
+    loadActionLog();
+  } catch(e){ showToast('⚠️ 儲存失敗：' + e.message); }
+}
+
+async function loadActionLog() {
+  if(!googleToken) return;
+  try {
+    const range = encodeURIComponent('行動紀錄!A2:G200');
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const data = await res.json();
+    const rows = (data.values||[]).filter(r => r[0]);
+    if(!rows.length) return;
+    renderActionLog(rows);
+  } catch(e){}
+}
+
+async function updateActionStatus(rowIndex, newStatus) {
+  if(!googleToken) return;
+  try {
+    // rowIndex 是從 A2 開始的，所以實際行號 = rowIndex + 2
+    const sheetRow = rowIndex + 2;
+    const writeRange = encodeURIComponent(`行動紀錄!F${sheetRow}`);
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${writeRange}?valueInputOption=USER_ENTERED`,{
+      method:'PUT',
+      headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify({values:[[newStatus]]})
+    });
+    loadActionLog();
+  } catch(e){}
+}
+
+function renderActionLog(rows) {
+  const section = document.getElementById('action-log-section');
+  const list = document.getElementById('action-log-list');
+  if(!section || !list) return;
+
+  // 只顯示最近 10 筆，倒序
+  const recent = [...rows].reverse().slice(0, 10);
+  const originalRows = rows;
+
+  list.innerHTML = recent.map((r, i) => {
+    const status = r[5] || '待執行';
+    const origIndex = originalRows.length - 1 - i;
+    const statusClass = status === '已執行' ? 'status-done' : status === '已略過' ? 'status-skip' : 'status-pending';
+    const nextStatus = status === '待執行' ? '已執行' : status === '已執行' ? '已略過' : '待執行';
+    return `<div class="action-log-item">
+      <div class="action-log-date">${r[0]||''}<br><span style="color:var(--accent)">${r[1]||''}</span></div>
+      <div class="action-log-body">
+        <div class="action-log-ticker">${r[2]||'—'}</div>
+        <div class="action-log-desc">${r[3]||''}</div>
+        ${r[4] ? `<div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:3px">⏱ ${r[4]}</div>` : ''}
+      </div>
+      <span class="action-log-status ${statusClass}" onclick="updateActionStatus(${origIndex},'${nextStatus}')">${status}</span>
+    </div>`;
+  }).join('');
+
+  section.style.display = 'block';
+}
+
+// 解析行動清單文字為結構化資料
+function parseActionItems(content) {
+  const lines = content.split('\n').filter(l => l.trim());
+  const items = [];
+  for(const line of lines) {
+    const match = line.match(/【優先級[：:]\s*(高|中|低)】\s*(.+?)\s*[—\-–]\s*(.+?)\s*[—\-–]\s*(.+)/);
+    if(match) {
+      items.push({ priority: match[1], ticker: match[2].trim(), action: match[3].trim(), trigger: match[4].trim() });
+    } else if(line.trim() && !line.startsWith('【')) {
+      // fallback：沒有標準格式的行
+      const priorityMatch = line.match(/(高|中|低)/);
+      items.push({ priority: priorityMatch?.[1] || '中', ticker: '', action: line.trim(), trigger: '' });
+    }
+  }
+  return items;
+}
 async function fetchMacroQuote(symbol) {
   try {
     const res = await fetch(`https://anthropic-proxy.issac0901.workers.dev/quote/${encodeURIComponent(symbol)}`);
@@ -897,9 +1042,10 @@ function renderMacroBar(fd) {
 
 // === PARSE META ===
 function parseMeta(rows) {
-  let pureCash=0, tto=0, reserveCash=0, growthTarget=0.45, etfTarget=0.35, vix=null;
+  let pureCash=0, tto=0, reserveCash=0, growthTarget=0.45, etfTarget=0.35, vix=null, usdFxPnl=null;
   for(const row of rows){
     const label=(row[0]||'').trim();
+    const lLabel=(row[11]||'').trim(); // L欄
     const bVal=parseFloat((row[1]||'').replace(/,/g,'').replace('%',''));
     const cVal=parseFloat((row[2]||'').replace(/,/g,''));
     const fVal=parseFloat((row[5]||'').replace(/,/g,''));
@@ -912,9 +1058,14 @@ function parseMeta(rows) {
     if(label===ALLOC_ROWS.growth&&!isNaN(bVal)) growthTarget=bVal/100;
     if(label===ALLOC_ROWS.etf&&!isNaN(bVal)) etfTarget=bVal/100;
     if(iVal==='VIX 數值'&&!isNaN(gVal)&&gVal>0) vix=gVal;
+    // L欄掃描：USD匯兌損益
+    if(lLabel==='USD匯兌損益') {
+      const mVal=parseFloat((row[12]||'').replace(/,/g,''));
+      if(!isNaN(mVal)) usdFxPnl=mVal;
+    }
   }
   const deployable=Math.max(0,pureCash-reserveCash);
-  return {totalCash:tto, pureCash, reserveCash, deployable, growthTarget, etfTarget, vix};
+  return {totalCash:tto, pureCash, reserveCash, deployable, growthTarget, etfTarget, vix, usdFxPnl};
 }
 
 function parseHoldings(rows) {
@@ -1076,6 +1227,17 @@ function updateAllocCards(meta) {
   document.getElementById('alloc-cash-val').textContent='NT$'+deployable萬+'萬';
   document.getElementById('alloc-cash-sub').textContent=`現金 NT$${pureCash萬}萬 · 保留 NT$${reserve萬}萬`;
   if(meta.vix!==null) updateVIX(meta.vix);
+  // 匯兌損益
+  if(meta.usdFxPnl !== null && meta.usdFxPnl !== undefined) {
+    const fxEl = document.getElementById('total-pnl-fx');
+    const fxSub = document.getElementById('total-pnl-fx-sub');
+    if(fxEl) {
+      const sign = meta.usdFxPnl >= 0 ? '+' : '';
+      fxEl.textContent = sign + 'NT$' + Math.abs(meta.usdFxPnl).toLocaleString(undefined,{maximumFractionDigits:0});
+      fxEl.style.color = meta.usdFxPnl >= 0 ? 'var(--red)' : 'var(--green)';
+    }
+    if(fxSub) fxSub.textContent = '美元換匯損益';
+  }
 }
 
 // === VIX ===
@@ -1866,6 +2028,10 @@ function renderRiskAnalysisResult(sections) {
   const el = document.getElementById('risk-analysis-result');
   if (!sections.length) return;
 
+  // 解析行動清單
+  const actionSection = sections.find(s => s.title.includes('行動清單'));
+  if(actionSection) currentActionItems = parseActionItems(actionSection.content);
+
   el.style.display = 'block';
   el.innerHTML = `
     <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
@@ -1874,7 +2040,6 @@ function renderRiskAnalysisResult(sections) {
       <span>${new Date().toLocaleDateString('zh-TW')} ${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}</span>
     </div>
     ${sections.map(s => {
-      // 本週行動清單特殊渲染
       if (s.title.includes('行動清單')) {
         const lines = s.content.split('\n').filter(l => l.trim());
         const actionHTML = lines.map(line => {
@@ -1889,7 +2054,6 @@ function renderRiskAnalysisResult(sections) {
               </div>
             </div>`;
           }
-          // fallback: 若格式不符，直接顯示文字
           if (line.trim()) return `<div style="padding:6px 0;font-size:12px;color:var(--text-secondary);border-bottom:1px solid var(--border)">${line}</div>`;
           return '';
         }).join('');
@@ -1898,13 +2062,16 @@ function renderRiskAnalysisResult(sections) {
           <div class="risk-analysis-content">${actionHTML || s.content.replace(/\n/g,'<br>')}</div>
         </div>`;
       }
-      // 一般段落
       return `<div class="risk-analysis-section">
         <div class="risk-analysis-title">${s.title}</div>
         <div class="risk-analysis-content">${s.content.replace(/\n/g,'<br>')}</div>
       </div>`;
     }).join('')}
+    ${currentActionItems.length ? `<button class="btn-save-actions" onclick="saveActionLog(currentActionItems)">📥 儲存本次行動清單至 Sheets</button>` : ''}
   `;
+
+  // 載入歷史紀錄
+  loadActionLog();
 }
 
 init();
