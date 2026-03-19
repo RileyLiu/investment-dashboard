@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.8.2</title>
+<title>投資儀錶板 v3.8.3</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -56,11 +56,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .index-cn{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.05em;}
 .index-price{font-family:var(--font-mono);font-size:18px;font-weight:600;margin-bottom:2px;}
 .index-change{font-family:var(--font-mono);font-size:11px;margin-bottom:6px;}
-.index-52w-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:8px;color:var(--text-muted);margin-bottom:3px;}
+.index-52w-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-bottom:3px;}
 .index-52w-track{position:relative;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:visible;}
 .index-52w-fill{height:100%;border-radius:2px;background:linear-gradient(to right,var(--green),var(--yellow),var(--red));}
 .index-52w-dot{position:absolute;top:-3px;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--bg-card);transform:translateX(-50%);}
-.index-52w-pct{font-family:var(--font-mono);font-size:8px;color:var(--text-muted);margin-top:3px;text-align:right;}
+.index-52w-pct{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-top:3px;text-align:right;}
 /* ── HOVER TOOLTIP ── */
 .index-tooltip{position:absolute;top:calc(100% + 8px);left:0;z-index:600;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
 .index-cell:hover .index-tooltip{display:block;animation:fadeIn 0.15s ease;}
@@ -239,7 +239,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.3</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -264,7 +264,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="index-cell-label"><span class="index-code">VIX</span><span class="index-cn">恐慌指數</span></div>
       <div class="index-price" id="vix-price">—</div>
       <div class="index-change" id="vix-change" style="color:var(--text-muted)">—</div>
-      <div class="index-52w-label"><span>低</span><span id="vix-52w-pct">—</span><span>高</span></div>
+      <div class="index-52w-label"><span id="vix-52w-low">低</span><span id="vix-52w-pct">—</span><span id="vix-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="vix-dot" style="left:50%;background:var(--yellow)"></div></div>
       <!-- Hover -->
       <div class="index-tooltip">
@@ -285,12 +285,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="index-cell-label"><span class="index-code">SPX</span><span class="index-cn">標普500</span></div>
       <div class="index-price" id="spx-price">—</div>
       <div class="index-change" id="spx-change" style="color:var(--text-muted)">—</div>
-      <div class="index-52w-label"><span>低</span><span id="spx-52w-pct">—</span><span>高</span></div>
+      <div class="index-52w-label"><span id="spx-52w-low">低</span><span id="spx-52w-pct">—</span><span id="spx-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="spx-dot" style="left:50%;background:var(--yellow)"></div></div>
       <div class="index-tooltip">
-        <div class="tt-title">美股持倉 vs SPX</div>
+        <div class="tt-title">NYSE 持倉</div>
         <div id="spx-holdings-list"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">同步持股後顯示</div></div>
         <div class="tt-divider"></div>
+        <div class="tt-row"><span class="tt-label">NYSE 曝險</span><span class="tt-val" id="spx-exposure-amt">—</span></div>
+        <div class="tt-row"><span class="tt-label">佔組合比重</span><span class="tt-val" id="spx-exposure-pct">—</span></div>
         <div class="tt-row"><span class="tt-label">SPX 今日漲跌</span><span class="tt-val" id="spx-today">—</span></div>
       </div>
     </div>
@@ -299,12 +301,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="index-cell-label"><span class="index-code">NDX</span><span class="index-cn">那斯達克100</span></div>
       <div class="index-price" id="ndx-price">—</div>
       <div class="index-change" id="ndx-change" style="color:var(--text-muted)">—</div>
-      <div class="index-52w-label"><span>低</span><span id="ndx-52w-pct">—</span><span>高</span></div>
+      <div class="index-52w-label"><span id="ndx-52w-low">低</span><span id="ndx-52w-pct">—</span><span id="ndx-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="ndx-dot" style="left:50%;background:var(--yellow)"></div></div>
       <div class="index-tooltip">
-        <div class="tt-title">Nasdaq 相關持倉 vs NDX</div>
+        <div class="tt-title">NASDAQ 持倉</div>
         <div id="ndx-holdings-list"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">同步持股後顯示</div></div>
         <div class="tt-divider"></div>
+        <div class="tt-row"><span class="tt-label">NASDAQ 曝險</span><span class="tt-val" id="ndx-exposure-amt">—</span></div>
+        <div class="tt-row"><span class="tt-label">佔組合比重</span><span class="tt-val" id="ndx-exposure-pct">—</span></div>
         <div class="tt-row"><span class="tt-label">NDX 今日漲跌</span><span class="tt-val" id="ndx-today">—</span></div>
       </div>
     </div>
@@ -313,7 +317,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="index-cell-label"><span class="index-code">SOX</span><span class="index-cn">費城半導體</span></div>
       <div class="index-price" id="sox-price">—</div>
       <div class="index-change" id="sox-change" style="color:var(--text-muted)">—</div>
-      <div class="index-52w-label"><span>低</span><span id="sox-52w-pct">—</span><span>高</span></div>
+      <div class="index-52w-label"><span id="sox-52w-low">低</span><span id="sox-52w-pct">—</span><span id="sox-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="sox-dot" style="left:50%;background:var(--yellow)"></div></div>
       <div class="index-tooltip">
         <div class="tt-title">半導體相關持倉</div>
@@ -441,6 +445,17 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.8.3 — 2026-03-19</div>
+        <div class="analysis-text">
+          ✦ 52週高低點顯示數字（四個指數動態顯示）<br>
+          ✦ 字體修正：低/位置/高 8px → 12px<br>
+          ✦ SPX hover 改為 NYSE 白名單（LLY、UNH），排除 ETF<br>
+          ✦ NDX hover 移除 LLY（NYSE），保留 NASDAQ 個股<br>
+          ✦ SPX / NDX hover 底部加曝險金額 + 佔組合比重<br>
+          ✦ 未來新增股票按交易所自動分類：NYSE→SPX、NASDAQ→NDX、半導體→SOX
+        </div>
+      </div>
+      <div class="analysis-section">
         <div class="analysis-section-title">v3.8.2 — 2026-03-19</div>
         <div class="analysis-text">
           ✦ 修正 Script 崩潰根本原因：三元運算子內的 IIFE arrow function `lc?()=>{...}():...` 造成 Node/嚴格解析器語法錯誤，導致所有函數未定義<br>
@@ -493,7 +508,9 @@ const ALLOC_ROWS={growth:'成長型股票',etf:'持有ETF'};
 const WATCHLIST_EXCLUDE=['IX0001','TWSE','SPX','NDX','DJI','VIX'];
 // 指數相關持股分類
 const SOX_TICKERS=['SMH','2330','SNPS','CDNS','MU','AMD','NVDA','AVGO','QCOM'];
-const NDX_TICKERS=['MSFT','GOOG','GOOGL','COST','AAPL','META','AMZN','TSLA','QQQ','SNPS','CDNS','LLY','SOFI','PLTR'];
+const SPX_TICKERS=['LLY','UNH']; // NYSE 個股（SPX 獨有）
+const NYSE_TICKERS=['LLY','UNH']; // 同上，用於排除 NDX 重疊
+const NDX_TICKERS=['MSFT','GOOG','GOOGL','COST','AAPL','META','AMZN','TSLA','QQQ','SNPS','CDNS','SOFI','PLTR'];
 const TREEMAP_COLORS=['#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#facc15','#60a5fa','#4ade80','#f87171','#c084fc'];
 const STATIC_INDUSTRY_MAP={'SMH':'半導體','2330':'半導體','MU':'半導體','AMD':'半導體','NVDA':'半導體','MSFT':'科技雲端','GOOG':'科技雲端','SNPS':'科技雲端','CDNS':'科技雲端','COST':'消費零售','5871':'金融租賃','LLY':'生技醫療','UNH':'生技醫療','SOFI':'金融科技','QQQ':'ETF-科技','006208':'ETF-科技','JEPI':'ETF-防禦收益','XLU':'ETF-防禦收益','PHO':'ETF-主題','COPX':'ETF-主題','PLTR':'企業軟體AI','VST':'個股-電力','FCX':'個股-銅礦'};
 const CD_MINUTES=30;
@@ -591,6 +608,11 @@ function renderIndexCell(id,data,isVix){
     const dc=pos<30?'var(--green)':pos<70?'var(--yellow)':'var(--red)';
     if(dotEl){dotEl.style.left=pos+'%';dotEl.style.background=dc;}
     if(pctEl)pctEl.textContent=`${pos.toFixed(0)}% 位置`;
+    const lowEl=document.getElementById(`${id}-52w-low`);
+    const highEl=document.getElementById(`${id}-52w-high`);
+    const fmt=v=>v>1000?v.toLocaleString(undefined,{maximumFractionDigits:0}):v.toLocaleString(undefined,{maximumFractionDigits:2});
+    if(lowEl)lowEl.textContent=fmt(data.low52);
+    if(highEl)highEl.textContent=fmt(data.high52);
   }
 }
 
