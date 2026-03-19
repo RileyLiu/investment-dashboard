@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.8.1</title>
+<title>投資儀錶板 v3.8.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -239,7 +239,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -440,6 +440,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.8.2 — 2026-03-19</div>
+        <div class="analysis-text">
+          ✦ 修正 Script 崩潰根本原因：三元運算子內的 IIFE arrow function `lc?()=>{...}():...` 造成 Node/嚴格解析器語法錯誤，導致所有函數未定義<br>
+          ✦ 改寫為標準條件式，Node --check 驗證通過
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.8.1 — 2026-03-19</div>
         <div class="analysis-text">
@@ -1044,7 +1051,9 @@ function renderHoldings(){
     const col=pnl>=0?'var(--red)':'var(--green)',sign=pnl>=0?'+':'',curr=h.currency==='TWD'?'NT$':'US$';
     const techHTML=renderTechIndicators(h);
     const fd=JSON.parse(localStorage.getItem('faithCheck')||'{}'),lc=fd[h.ticker];
-    let fHTML=lc?()=>{const dl=180-Math.floor((Date.now()-new Date(lc).getTime())/86400000);const fc=dl<=0?'var(--red)':dl<=30?'var(--yellow)':'var(--text-muted)';return `<span style="font-family:var(--font-mono);font-size:9px;color:${fc}">${dl<=0?`逾期 ${Math.abs(dl)} 天`:`${dl} 天後信仰檢核`}</span>`;}():`<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span>`;
+    const _dl=lc?(180-Math.floor((Date.now()-new Date(lc).getTime())/86400000)):null;
+    const _fc=_dl!=null?(_dl<=0?'var(--red)':_dl<=30?'var(--yellow)':'var(--text-muted)'):'';
+    const fHTML=lc?('<span style="font-family:var(--font-mono);font-size:9px;color:'+_fc+'">'+((_dl<=0)?('逾期 '+Math.abs(_dl)+' 天'):(_dl+' 天後信仰檢核'))+'</span>'):'<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span>';
     return `<div class="holding-entry" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
       <div><div class="holding-ticker">${h.ticker}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
       <div class="holding-metrics">
