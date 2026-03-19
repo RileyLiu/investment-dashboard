@@ -619,45 +619,48 @@ function renderIndexCell(id,data,isVix){
 function updateIndexHovers(){
   if(!holdingsData.length)return;
   const totalTWD=holdingsData.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
-  // SPX: 所有美股
-  const spxH=holdingsData.filter(h=>h.currency==='USD');
+
+  function renderHoldingRows(list){
+    return list.map(h=>{
+      const p=h.cost>0?((h.price-h.cost)/h.cost*100):0;
+      const pc=p>=0?'var(--red)':'var(--green)';
+      const priceStr=(h.currency==='USD'?'$':'NT$')+h.price.toLocaleString();
+      return '<div class="tt-holding-row"><span class="tt-ticker">'+h.ticker+'</span><span class="tt-price">'+priceStr+'</span><span class="tt-pct" style="color:'+pc+'">'+(p>=0?'+':'')+p.toFixed(1)+'%</span></div>';
+    }).join('');
+  }
+  function renderExposure(amtId,pctId,val,total){
+    const amtEl=document.getElementById(amtId);
+    const pctEl=document.getElementById(pctId);
+    if(amtEl)amtEl.textContent='NT$'+(val/10000).toFixed(1)+'萬';
+    if(pctEl){const pct=total>0?(val/total*100):0;pctEl.textContent=pct.toFixed(1)+'%';pctEl.style.color=pct>35?'var(--red)':pct>25?'var(--yellow)':'var(--green)';}
+  }
+
+  // SPX: NYSE 個股（LLY、UNH）
+  const spxH=holdingsData.filter(h=>SPX_TICKERS.includes(h.ticker.toUpperCase()));
+  const spxTWD=spxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
   const spxList=document.getElementById('spx-holdings-list');
-  if(spxList&&spxH.length){
-    spxList.innerHTML=spxH.map(h=>{
-      const p=h.cost>0?((h.price-h.cost)/h.cost*100):0;
-      const pc=p>=0?'var(--red)':'var(--green)';
-      return `<div class="tt-holding-row"><span class="tt-ticker">${h.ticker}</span><span class="tt-price">$${h.price.toLocaleString()}</span><span class="tt-pct" style="color:${pc}">${p>=0?'+':''}${p.toFixed(1)}%</span></div>`;
-    }).join('');
-  }
-  // NDX: Nasdaq 相關
+  if(spxList)spxList.innerHTML=spxH.length?renderHoldingRows(spxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無 NYSE 個股持倉</div>';
+  renderExposure('spx-exposure-amt','spx-exposure-pct',spxTWD,totalTWD);
+
+  // NDX: NASDAQ 個股（MSFT、GOOG、COST、SOFI、PLTR、QQQ）
   const ndxH=holdingsData.filter(h=>NDX_TICKERS.includes(h.ticker.toUpperCase()));
+  const ndxTWD=ndxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
   const ndxList=document.getElementById('ndx-holdings-list');
-  if(ndxList&&ndxH.length){
-    ndxList.innerHTML=ndxH.map(h=>{
-      const p=h.cost>0?((h.price-h.cost)/h.cost*100):0;
-      const pc=p>=0?'var(--red)':'var(--green)';
-      return `<div class="tt-holding-row"><span class="tt-ticker">${h.ticker}</span><span class="tt-price">$${h.price.toLocaleString()}</span><span class="tt-pct" style="color:${pc}">${p>=0?'+':''}${p.toFixed(1)}%</span></div>`;
-    }).join('');
-  }
-  // SOX: 半導體相關
+  if(ndxList)ndxList.innerHTML=ndxH.length?renderHoldingRows(ndxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無 NASDAQ 持倉</div>';
+  renderExposure('ndx-exposure-amt','ndx-exposure-pct',ndxTWD,totalTWD);
+
+  // SOX: 半導體相關（2330、SMH）
   const soxH=holdingsData.filter(h=>SOX_TICKERS.includes(h.ticker.toUpperCase()));
   const soxTWD=soxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
   const soxList=document.getElementById('sox-holdings-list');
-  if(soxList&&soxH.length){
-    soxList.innerHTML=soxH.map(h=>{
-      const p=h.cost>0?((h.price-h.cost)/h.cost*100):0;
-      const pc=p>=0?'var(--red)':'var(--green)';
-      return `<div class="tt-holding-row"><span class="tt-ticker">${h.ticker}</span><span class="tt-price">${h.currency==='USD'?'$':'NT$'}${h.price.toLocaleString()}</span><span class="tt-pct" style="color:${pc}">${p>=0?'+':''}${p.toFixed(1)}%</span></div>`;
-    }).join('');
-  }
-  const soxAmtEl=document.getElementById('sox-exposure-amt');
-  const soxPctEl=document.getElementById('sox-exposure-pct');
-  if(soxAmtEl)soxAmtEl.textContent=`NT$${(soxTWD/10000).toFixed(1)}萬`;
-  if(soxPctEl){
-    const pct=totalTWD>0?(soxTWD/totalTWD*100):0;
-    soxPctEl.textContent=`${pct.toFixed(1)}%`;
-    soxPctEl.style.color=pct>35?'var(--red)':pct>25?'var(--yellow)':'var(--green)';
-  }
+  if(soxList)soxList.innerHTML=soxH.length?renderHoldingRows(soxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無半導體持倉</div>';
+  renderExposure('sox-exposure-amt','sox-exposure-pct',soxTWD,totalTWD);
+
+  // 今日漲跌
+  const spxTodayEl=document.getElementById('spx-today');
+  if(spxTodayEl&&indexData.spx){const sg=indexData.spx.changePct>=0?'+':'';spxTodayEl.textContent=sg+(indexData.spx.changePct||0).toFixed(2)+'%';spxTodayEl.style.color=indexData.spx.changePct>0?'var(--red)':indexData.spx.changePct<0?'var(--green)':'var(--text-muted)';}
+  const ndxTodayEl=document.getElementById('ndx-today');
+  if(ndxTodayEl&&indexData.ndx){const sg=indexData.ndx.changePct>=0?'+':'';ndxTodayEl.textContent=sg+(indexData.ndx.changePct||0).toFixed(2)+'%';ndxTodayEl.style.color=indexData.ndx.changePct>0?'var(--red)':indexData.ndx.changePct<0?'var(--green)':'var(--text-muted)';}
 }
 
 // === ETF QUOTES ===
@@ -832,14 +835,15 @@ function parseMeta(rows){
     const fVal=parseFloat((row[5]||'').replace(/,/g,''));
     const iVal=(row[8]||'').trim();
     const gVal=parseFloat((row[6]||'').replace(/,/g,''));
-    const lVal=parseFloat((row[11]||'').replace(/,/g,''));
+    const lLabel=(row[11]||'').trim();
+    const lVal=parseFloat((row[12]||'').replace(/,/g,''));
     if(fVal>25&&fVal<45)usdTwd=fVal;
     if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0)pureCash+=bVal;
     if(label==='TTO'&&!isNaN(bVal)&&bVal>0)tto=bVal;
     if(label===ALLOC_ROWS.growth&&!isNaN(bVal))growthTarget=bVal/100;
     if(label===ALLOC_ROWS.etf&&!isNaN(bVal))etfTarget=bVal/100;
     if(iVal==='VIX 數值'&&!isNaN(gVal)&&gVal>0)vix=gVal;
-    if(label==='USD匯兌損益'&&!isNaN(lVal))forexPnl=lVal;
+    if(lLabel==='USD匯兌損益'&&!isNaN(lVal))forexPnl=lVal;
   }
   const deployable=Math.max(0,pureCash-RESERVE_CASH);
   return{totalCash:tto,pureCash,reserveCash:RESERVE_CASH,deployable,growthTarget,etfTarget,vix,forexPnl};
@@ -911,6 +915,7 @@ async function syncSheets(){
   }catch(e){}
   holdingsData=parseHoldings(rows);
   const meta=parseMeta(rows);
+
   ls('holdings_cache',JSON.stringify({data:holdingsData,meta,ts:Date.now()}));
   renderHoldings();
   updateAllocCards(meta);
