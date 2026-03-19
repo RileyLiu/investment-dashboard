@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.8.0</title>
+<title>投資儀錶板 v3.8.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -239,7 +239,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -386,7 +386,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div id="health-ai-status" style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:12px">尚未生成</div>
   <div id="action-log-list"></div>
 </div>
-</main>
 <!-- RISK PAGE -->
 <div class="page" id="page-risk" style="padding:16px 20px;max-width:1400px;margin:0 auto;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
@@ -404,6 +403,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   </div>
   <div id="risk-analysis-result" style="display:none;margin-top:8px"></div>
 </div>
+</main>
 <!-- ANALYSIS MODAL -->
 <div class="modal-overlay" id="analysis-modal">
   <div class="modal">
@@ -440,6 +440,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.8.1 — 2026-03-19</div>
+        <div class="analysis-text">
+          ✦ 修正設定視窗無法開啟：page-risk 移回 &lt;main&gt; 內，所有 .page 切換恢復正常<br>
+          ✦ 移除重複的 thesisCache 宣告（第 1183 行冗餘定義）<br>
+          ✦ 補上匯兌損益渲染：total-pnl-forex 現在正確顯示 USD/TWD 匯兌損益
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.8.0 — 2026-03-19</div>
         <div class="analysis-text">
@@ -996,6 +1004,10 @@ function computeAndRenderPnL(){
   el('total-pnl-usd-pct').textContent=uCost>0?(uPnl>=0?'+':'')+pct(uPnl,uCost)+'% 美股':'—';
   el('total-pnl-tw').style.color=col(twPnl);el('total-pnl-tw').textContent=twCost>0?fmt(twPnl,'TWD'):'—';
   el('total-pnl-tw-pct').textContent=twCost>0?(twPnl>=0?'+':'')+pct(twPnl,twCost)+'% 台股':'—';
+  // forexPnl：從最新 meta cache 讀取
+  try{const mc=JSON.parse(ls('holdings_cache')||'{}');const fp=mc.meta?.forexPnl;
+    if(fp!=null&&el('total-pnl-forex')){el('total-pnl-forex').style.color=col(fp);el('total-pnl-forex').textContent=fmt(fp,'TWD');if(el('total-pnl-forex-sub'))el('total-pnl-forex-sub').textContent='USD/TWD 匯兌損益';}
+  }catch(e){}
   document.getElementById('charts-row').style.display='grid';
   renderCharts(gVal,eVal,sVals);
 }
@@ -1180,7 +1192,6 @@ function closeModal(id){el(id).classList.remove('open');}
 ['analysis-modal','settings-modal','thesis-modal','changelog-modal'].forEach(id=>{el(id).addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal(id);});});
 
 // === THESIS ===
-let thesisCache={};
 async function loadThesisFromSheets(){
   if(!googleToken)return;
   try{
