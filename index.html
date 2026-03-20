@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.8.3</title>
+<title>投資儀錶板 v3.8.5</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -162,6 +162,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .risk-cd-bar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden;}
 .risk-cd-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 1s linear;}
 .risk-ai-status{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:6px;min-height:16px;}
+.macro-cell{transition:border-color 0.2s;}
+.macro-cell:hover{border-color:var(--border-bright)!important;}
+.macro-tooltip{position:absolute;top:calc(100% + 8px);left:0;z-index:600;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:260px;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
+.macro-cell:hover .macro-tooltip{display:block;animation:fadeIn 0.15s ease;}
 .sync-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;margin-bottom:20px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
 .sync-banner.synced{border-color:var(--green-dim);color:var(--green);}
 .sync-banner.error{border-color:var(--red-dim);color:var(--red);}
@@ -239,7 +243,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.3</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.5</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -392,12 +396,102 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </div>
 <!-- RISK PAGE -->
 <div class="page" id="page-risk" style="padding:16px 20px;max-width:1400px;margin:0 auto;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
     <div class="section-header" style="margin-bottom:0;flex:1"><span class="section-label">風險總覽</span><div class="section-line"></div></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:16px;">
       <button class="risk-ai-btn" id="risk-ai-btn" onclick="runRiskAnalysis()">⬡ AI 風險審查</button>
       <div class="risk-cd-bar" style="width:160px"><div class="risk-cd-fill" id="risk-cd-fill" style="width:0%"></div></div>
       <div class="risk-ai-status" id="risk-ai-status">尚未分析</div>
+    </div>
+  </div>
+  <!-- 宏觀環境指標欄 -->
+  <div id="macro-bar" style="display:none;margin-bottom:16px;">
+    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">宏觀環境指標 · Yahoo Finance 即時</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+
+      <!-- 短期利率 -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">短期利率</div>
+        <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-fedfunds">—</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">^IRX 13週國庫券</div>
+        <div class="macro-tooltip">
+          <div class="tt-title">短期利率 · ^IRX</div>
+          <div class="tt-row"><span class="tt-label">代理指標</span><span class="tt-val">13週美國國庫券殖利率</span></div>
+          <div class="tt-row"><span class="tt-label">近似聯邦基金利率</span><span class="tt-val" style="color:var(--accent)">Fed 政策方向</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">對持倉影響</div>
+          <div class="tt-row"><span class="tt-label">&gt; 4%（偏高）</span><span class="tt-val" style="color:var(--red)">成長股估值壓縮</span></div>
+          <div class="tt-row"><span class="tt-label">2–4%（正常）</span><span class="tt-val" style="color:var(--yellow)">中性影響</span></div>
+          <div class="tt-row"><span class="tt-label">&lt; 2%（偏低）</span><span class="tt-val" style="color:var(--green)">估值空間打開</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">利率高 → DCF 折現率升 → MSFT / GOOG / PLTR 等高 PE 股本益比承壓</div>
+        </div>
+      </div>
+
+      <!-- 10年期公債 -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">10年期公債</div>
+        <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-dgs10">—</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">^TNX</div>
+        <div class="macro-tooltip">
+          <div class="tt-title">10年期公債殖利率 · ^TNX</div>
+          <div class="tt-row"><span class="tt-label">角色</span><span class="tt-val">長期資金成本基準</span></div>
+          <div class="tt-row"><span class="tt-label">DCF 折現率基礎</span><span class="tt-val" style="color:var(--accent)">估值關鍵指標</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">對持倉影響</div>
+          <div class="tt-row"><span class="tt-label">&gt; 5%（高）</span><span class="tt-val" style="color:var(--red)">高本益比股全面承壓</span></div>
+          <div class="tt-row"><span class="tt-label">3–5%（正常）</span><span class="tt-val" style="color:var(--yellow)">結構性壓力存在</span></div>
+          <div class="tt-row"><span class="tt-label">&lt; 3%（低）</span><span class="tt-val" style="color:var(--green)">成長股估值空間大</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">TNX 每升 1% → 成長股理論估值縮水 15–25%（視久期而定）</div>
+        </div>
+      </div>
+
+      <!-- 殖利率曲線 -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">殖利率曲線</div>
+        <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-t10y2y">—</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">TNX - FVX（倒掛預警）</div>
+        <div class="macro-tooltip" style="left:auto;right:0;">
+          <div class="tt-title">殖利率曲線 · TNX − FVX</div>
+          <div class="tt-row"><span class="tt-label">計算方式</span><span class="tt-val">10年 − 5年期公債</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">訊號解讀</div>
+          <div class="tt-row"><span class="tt-label">&gt; 0（正斜率）</span><span class="tt-val" style="color:var(--green)">正常，經濟預期健康</span></div>
+          <div class="tt-row"><span class="tt-label">接近 0（平坦）</span><span class="tt-val" style="color:var(--yellow)">警戒，市場存疑</span></div>
+          <div class="tt-row"><span class="tt-label">&lt; 0（倒掛）</span><span class="tt-val" style="color:var(--red)">衰退前兆警示</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">倒掛後果</div>
+          <div class="tt-row"><span class="tt-label">歷史紀錄</span><span class="tt-val">倒掛後 12–18 個月內衰退</span></div>
+          <div class="tt-row"><span class="tt-label">SOFI 影響</span><span class="tt-val" style="color:var(--red)">金融股淨息差收窄</span></div>
+          <div class="tt-row"><span class="tt-label">COST 影響</span><span class="tt-val" style="color:var(--yellow)">消費降級但防禦性佳</span></div>
+          <div class="tt-row"><span class="tt-label">MSFT / GOOG</span><span class="tt-val" style="color:var(--yellow)">雲端需求相對穩定</span></div>
+        </div>
+      </div>
+
+      <!-- VIX -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">VIX 恐慌指數</div>
+        <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vix">—</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">^VIX</div>
+        <div class="macro-tooltip" style="left:auto;right:0;">
+          <div class="tt-title">VIX 恐慌指數</div>
+          <div class="tt-row"><span class="tt-label">意義</span><span class="tt-val">市場隱含波動率（30天）</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">區間解讀</div>
+          <div class="tt-row"><span class="tt-label">&lt; 20（平靜）</span><span class="tt-val" style="color:var(--green)">市場樂觀，正常操作</span></div>
+          <div class="tt-row"><span class="tt-label">20–30（警戒）</span><span class="tt-val" style="color:var(--yellow)">控制倉位，等待明朗</span></div>
+          <div class="tt-row"><span class="tt-label">&gt; 30（恐慌）</span><span class="tt-val" style="color:var(--red)">極端情緒，歷史加碼區</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">Buffett 法則</div>
+          <div class="tt-row"><span class="tt-label">VIX 歷史高點</span><span class="tt-val">2020 疫情 89.5</span></div>
+          <div class="tt-row"><span class="tt-label">2024 日圓閃崩</span><span class="tt-val">65.7</span></div>
+          <div class="tt-row"><span class="tt-label">2022 升息高峰</span><span class="tt-val">36.4</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VIX 30+ 且基本面未變 → 你的子彈就是為此刻準備的</div>
+        </div>
+      </div>
+
     </div>
   </div>
   <div class="risk-panel risk-panel-full" style="margin-bottom:16px;">
@@ -444,6 +538,24 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.8.5 — 2026-03-20</div>
+        <div class="analysis-text">
+          ✦ 宏觀指標四格加入 Hover tooltip<br>
+          ✦ 短期利率：利率區間 vs 持倉影響說明<br>
+          ✦ 10年期公債：DCF 折現率影響、估值壓縮量化<br>
+          ✦ 殖利率曲線：倒掛定義 + 歷史衰退紀錄 + 各持股具體影響<br>
+          ✦ VIX：三段區間解讀 + Buffett 歷史對照 + 子彈提醒
+        </div>
+      </div>
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.8.4 — 2026-03-20</div>
+        <div class="analysis-text">
+          ✦ 補回宏觀環境指標欄（v3.8.x 架構重整時誤刪）<br>
+          ✦ 四格顯示：短期利率(^IRX) / 10年公債(^TNX) / 殖利率曲線(TNX-FVX) / VIX<br>
+          ✦ 點擊「AI 風險審查」自動抓取並顯示，數據納入 AI prompt context
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.8.3 — 2026-03-19</div>
         <div class="analysis-text">
@@ -1368,7 +1480,39 @@ async function saveActionLogToSheets(actions){
 }
 
 // === 風險總覽 ===
-function initRiskPage(){renderTreemap();checkRiskCd();}
+// === 宏觀數據 (Yahoo Finance) ===
+async function fetchMacroData(){
+  try{
+    const [irxR,tnxR,fvxR]=await Promise.all([
+      fetch(`${PROXY}/quote/${encodeURIComponent('^IRX')}`),
+      fetch(`${PROXY}/quote/${encodeURIComponent('^TNX')}`),
+      fetch(`${PROXY}/quote/${encodeURIComponent('^FVX')}`)
+    ]);
+    const [irxD,tnxD,fvxD]=await Promise.all([irxR.json(),tnxR.json(),fvxR.json()]);
+    const irx=irxD.price||null, tnx=tnxD.price||null, fvx=fvxD.price||null;
+    const t10y2y=(tnx&&fvx)?parseFloat((tnx-fvx).toFixed(3)):null;
+    const vix=indexData.vix?.price||null; // 直接用已抓的 VIX
+    return {irx,tnx,fvx,t10y2y,vix};
+  }catch(e){return {irx:null,tnx:null,fvx:null,t10y2y:null,vix:null};}
+}
+
+function renderMacroBar(fd){
+  const bar=document.getElementById('macro-bar');
+  if(!bar||!fd)return;
+  const fmt=(v,d=2)=>v!=null?v.toFixed(d)+'%':'—';
+  const fmtVix=(v)=>v!=null?v.toFixed(2):'—';
+  const irxEl=document.getElementById('fred-fedfunds');
+  const tnxEl=document.getElementById('fred-dgs10');
+  const t10El=document.getElementById('fred-t10y2y');
+  const vixEl=document.getElementById('fred-vix');
+  if(irxEl){irxEl.textContent=fmt(fd.irx);irxEl.style.color=fd.irx!=null?(fd.irx>4?'var(--red)':fd.irx<2?'var(--green)':'var(--yellow)'):'var(--text-muted)';}
+  if(tnxEl){tnxEl.textContent=fmt(fd.tnx);tnxEl.style.color=fd.tnx!=null?(fd.tnx>5?'var(--red)':fd.tnx<3?'var(--green)':'var(--yellow)'):'var(--text-muted)';}
+  if(t10El){t10El.textContent=fmt(fd.t10y2y,3);t10El.style.color=fd.t10y2y!=null?(fd.t10y2y<0?'var(--red)':'var(--green)'):'var(--text-muted)';}
+  if(vixEl){vixEl.textContent=fmtVix(fd.vix);vixEl.style.color=fd.vix!=null?(fd.vix>=30?'var(--red)':fd.vix>=20?'var(--yellow)':'var(--green)'):'var(--text-muted)';}
+  bar.style.display='block';
+}
+
+async function initRiskPage(){renderTreemap();checkRiskCd();const fd=await fetchMacroData();renderMacroBar(fd);}
 function renderTreemap(){
   const container=el('treemap-container'),legend=el('treemap-legend');
   if(!holdingsData.length){container.innerHTML='<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:20px">載入持股資料後顯示</div>';return;}
@@ -1422,7 +1566,12 @@ async function runRiskAnalysis(){
   const btn=el('risk-ai-btn'),status=el('risk-ai-status');
   const apiKey=getApiKey();if(!apiKey){alert('請先設定 API Key');return;}if(!holdingsData.length){alert('請先同步持股資料');return;}
   if(btn){btn.disabled=true;btn.textContent='⬡ 分析中...';}if(status)status.textContent='呼叫 AI，約需 20 秒...';
+  // 重新抓宏觀數據（更新最新值）
+  const fd=await fetchMacroData();
+  renderMacroBar(fd);
   const tickerList=holdingsData.map(h=>`${h.ticker}(現價${h.price}${h.currency==='USD'?'USD':'TWD'})`).join('、');
+  // 宏觀 context
+  const macroCtxStr=fd?('短期利率'+(fd.irx!=null?fd.irx.toFixed(2)+'%':'—')+' / 10年公債'+(fd.tnx!=null?fd.tnx.toFixed(2)+'%':'—')+' / 殖利率曲線'+(fd.t10y2y!=null?fd.t10y2y.toFixed(3)+'%':'—')+(fd.t10y2y!=null&&fd.t10y2y<0?' 倒掛警示':'')+' / VIX '+(fd.vix!=null?fd.vix.toFixed(1):'—')):'';
   // 宏觀數據
   let macroCtx='';
   if(indexData.vix)macroCtx+=`VIX:${indexData.vix.price.toFixed(1)} `;
