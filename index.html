@@ -1109,7 +1109,7 @@ async function fetchWealthTargets(){
     ]);
     const[d12,d18]=await Promise.all([r12.json(),r18.json()]);
     const yrs=(d12.values||[[]])[0]||[],tgs=(d18.values||[[]])[0]||[];
-    return yrs.map((y,i)=>{const yr=parseInt((y||'').toString().replace(/,/g,''));const val=parseFloat((tgs[i]||'').toString().replace(/,/g,''));return yr>=2026&&yr<=2030&&!isNaN(val)&&val>0?{year:yr,target:val/10000}:null;}).filter(Boolean);
+    return yrs.map((y,i)=>{const yr=parseInt((y||'').toString().replace(/,/g,''));const val=parseFloat((tgs[i]||'').toString().replace(/,/g,''));const thisYear=new Date().getFullYear();return yr===thisYear&&!isNaN(val)&&val>0?{year:yr,target:val/10000}:null;}).filter(Boolean);
   }catch(e){return[];}
 }
 
