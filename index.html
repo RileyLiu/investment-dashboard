@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.8.5</title>
+<title>投資儀錶板 v3.9.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -239,11 +239,27 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 @media(min-width:641px) and (max-width:1024px){
   .holding-entry{grid-template-columns:140px 1fr 200px 120px;}
 }
+/* ── Nasdaq/Gold 比值週期圖 v3.9.0 ── */
+.ng-section{margin-bottom:20px;}
+.ng-chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;position:relative;}
+.ng-overlay-btn{padding:3px 10px;border-radius:2px;font-family:var(--font-mono);font-size:10px;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text-muted);transition:all 0.2s;letter-spacing:0.05em;}
+.ng-overlay-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+.ng-chart-wrap{position:relative;width:100%;user-select:none;}
+.ng-tooltip-card{background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:6px;padding:10px 14px;margin-top:10px;display:none;}
+.ng-tooltip-card.visible{display:block;}
+.ng-tooltip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.ng-stat-val{font-family:var(--font-mono);font-size:15px;font-weight:600;}
+.ng-stat-lbl{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:2px;}
+.ng-zone-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.ng-zone-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.ng-zone-item{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);}
+.ng-key-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.ng-key-stat{background:var(--bg-base);border:1px solid var(--border);border-radius:6px;padding:8px 12px;text-align:center;}
 </style>
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.8.5</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.9.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -494,6 +510,71 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 
     </div>
   </div>
+  <!-- ── v3.9.0 Nasdaq / Gold 比值週期圖 ── -->
+  <div class="ng-section" id="ng-ratio-section">
+    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Nasdaq / Gold 比值 · 1995–2026 宏觀週期</div>
+    <div class="ng-chart-card">
+      <!-- 區間圖例 + 疊加指標按鈕 -->
+      <div class="ng-zone-legend">
+        <div class="ng-zone-item"><div class="ng-zone-dot" style="background:#ff1744;opacity:0.8"></div>極度危險 &gt;10</div>
+        <div class="ng-zone-item"><div class="ng-zone-dot" style="background:#ff6d00;opacity:0.8"></div>高風險 7-10</div>
+        <div class="ng-zone-item"><div class="ng-zone-dot" style="background:#ffd600;opacity:0.8"></div>中性 4-7</div>
+        <div class="ng-zone-item"><div class="ng-zone-dot" style="background:#00e676;opacity:0.8"></div>機會區 2-4</div>
+        <div class="ng-zone-item"><div class="ng-zone-dot" style="background:#00b0ff;opacity:0.8"></div>極度低估 &lt;2</div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button class="ng-overlay-btn" id="ng-btn-pe" onclick="ngToggleOverlay('pe')">Nasdaq P/E</button>
+          <button class="ng-overlay-btn" id="ng-btn-gold" onclick="ngToggleOverlay('gold')">黃金價格</button>
+          <button class="ng-overlay-btn" id="ng-btn-fed" onclick="ngToggleOverlay('fed')">Fed 利率</button>
+        </div>
+      </div>
+      <!-- SVG 圖表 -->
+      <div class="ng-chart-wrap" id="ng-chart-wrap">
+        <svg id="ng-svg" style="display:block;width:100%;touch-action:none;cursor:crosshair;" height="260"></svg>
+      </div>
+      <!-- Tooltip -->
+      <div class="ng-tooltip-card" id="ng-tooltip">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)" id="ng-tt-date">—</span>
+          <span style="font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:3px;" id="ng-tt-zone">—</span>
+        </div>
+        <div class="ng-tooltip-grid">
+          <div><div class="ng-stat-val" id="ng-tt-ratio" style="color:#c9a84c">—</div><div class="ng-stat-lbl">Nasdaq/Gold</div></div>
+          <div><div class="ng-stat-val" id="ng-tt-pe" style="color:#a78bfa">—</div><div class="ng-stat-lbl">Nasdaq P/E</div></div>
+          <div><div class="ng-stat-val" id="ng-tt-gold" style="color:#fbbf24">—</div><div class="ng-stat-lbl">黃金 USD/oz</div></div>
+          <div><div class="ng-stat-val" id="ng-tt-fed" style="color:#34d399">—</div><div class="ng-stat-lbl">Fed 利率 %</div></div>
+        </div>
+      </div>
+      <!-- 關鍵數值 -->
+      <div class="ng-key-stats" id="ng-key-stats">
+        <div class="ng-key-stat">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:4px">2000年高點</div>
+          <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#c9a84c">15.2</div>
+        </div>
+        <div class="ng-key-stat">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:4px">當前 2026.03</div>
+          <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;" id="ng-current-val">4.8</div>
+          <div style="font-family:var(--font-mono);font-size:10px;margin-top:2px;" id="ng-current-zone">中性</div>
+        </div>
+        <div class="ng-key-stat">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:4px">2011年低點</div>
+          <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#00e676">1.6</div>
+        </div>
+      </div>
+      <!-- 位置橫條 -->
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:8px;color:var(--text-muted);margin-bottom:3px;"><span>極低 0</span><span>中性</span><span>危險 16</span></div>
+        <div style="height:5px;background:var(--bg-elevated);border-radius:3px;position:relative;overflow:hidden;">
+          <div style="position:absolute;left:0;top:0;width:12.5%;height:100%;background:#00b0ff;opacity:0.5"></div>
+          <div style="position:absolute;left:12.5%;top:0;width:12.5%;height:100%;background:#00e676;opacity:0.5"></div>
+          <div style="position:absolute;left:25%;top:0;width:18.75%;height:100%;background:#ffd600;opacity:0.5"></div>
+          <div style="position:absolute;left:43.75%;top:0;width:18.75%;height:100%;background:#ff6d00;opacity:0.5"></div>
+          <div style="position:absolute;left:62.5%;top:0;width:37.5%;height:100%;background:#ff1744;opacity:0.5"></div>
+          <div style="position:absolute;top:-1px;width:3px;height:calc(100% + 2px);background:#fff;border-radius:2px;transform:translateX(-50%);" id="ng-pos-indicator"></div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:8px;text-align:center;margin-top:3px;" id="ng-pos-label">▲ 當前 4.8</div>
+      </div>
+    </div>
+  </div>
   <div class="risk-panel risk-panel-full" style="margin-bottom:16px;">
     <div class="risk-panel-title">產業分布</div>
     <div id="treemap-container"></div>
@@ -538,6 +619,18 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.9.0 — 2026-03-30</div>
+        <div class="analysis-text">
+          ✦ 風險總覽新增「Nasdaq / Gold 比值週期圖」（1995–2026）<br>
+          ✦ 五色風險區間色帶：極度低估 / 機會區 / 中性 / 高風險 / 極度危險<br>
+          ✦ 可疊加三條指標：Nasdaq P/E / 黃金價格 / Fed 利率（虛線疊加）<br>
+          ✦ Crosshair tooltip：懸停顯示當月比值、P/E、黃金、Fed 四欄數據<br>
+          ✦ 歷史事件標記：千禧泡沫 / 911 / SARS / 金融海嘯 / COVID / 升息 / 關稅 / 美伊戰爭<br>
+          ✦ 當前位置橫條 + 三大關鍵數值（2000高點 / 當前 / 2011低點）<br>
+          ✦ 插入位置：宏觀環境指標欄之後、產業分布 Treemap 之前
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.8.5 — 2026-03-20</div>
         <div class="analysis-text">
@@ -1613,6 +1706,203 @@ async function runRiskAnalysis(){
     if(status)status.textContent='分析完成 · '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
   }catch(e){if(btn){btn.disabled=false;btn.textContent='⬡ AI 風險審查';}if(status)status.textContent='分析失敗：'+e.message;}
 }
+
+// === Nasdaq/Gold 比值週期圖 v3.9.0 ===
+(function(){
+const KEY_RATIO=[
+  [1995,0,1.5],[1995,3,1.7],[1995,6,1.9],[1995,9,2.1],
+  [1996,0,2.3],[1996,3,2.5],[1996,6,2.6],[1996,9,2.8],
+  [1997,0,3.0],[1997,3,3.4],[1997,6,3.8],[1997,9,4.0],
+  [1998,0,4.2],[1998,3,4.5],[1998,6,3.8],[1998,9,4.3],
+  [1999,0,5.2],[1999,3,6.5],[1999,6,8.0],[1999,9,10.5],
+  [2000,0,14.5],[2000,2,15.2],[2000,3,12.0],[2000,5,9.5],
+  [2000,6,8.0],[2000,9,7.0],[2000,11,5.5],
+  [2001,0,5.0],[2001,3,4.5],[2001,6,4.2],[2001,8,3.5],[2001,11,3.2],
+  [2002,0,3.0],[2002,3,2.6],[2002,6,2.2],[2002,9,1.8],[2002,11,1.9],
+  [2003,0,1.8],[2003,3,2.0],[2003,6,2.2],[2003,9,2.4],
+  [2004,0,2.5],[2004,6,2.6],[2004,11,2.7],
+  [2005,0,2.8],[2005,6,2.9],[2005,11,3.0],
+  [2006,0,3.1],[2006,6,3.0],[2006,11,3.2],
+  [2007,0,3.3],[2007,3,3.5],[2007,6,3.4],[2007,9,3.2],[2007,11,3.0],
+  [2008,0,2.9],[2008,3,2.6],[2008,6,2.5],[2008,8,2.0],[2008,11,1.9],
+  [2009,0,1.8],[2009,3,2.0],[2009,6,2.2],[2009,9,2.3],[2009,11,2.2],
+  [2010,0,2.3],[2010,6,2.2],[2010,11,2.0],
+  [2011,0,2.0],[2011,7,1.6],[2011,11,2.0],
+  [2012,0,2.2],[2012,6,2.4],[2012,11,2.6],
+  [2013,0,2.8],[2013,6,3.6],[2013,11,4.0],
+  [2014,0,4.2],[2014,11,4.5],
+  [2015,0,4.6],[2015,11,5.0],
+  [2016,0,4.6],[2016,11,5.2],
+  [2017,0,5.4],[2017,11,6.2],
+  [2018,0,6.5],[2018,11,6.0],
+  [2019,0,6.2],[2019,11,7.2],
+  [2020,0,7.5],[2020,2,5.5],[2020,3,4.7],[2020,6,5.8],[2020,11,7.0],
+  [2021,0,7.5],[2021,11,9.2],
+  [2022,0,8.5],[2022,6,6.5],[2022,11,6.3],
+  [2023,0,6.3],[2023,6,7.5],[2023,11,8.2],
+  [2024,0,8.0],[2024,6,8.0],[2024,11,8.3],
+  [2025,0,7.8],[2025,3,5.3],[2025,6,5.8],[2025,11,6.5],
+  [2026,0,5.5],[2026,1,5.0],[2026,2,4.8],
+];
+const KEY_PE=[
+  [1995,0,20],[1997,0,28],[1999,0,55],[2000,2,80],[2001,0,40],
+  [2002,9,28],[2004,0,32],[2007,0,30],[2008,11,18],[2009,6,20],
+  [2011,0,20],[2013,0,20],[2015,0,24],[2018,11,22],[2020,3,30],
+  [2021,11,36],[2022,6,24],[2023,6,28],[2024,6,32],[2025,3,24],[2026,2,24],
+];
+const KEY_GOLD=[
+  [1995,0,380],[1997,0,360],[1999,0,290],[2001,0,265],[2003,0,350],
+  [2005,0,430],[2007,0,640],[2008,0,880],[2008,11,820],[2009,9,1000],
+  [2010,0,1100],[2011,7,1900],[2011,11,1600],[2013,6,1200],
+  [2015,6,1080],[2016,6,1350],[2018,9,1200],[2019,9,1500],
+  [2020,7,2060],[2020,11,1900],[2021,11,1800],[2022,3,1950],
+  [2022,11,1800],[2023,9,2000],[2024,3,2300],[2024,9,2650],
+  [2025,3,3100],[2025,9,3200],[2026,2,3300],
+];
+const KEY_FED=[
+  [1995,0,5.5],[1998,9,4.75],[2000,2,5.75],[2000,6,6.5],
+  [2001,3,4.5],[2001,11,1.75],[2003,6,1.0],[2004,6,1.5],
+  [2006,6,5.25],[2007,11,4.25],[2008,3,2.0],[2008,11,0.25],
+  [2015,11,0.5],[2017,11,1.5],[2018,11,2.5],[2019,9,1.75],
+  [2020,3,0.25],[2022,3,0.5],[2022,6,1.75],[2022,9,3.25],
+  [2022,11,4.5],[2023,6,5.25],[2023,11,5.5],[2024,9,4.75],
+  [2025,0,4.25],[2025,6,3.75],[2026,2,3.25],
+];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const ZONES=[
+  {min:10,max:16,color:'#ff1744',label:'極度危險',opacity:0.13},
+  {min:7, max:10,color:'#ff6d00',label:'高風險',  opacity:0.10},
+  {min:4, max:7, color:'#ffd600',label:'中性',    opacity:0.06},
+  {min:2, max:4, color:'#00e676',label:'機會區',  opacity:0.08},
+  {min:0, max:2, color:'#00b0ff',label:'極度低估',opacity:0.13},
+];
+const EVENTS=[
+  {year:2000,month:2, label:'千禧泡沫',color:'#c9a84c'},
+  {year:2001,month:8, label:'911',     color:'#f87171'},
+  {year:2003,month:2, label:'SARS',    color:'#fb923c'},
+  {year:2008,month:8, label:'金融海嘯',color:'#f87171'},
+  {year:2011,month:7, label:'黃金頂', color:'#34d399'},
+  {year:2020,month:3, label:'COVID',   color:'#f87171'},
+  {year:2022,month:5, label:'升息',    color:'#60a5fa'},
+  {year:2025,month:3, label:'關稅',    color:'#fb923c'},
+  {year:2026,month:2, label:'美伊戰爭',color:'#f87171'},
+];
+const OVERLAYS={
+  pe:  {key:'pe',  label:'P/E',  color:'#a78bfa',data:KEY_PE,  max:90,  unit:'x'},
+  gold:{key:'gold',label:'黃金', color:'#fbbf24',data:KEY_GOLD,max:3500,unit:'$'},
+  fed: {key:'fed', label:'Fed',  color:'#34d399',data:KEY_FED, max:8,   unit:'%'},
+};
+function interp(arr){
+  const out=[];
+  for(let i=0;i<arr.length-1;i++){
+    const[y1,m1,v1]=arr[i],[y2,m2,v2]=arr[i+1];
+    const steps=(y2*12+m2)-(y1*12+m1);
+    for(let s=0;s<steps;s++){const t=s/steps,tm=y1*12+m1+s;out.push({year:Math.floor(tm/12),month:tm%12,value:v1+(v2-v1)*t});}
+  }
+  const l=arr[arr.length-1];out.push({year:l[0],month:l[1],value:l[2]});
+  return out;
+}
+const monthly=interp(KEY_RATIO);
+const peM=interp(KEY_PE),goldM=interp(KEY_GOLD),fedM=interp(KEY_FED);
+const N=monthly.length;
+function getIdx(year,month){return monthly.findIndex(d=>d.year===year&&d.month===month);}
+function getZone(v){return ZONES.find(z=>v>=z.min&&v<z.max)||ZONES[ZONES.length-1];}
+let ngOverlay=null;
+window.ngToggleOverlay=function(key){
+  ngOverlay=ngOverlay===key?null:key;
+  ['pe','gold','fed'].forEach(k=>{const btn=document.getElementById('ng-btn-'+k);if(btn)btn.classList.toggle('active',ngOverlay===k);});
+  ngDraw();
+};
+function ngDraw(){
+  const wrap=document.getElementById('ng-chart-wrap'),svg=document.getElementById('ng-svg');
+  if(!wrap||!svg)return;
+  const W=wrap.clientWidth||700,H=260;
+  svg.setAttribute('width',W);svg.setAttribute('height',H);
+  const PAD={top:32,right:14,bottom:24,left:36};
+  const CW=W-PAD.left-PAD.right,CH=H-PAD.top-PAD.bottom;
+  const MAX=16,MIN=0;
+  const xS=i=>(i/(N-1))*CW;
+  const yS=v=>CH-((v-MIN)/(MAX-MIN))*CH;
+  let html='';
+  html+=`<defs><linearGradient id="ng-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c9a84c" stop-opacity="0.3"/><stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/></linearGradient><clipPath id="ng-clip"><rect x="0" y="0" width="${CW}" height="${CH}"/></clipPath></defs>`;
+  html+=`<g transform="translate(${PAD.left},${PAD.top})">`;
+  ZONES.forEach(z=>{const zy=Math.max(0,yS(z.max)),zh=Math.min(CH,yS(z.min)-yS(z.max));html+=`<rect x="0" y="${zy.toFixed(1)}" width="${CW}" height="${zh.toFixed(1)}" fill="${z.color}" opacity="${z.opacity}"/>`;});
+  ZONES.forEach(z=>{const midY=Math.max(10,Math.min(CH-8,(yS(z.max)+yS(z.min))/2));html+=`<text x="${CW-4}" y="${midY.toFixed(1)}" fill="${z.color}" font-size="7.5" text-anchor="end" opacity="0.7" font-family="IBM Plex Mono,monospace">${z.label}</text>`;});
+  [2,4,6,8,10,12,14].forEach(v=>{html+=`<line x1="0" y1="${yS(v).toFixed(1)}" x2="${CW}" y2="${yS(v).toFixed(1)}" stroke="#1e3050" stroke-width="0.5"/>`;html+=`<text x="-4" y="${(yS(v)+4).toFixed(1)}" fill="#3d5875" font-size="8" text-anchor="end" font-family="IBM Plex Mono,monospace">${v}</text>`;});
+  monthly.forEach((d,i)=>{if(d.month===0&&d.year%3===0){html+=`<line x1="${xS(i).toFixed(1)}" y1="${CH}" x2="${xS(i).toFixed(1)}" y2="${CH+4}" stroke="#1e3050"/>`;html+=`<text x="${xS(i).toFixed(1)}" y="${CH+14}" fill="#3d5875" font-size="8" text-anchor="middle" font-family="IBM Plex Mono,monospace">${d.year}</text>`;}});
+  const mainD=monthly.map((d,i)=>`${i===0?'M':'L'}${xS(i).toFixed(1)},${yS(d.value).toFixed(1)}`).join(' ');
+  const areaD=mainD+` L${xS(N-1).toFixed(1)},${CH} L0,${CH} Z`;
+  html+=`<g clip-path="url(#ng-clip)">`;
+  html+=`<path d="${areaD}" fill="url(#ng-grad)"/>`;
+  html+=`<path d="${mainD}" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linejoin="round"/>`;
+  if(ngOverlay&&OVERLAYS[ngOverlay]){
+    const ov=OVERLAYS[ngOverlay];
+    const ovD=interp(ov.data);
+    const yO=v=>CH-(v/ov.max)*CH;
+    const ovPath=ovD.map((d,i)=>`${i===0?'M':'L'}${xS(i).toFixed(1)},${yO(d.value).toFixed(1)}`).join(' ');
+    html+=`<path d="${ovPath}" fill="none" stroke="${ov.color}" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.85"/>`;
+    html+=`<text x="${CW-4}" y="10" fill="${ov.color}" font-size="8.5" text-anchor="end" font-family="IBM Plex Mono,monospace">${ov.label} (${ov.unit})</text>`;
+  }
+  html+=`</g>`;
+  EVENTS.forEach(ev=>{
+    const idx=getIdx(ev.year,ev.month);if(idx<0)return;
+    const x=xS(idx),y=yS(monthly[idx].value);
+    const flip=x>CW*0.8,anchor=flip?'end':'start',dx=flip?-5:5;
+    const ly=Math.max(12,Math.min(y-10,CH-30));
+    html+=`<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${CH}" stroke="${ev.color}" stroke-width="0.7" stroke-dasharray="3,3" opacity="0.5"/>`;
+    html+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${ev.color}" stroke="#0d1526" stroke-width="1.5"/>`;
+    html+=`<text x="${(x+dx).toFixed(1)}" y="${ly}" fill="${ev.color}" font-size="8" text-anchor="${anchor}" font-family="IBM Plex Sans,sans-serif" transform="rotate(-50,${(x+dx).toFixed(1)},${ly})">${ev.label}</text>`;
+  });
+  html+=`<line id="ng-xhair" x1="0" y1="0" x2="0" y2="${CH}" stroke="rgba(255,255,255,0.2)" stroke-width="0.8" display="none"/>`;
+  html+=`<circle id="ng-xhair-dot" cx="0" cy="0" r="5" fill="#c9a84c" stroke="#0d1526" stroke-width="2" display="none"/>`;
+  html+=`<line x1="0" y1="0" x2="0" y2="${CH}" stroke="#1e3050"/>`;
+  html+=`<line x1="0" y1="${CH}" x2="${CW}" y2="${CH}" stroke="#1e3050"/>`;
+  html+=`</g>`;
+  svg.innerHTML=html;
+  // 更新位置 bar
+  const cur=monthly[N-1].value;
+  const pct=Math.min(100,(cur/16)*100);
+  const ind=document.getElementById('ng-pos-indicator');if(ind)ind.style.left=pct+'%';
+  const lbl=document.getElementById('ng-pos-label'),zone=getZone(cur);
+  if(lbl){lbl.textContent=`▲ 當前 ${cur.toFixed(1)} — ${zone.label}`;lbl.style.color=zone.color;}
+  const cv=document.getElementById('ng-current-val'),cz=document.getElementById('ng-current-zone');
+  if(cv){cv.textContent=cur.toFixed(1);cv.style.color=zone.color;}
+  if(cz){cz.textContent=zone.label;cz.style.color=zone.color;}
+  // 滑鼠事件
+  svg.onmousemove=svg.ontouchmove=function(e){
+    e.preventDefault();
+    const rect=svg.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left-PAD.left;
+    const idx=Math.max(0,Math.min(N-1,Math.round((cx/CW)*(N-1))));
+    const d=monthly[idx],x=xS(idx),y=yS(d.value);
+    const xh=document.getElementById('ng-xhair'),dot=document.getElementById('ng-xhair-dot');
+    if(xh){xh.setAttribute('x1',x.toFixed(1));xh.setAttribute('x2',x.toFixed(1));xh.setAttribute('display','block');}
+    if(dot){dot.setAttribute('cx',x.toFixed(1));dot.setAttribute('cy',y.toFixed(1));dot.setAttribute('display','block');}
+    const tt=document.getElementById('ng-tooltip');if(tt)tt.classList.add('visible');
+    const zone=getZone(d.value);
+    const dte=document.getElementById('ng-tt-date');if(dte)dte.textContent=`${d.year} ${MONTHS[d.month]}`;
+    const ze=document.getElementById('ng-tt-zone');if(ze){ze.textContent=zone.label;ze.style.color=zone.color;ze.style.background=zone.color+'22';ze.style.border='1px solid '+zone.color+'55';}
+    const rv=document.getElementById('ng-tt-ratio');if(rv){rv.textContent=d.value.toFixed(2);rv.style.color=zone.color;}
+    const pi=peM[Math.min(idx,peM.length-1)];const pe2=document.getElementById('ng-tt-pe');if(pe2)pe2.textContent=pi.value.toFixed(0)+'x';
+    const gi=goldM[Math.min(idx,goldM.length-1)];const g2=document.getElementById('ng-tt-gold');if(g2)g2.textContent='$'+gi.value.toFixed(0);
+    const fi=fedM[Math.min(idx,fedM.length-1)];const f2=document.getElementById('ng-tt-fed');if(f2)f2.textContent=fi.value.toFixed(2)+'%';
+  };
+  svg.onmouseleave=function(){
+    const xh=document.getElementById('ng-xhair'),dot=document.getElementById('ng-xhair-dot');
+    if(xh)xh.setAttribute('display','none');if(dot)dot.setAttribute('display','none');
+    const tt=document.getElementById('ng-tooltip');if(tt)tt.classList.remove('visible');
+  };
+}
+function ngInit(){if(!document.getElementById('ng-svg'))return;ngDraw();}
+window.addEventListener('resize',()=>{if(document.getElementById('ng-svg'))ngDraw();});
+// Hook 進 showPage
+const _origShowPage=window.showPage;
+window.showPage=function(name,btn){
+  if(_origShowPage)_origShowPage(name,btn);
+  if(name==='risk')setTimeout(ngInit,80);
+};
+if(document.getElementById('page-risk')&&document.getElementById('page-risk').classList.contains('active'))setTimeout(ngInit,100);
+})();
 
 init();
 </script>
