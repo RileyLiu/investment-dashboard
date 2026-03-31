@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.10.3</title>
+<title>投資儀錶板 v3.10.4</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.3</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.4</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -629,6 +629,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.10.4 — 2026-03-31</div>
+        <div class="analysis-text">
+          ✦ 頁面載入自動同步：有 Google Token 時自動執行 syncSheets()，確保資產快照每日不中斷寫入，無需手動點擊「同步試算表」
+        </div>
         <div class="analysis-section-title">v3.10.3 — 2026-03-31</div>
         <div class="analysis-text">
           ✦ 資產快照 guard 從 localStorage 改存 Sheets 設定!B11（跨裝置同步）<br>
@@ -774,7 +778,10 @@ function init(){
   loadGoogleToken();renderWatchlist();updateStatusBar();
   fetchAllIndexData();
   fetchETFQuotes();
-  if(googleToken)fetchAllDCF();
+  if(googleToken){
+    fetchAllDCF();
+    syncSheets(); // v3.10.4：自動同步，確保資產快照每日寫入不中斷
+  }
 }
 
 // === INDEX BAR ===
