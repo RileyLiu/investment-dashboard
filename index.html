@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.10.4</title>
+<title>投資儀錶板 v3.10.5</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.4</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.5</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -629,9 +629,15 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.10.5 — 2026-03-31</div>
+        <div class="analysis-text">
+          ✦ 資產快照去重：fetchAssetSnapshots 同一天只取最後一筆，圖表每天顯示一個點<br>
+          ✦ 快照範圍改為動態 A2:E（無上限），支援長期使用不受行數限制<br>
+          ✦ writeAssetSnapshot 加 in-memory flag，同一 session 只寫入一次，防止頁面自動同步時重複寫入
+        </div>
         <div class="analysis-section-title">v3.10.4 — 2026-03-31</div>
         <div class="analysis-text">
-          ✦ 頁面載入自動同步：有 Google Token 時自動執行 syncSheets()，確保資產快照每日不中斷寫入，無需手動點擊「同步試算表」
+          ✦ 頁面載入自動同步：有 Google Token 時自動執行 syncSheets()，確保資產快照每日不中斷寫入
         </div>
         <div class="analysis-section-title">v3.10.3 — 2026-03-31</div>
         <div class="analysis-text">
@@ -739,6 +745,7 @@ const DEFAULT_SHEET_ID='1wSie_fKvkfJKXT6WSQh3VSsyzdnCJKRv10DrJMU5F80';
 const PROXY='https://anthropic-proxy.issac0901.workers.dev';
 const RESERVE_CASH=500000; // NT$50萬固定保留現金
 let githubPAT=null;
+let snapshotWritten=false; // v3.10.5：同一 session 只寫一次快照
 const COLS={ticker:5,fullCode:6,name:7,shares:10,cost:11,price:13,ma200pct:15,ma50pct:2,trend:3,kd:4,w52low:16,w52high:17,pe:19,peL:20,peH:21};
 const ETF_TICKERS=['006208','SMH','QQQ','TQQQ','0050','JEPI','XLU','PHO','COPX'];
 const TW_TICKERS=['2330','6669','5871','006208','IX0001'];
@@ -778,10 +785,7 @@ function init(){
   loadGoogleToken();renderWatchlist();updateStatusBar();
   fetchAllIndexData();
   fetchETFQuotes();
-  if(googleToken){
-    fetchAllDCF();
-    syncSheets(); // v3.10.4：自動同步，確保資產快照每日寫入不中斷
-  }
+  if(googleToken)fetchAllDCF();
 }
 
 // === INDEX BAR ===
@@ -1210,6 +1214,7 @@ function updateAllocCards(meta){
 // === 資產快照 ===
 async function writeAssetSnapshot(){
   if(!googleToken||!holdingsData.length)return;
+  if(snapshotWritten){console.log('[快照] 本次 session 已寫入，跳過');return;} // v3.10.5
   const now=new Date();
   const dateStr=now.toISOString().split('T')[0];
   try{
@@ -1231,6 +1236,7 @@ async function writeAssetSnapshot(){
     if(wd.updatedCells){
       // 寫成功後更新 設定!B11 guard
       await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B11')}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateStr]]})});
+      snapshotWritten=true; // v3.10.5
       console.log('[快照] 已寫入：',dateStr,totalMW+'萬');
     }
   }catch(e){console.error('[快照] 寫入失敗:',e);}
@@ -1238,9 +1244,13 @@ async function writeAssetSnapshot(){
 async function fetchAssetSnapshots(){
   if(!googleToken)return[];
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A2:E200')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A2:E')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();
-    return(d.values||[]).map(r=>({date:r[0]||'',total:parseFloat(r[1])||0,usdPnl:parseFloat(r[2])||0,twPnl:parseFloat(r[3])||0,vix:parseFloat(r[4])||null})).filter(r=>r.date&&r.total>0);
+    const all=(d.values||[]).map(r=>({date:r[0]||'',total:parseFloat(r[1])||0,usdPnl:parseFloat(r[2])||0,twPnl:parseFloat(r[3])||0,vix:parseFloat(r[4])||null})).filter(r=>r.date&&r.total>0);
+    // v3.10.5：同一天只取最後一筆（去重），避免重複資料污染圖表
+    const byDate=new Map();
+    for(const row of all) byDate.set(row.date,row);
+    return Array.from(byDate.values()).sort((a,b)=>a.date.localeCompare(b.date));
   }catch(e){return[];}
 }
 async function fetchWealthTargets(){
