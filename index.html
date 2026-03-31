@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.10.7</title>
+<title>投資儀錶板 v3.10.8</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.7</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.8</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -382,6 +382,15 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div><div class="total-pnl-label">台股損益（TWD）</div><div class="total-pnl-value" id="total-pnl-tw" style="font-size:22px">—</div><div class="total-pnl-sub" id="total-pnl-tw-pct">—</div></div>
     <div class="pnl-divider"></div>
     <div><div class="total-pnl-label">匯兌損益（TWD）</div><div class="total-pnl-value" id="total-pnl-forex" style="font-size:22px">—</div><div class="total-pnl-sub" id="total-pnl-forex-sub">—</div></div>
+    <div class="pnl-divider"></div>
+    <div style="min-width:140px">
+      <div class="total-pnl-label">FIRE 達成率</div>
+      <div class="total-pnl-value" id="fire-pct-value" style="font-size:22px">—</div>
+      <div class="total-pnl-sub" id="fire-pct-sub">載入中...</div>
+      <div style="height:4px;background:var(--bg-elevated);border-radius:2px;margin-top:8px;overflow:hidden;width:120px">
+        <div id="fire-pct-bar" style="height:100%;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
+      </div>
+    </div>
   </div>
   <div class="charts-row" id="charts-row" style="display:none">
     <div class="chart-card"><div class="chart-title">大類資產分布</div><div class="chart-wrap"><canvas id="chart-category"></canvas></div></div>
@@ -629,11 +638,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v3.10.7 — 2026-03-31</div>
+        <div class="analysis-section-title">v3.10.8 — 2026-03-31</div>
         <div class="analysis-text">
-          ✦ 配置進度改為實際佔比：從 Sheets G欄直接抓已計算比例（成長型/ETF），不再顯示目標執行進度<br>
-          ✦ 小字改為「目標 X% · 還差 NT$YY萬」，目標比例跟著 B9/B10 動態變動<br>
-          ✦ 進度條寬度改以實際佔比驅動，超過100%時截為100%
+          ✦ 修正配置比例：Sheets百分比格式API回傳小數(0.8357)，正確×100轉換為83.57%顯示<br>
+          ✦ 配置進度改為實際佔比（G欄），小字顯示「目標X% · 還差NT$YY萬」<br>
+          ✦ FIRE達成率加入總損益橫幅（C21/C29動態計算）<br>
+          ✦ 財富規劃行號修正：年分B15、年末投資B21<br>
+          ✦ 快照範圍A2:E無上限、去重、session防重複寫入<br>
+          ✦ 頁面載入自動同步
         </div>
         <div class="analysis-section-title">v3.10.3 — 2026-03-31</div>
         <div class="analysis-text">
@@ -741,6 +753,7 @@ const DEFAULT_SHEET_ID='1wSie_fKvkfJKXT6WSQh3VSsyzdnCJKRv10DrJMU5F80';
 const PROXY='https://anthropic-proxy.issac0901.workers.dev';
 const RESERVE_CASH=500000; // NT$50萬固定保留現金
 let githubPAT=null;
+let snapshotWritten=false;
 const COLS={ticker:5,fullCode:6,name:7,shares:10,cost:11,price:13,ma200pct:15,ma50pct:2,trend:3,kd:4,w52low:16,w52high:17,pe:19,peL:20,peH:21};
 const ETF_TICKERS=['006208','SMH','QQQ','TQQQ','0050','JEPI','XLU','PHO','COPX'];
 const TW_TICKERS=['2330','6669','5871','006208','IX0001'];
@@ -780,7 +793,7 @@ function init(){
   loadGoogleToken();renderWatchlist();updateStatusBar();
   fetchAllIndexData();
   fetchETFQuotes();
-  if(googleToken)fetchAllDCF();
+  if(googleToken){fetchAllDCF();syncSheets();}
 }
 
 // === INDEX BAR ===
@@ -1071,15 +1084,14 @@ async function fetchAllDCF(){
 // === PARSE META ===
 function parseMeta(rows){
   let pureCash=0,tto=0,growthTarget=0.55,etfTarget=0.45,vix=null,forexPnl=null;
-  let growthActual=null,etfActual=null; // v3.10.7：G欄實際配置比例
+  let growthActual=null,etfActual=null;
   for(const row of rows){
     const label=(row[0]||'').trim();
     const bVal=parseFloat((row[1]||'').replace(/,/g,'').replace('%',''));
     const fVal=parseFloat((row[5]||'').replace(/,/g,''));
     const iVal=(row[8]||'').trim();
     const gVal=parseFloat((row[6]||'').replace(/,/g,''));
-    const gPctRaw=(row[6]||'').replace(/,/g,'').replace('%','');
-    const gPctVal=parseFloat(gPctRaw);
+    const gPctVal=parseFloat((row[6]||'').replace(/,/g,'').replace('%',''));
     const lLabel=(row[11]||'').trim();
     const lVal=parseFloat((row[12]||'').replace(/,/g,''));
     if(fVal>25&&fVal<45)usdTwd=fVal;
@@ -1087,11 +1099,12 @@ function parseMeta(rows){
     if(label==='TTO'&&!isNaN(bVal)&&bVal>0)tto=bVal;
     if(label===ALLOC_ROWS.growth&&!isNaN(bVal)){
       growthTarget=bVal/100;
-      if(!isNaN(gPctVal)&&gPctVal>0)growthActual=gPctVal; // G欄實際佔比
+      // Sheets百分比格式API回傳小數(0.8357)，<2則×100
+      if(!isNaN(gPctVal)&&gPctVal>0)growthActual=gPctVal<2?gPctVal*100:gPctVal;
     }
     if(label===ALLOC_ROWS.etf&&!isNaN(bVal)){
       etfTarget=bVal/100;
-      if(!isNaN(gPctVal)&&gPctVal>0)etfActual=gPctVal; // G欄實際佔比
+      if(!isNaN(gPctVal)&&gPctVal>0)etfActual=gPctVal<2?gPctVal*100:gPctVal;
     }
     if(iVal==='VIX 數值'&&!isNaN(gVal)&&gVal>0)vix=gVal;
     if(lLabel==='USD匯兌損益'&&!isNaN(lVal))forexPnl=lVal;
@@ -1182,6 +1195,7 @@ async function syncSheets(){
   await syncAllThesisToSheets();
   renderGrowthChart();
   renderHealthPage();
+  fetchFIREProgress();
 }
 
 // === ALLOC CARDS (v3.8.0修正：tto = totalCash - reserveCash) ===
@@ -1197,7 +1211,6 @@ function updateAllocCards(meta){
   const gTarget=tto*growthTarget,eTarget=tto*etfTarget;
   const gGap=Math.max(0,gTarget-growthVal),eGap=Math.max(0,eTarget-etfVal);
   const fmt=n=>'NT$'+(n/10000).toFixed(0)+'萬';
-  // v3.10.7：顯示 Sheets G欄實際佔比，fallback 自算
   const gActualPct=growthActual!=null?growthActual:(tto>0?growthVal/tto*100:0);
   const eActualPct=etfActual!=null?etfActual:(tto>0?etfVal/tto*100:0);
   document.getElementById('alloc-growth-pct').textContent=gActualPct.toFixed(1)+'%';
@@ -1218,6 +1231,7 @@ function updateAllocCards(meta){
 // === 資產快照 ===
 async function writeAssetSnapshot(){
   if(!googleToken||!holdingsData.length)return;
+  if(snapshotWritten){console.log('[快照] session已寫入，跳過');return;}
   const now=new Date();
   const dateStr=now.toISOString().split('T')[0];
   try{
@@ -1239,6 +1253,7 @@ async function writeAssetSnapshot(){
     if(wd.updatedCells){
       // 寫成功後更新 設定!B11 guard
       await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B11')}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateStr]]})});
+      snapshotWritten=true;
       console.log('[快照] 已寫入：',dateStr,totalMW+'萬');
     }
   }catch(e){console.error('[快照] 寫入失敗:',e);}
@@ -1246,17 +1261,42 @@ async function writeAssetSnapshot(){
 async function fetchAssetSnapshots(){
   if(!googleToken)return[];
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A2:E200')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A2:E')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();
-    return(d.values||[]).map(r=>({date:r[0]||'',total:parseFloat(r[1])||0,usdPnl:parseFloat(r[2])||0,twPnl:parseFloat(r[3])||0,vix:parseFloat(r[4])||null})).filter(r=>r.date&&r.total>0);
+    const all=(d.values||[]).map(r=>({date:r[0]||'',total:parseFloat(r[1])||0,usdPnl:parseFloat(r[2])||0,twPnl:parseFloat(r[3])||0,vix:parseFloat(r[4])||null})).filter(r=>r.date&&r.total>0);
+    const byDate=new Map();for(const row of all)byDate.set(row.date,row);
+    return Array.from(byDate.values()).sort((a,b)=>a.date.localeCompare(b.date));
   }catch(e){return[];}
 }
+async function fetchFIREProgress(){
+  if(!googleToken)return;
+  try{
+    const[rc21,rc29]=await Promise.all([
+      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!C21')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
+      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!C29')}`,{headers:{Authorization:`Bearer ${googleToken}`}})
+    ]);
+    const[dc21,dc29]=await Promise.all([rc21.json(),rc29.json()]);
+    const c21=parseFloat(((dc21.values||[[]])[0]||[])[0]?.toString().replace(/,/g,'')||'0');
+    const c29=parseFloat(((dc29.values||[[]])[0]||[])[0]?.toString().replace(/,/g,'')||'0');
+    if(!c21||!c29)return;
+    const pct=Math.min(999,(c21/c29)*100);
+    const color=pct>=80?'#60a5fa':pct>=50?'var(--green)':pct>=20?'var(--yellow)':'var(--red)';
+    const label=pct>=80?'FIRE準備中':pct>=50?'接近安全門檻':pct>=20?'累積中':'起步期';
+    const ev=document.getElementById('fire-pct-value');
+    const es=document.getElementById('fire-pct-sub');
+    const eb=document.getElementById('fire-pct-bar');
+    if(ev){ev.textContent=pct.toFixed(1)+'%';ev.style.color=color;}
+    if(es)es.textContent=label;
+    if(eb){eb.style.width=Math.min(100,pct)+'%';eb.style.background=color;}
+  }catch(e){console.error('[FIRE]',e);}
+}
+
 async function fetchWealthTargets(){
   if(!googleToken)return[];
   try{
     const[r12,r18]=await Promise.all([
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!B12:F12')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!B18:F18')}`,{headers:{Authorization:`Bearer ${googleToken}`}})
+      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!B15:F15')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
+      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!B21:F21')}`,{headers:{Authorization:`Bearer ${googleToken}`}})
     ]);
     const[d12,d18]=await Promise.all([r12.json(),r18.json()]);
     const yrs=(d12.values||[[]])[0]||[],tgs=(d18.values||[[]])[0]||[];
