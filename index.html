@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.10.9</title>
+<title>投資儀錶板 v3.10.10</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.9</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.10</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -638,6 +638,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
+        <div class="analysis-section-title">v3.10.10 — 2026-03-31</div>
+        <div class="analysis-text">
+          ✦ 修正目標配置%數計算錯誤：Sheets B欄百分比格式 API 回傳小數(如0.5)，須判斷後才轉換，成長股/ETF目標比例現在顯示正確
+        </div>
         <div class="analysis-section-title">v3.10.9 — 2026-03-31</div>
         <div class="analysis-text">
           ✦ 修正配置比例抓取：改用 includes 比對 A 欄標題，支援「持有ETF/藍籌」等帶後綴名稱
@@ -1101,13 +1105,13 @@ function parseMeta(rows){
     if(fVal>25&&fVal<45)usdTwd=fVal;
     if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0)pureCash+=bVal;
     if(label==='TTO'&&!isNaN(bVal)&&bVal>0)tto=bVal;
-    if(label.includes(ALLOC_ROWS.growth)&&!isNaN(bVal)){
-      growthTarget=bVal/100;
-      // v3.10.9：改用includes比對，支援「持有ETF/藍籌」等帶後綴的標題
+    if(label.includes(ALLOC_ROWS.growth)&&!isNaN(bVal)&&bVal>0){
+      // v3.10.10：B欄百分比格式API回傳小數(0.5)，正確判斷再轉換（<2視為小數，>=2視為整數%）
+      growthTarget=bVal<2?bVal:bVal/100;
       if(!isNaN(gPctVal)&&gPctVal>0)growthActual=gPctVal<2?gPctVal*100:gPctVal;
     }
-    if(label.includes(ALLOC_ROWS.etf)&&!isNaN(bVal)){
-      etfTarget=bVal/100;
+    if(label.includes(ALLOC_ROWS.etf)&&!isNaN(bVal)&&bVal>0){
+      etfTarget=bVal<2?bVal:bVal/100;
       if(!isNaN(gPctVal)&&gPctVal>0)etfActual=gPctVal<2?gPctVal*100:gPctVal;
     }
     if(iVal==='VIX 數值'&&!isNaN(gVal)&&gVal>0)vix=gVal;
