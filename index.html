@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.9.0</title>
+<title>投資儀錶板 v3.10.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -154,8 +154,17 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .risk-panel-title{font-family:var(--font-mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:14px;}
 .risk-panel-full{grid-column:1/-1;}
 #treemap-container{width:100%;height:280px;position:relative;}
-.treemap-cell{position:absolute;display:flex;flex-direction:column;justify-content:center;align-items:center;border:2px solid #0d1117;border-radius:4px;cursor:default;transition:opacity 0.2s;overflow:hidden;}
+.treemap-cell{position:absolute;display:flex;flex-direction:column;justify-content:center;align-items:center;border:2px solid #0d1117;border-radius:4px;cursor:pointer;transition:opacity 0.2s,border-color 0.15s;overflow:hidden;}
 .treemap-cell:hover{opacity:0.85;}
+.treemap-cell.active{border-color:#fff4;opacity:1;}
+/* Treemap 浮動 tooltip */
+.treemap-tooltip{position:absolute;z-index:500;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:220px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,0.7);pointer-events:none;animation:fadeIn 0.15s ease;}
+.treemap-tt-title{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;}
+.treemap-tt-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:11px;}
+.treemap-tt-row:last-child{border-bottom:none;}
+.treemap-tt-ticker{color:var(--text-secondary);font-weight:600;min-width:52px;}
+.treemap-tt-pnl{font-size:11px;min-width:52px;text-align:right;}
+.treemap-tt-wt{color:var(--text-muted);font-size:10px;min-width:40px;text-align:right;}
 .risk-ai-btn{display:flex;align-items:center;gap:8px;padding:8px 18px;background:var(--accent-glow);border:1px solid var(--accent-dim);border-radius:6px;color:var(--accent);font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;}
 .risk-ai-btn:hover:not(:disabled){background:var(--accent);color:#0d1117;}
 .risk-ai-btn:disabled{opacity:0.4;cursor:not-allowed;}
@@ -259,7 +268,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.9.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -551,9 +560,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#c9a84c">15.2</div>
         </div>
         <div class="ng-key-stat">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:4px">當前 2026.03</div>
-          <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;" id="ng-current-val">4.8</div>
-          <div style="font-family:var(--font-mono);font-size:10px;margin-top:2px;" id="ng-current-zone">中性</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:4px" id="ng-current-label">即時載入中...</div>
+          <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;" id="ng-current-val">—</div>
+          <div style="font-family:var(--font-mono);font-size:10px;margin-top:2px;" id="ng-current-zone">—</div>
         </div>
         <div class="ng-key-stat">
           <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:4px">2011年低點</div>
@@ -619,6 +628,16 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.10.0 — 2026-03-30</div>
+        <div class="analysis-text">
+          ✦ Nasdaq/Gold 比值即時化：頁面載入時自動抓 /quote/%5ENDX + /quote/GLD，計算當前比值（NDX ÷ GLD×10）<br>
+          ✦ 圖表右端最後數據點更新為即時值，中間統計格顯示「即時 YYYY.Mon」標籤<br>
+          ✦ Treemap 點擊互動：點擊產業色塊展開浮動 tooltip<br>
+          ✦ Tooltip 顯示：產業名稱 + 總佔比 / 各持股 ticker + 損益% + 佔組合比重%<br>
+          ✦ 點其他地方或再點同一塊關閉，色塊選中時白色邊框高亮
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.9.0 — 2026-03-30</div>
         <div class="analysis-text">
@@ -1611,17 +1630,57 @@ function renderTreemap(){
   if(!holdingsData.length){container.innerHTML='<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:20px">載入持股資料後顯示</div>';return;}
   const industryMap=Object.assign({},STATIC_INDUSTRY_MAP,(riskAiData&&riskAiData.industries)?riskAiData.industries:{});
   const groups={};
-  holdingsData.forEach(h=>{const val=h.price*h.shares*(h.currency==='USD'?usdTwd:1);const ind=industryMap[h.ticker]||'其他';if(!groups[ind])groups[ind]={val:0,tickers:[]};groups[ind].val+=val;groups[ind].tickers.push(TW_NAMES[h.ticker]||h.ticker);});
+  holdingsData.forEach(h=>{const val=h.price*h.shares*(h.currency==='USD'?usdTwd:1);const ind=industryMap[h.ticker]||'其他';if(!groups[ind])groups[ind]={val:0,tickers:[],holdings:[]};groups[ind].val+=val;groups[ind].tickers.push(TW_NAMES[h.ticker]||h.ticker);groups[ind].holdings.push(h);});
   const totalVal=Object.values(groups).reduce((s,g)=>s+g.val,0);
-  const sorted=Object.entries(groups).sort((a,b)=>b[1].val-a[1].val).map(([name,g],i)=>({name,val:g.val,tickers:g.tickers,pct:totalVal>0?(g.val/totalVal*100):0,color:TREEMAP_COLORS[i%TREEMAP_COLORS.length]}));
+  const sorted=Object.entries(groups).sort((a,b)=>b[1].val-a[1].val).map(([name,g],i)=>({name,val:g.val,tickers:g.tickers,holdings:g.holdings,pct:totalVal>0?(g.val/totalVal*100):0,color:TREEMAP_COLORS[i%TREEMAP_COLORS.length]}));
   const W=container.offsetWidth||700,H=300;
   container.innerHTML='';container.style.position='relative';container.style.height=H+'px';
   function sq(items,x,y,w,h){const res=[];function lr(row,x,y,w,h,hz){const rt=row.reduce((s,i)=>s+i.pct,0);let pos=hz?x:y;row.forEach(item=>{const sz=(item.pct/rt)*(hz?w:h);res.push({...item,x:hz?pos:x,y:hz?y:pos,w:hz?sz:w,h:hz?h:sz});pos+=sz;});}
   function pi(items,x,y,w,h){if(!items.length)return;if(items.length===1){res.push({...items[0],x,y,w,h});return;}const tot=items.reduce((s,i)=>s+i.pct,0),hz=w>=h;let bs=1,br=Infinity,cp=0;for(let i=0;i<items.length-1;i++){cp+=items[i].pct;const r1=cp/tot,d1=hz?w*r1:h*r1,cross=hz?h:w;const wr1=items.slice(0,i+1).reduce((worst,item)=>{const cw=hz?(item.pct/cp)*d1:cross,ch=hz?cross:(item.pct/cp)*d1;return Math.max(worst,Math.max(cw,ch)/Math.min(cw,ch));},0);if(wr1<br){br=wr1;bs=i+1;}}const s1=items.slice(0,bs),s2=items.slice(bs),p1=s1.reduce((s,i)=>s+i.pct,0)/tot;if(hz){const w1=w*p1;lr(s1,x,y,w1,h,false);pi(s2,x+w1,y,w-w1,h);}else{const h1=h*p1;lr(s1,x,y,w,h1,true);pi(s2,x,y+h1,w,h-h1);}}
   pi(items,x,y,w,h);return res;}
   const cells=sq(sorted,0,0,W,H)||[];
-  cells.forEach(cell=>{const div=document.createElement('div');div.className='treemap-cell';const cw=Math.max(cell.w-3,10),ch=Math.max(cell.h-3,10);div.style.cssText=`left:${cell.x}px;top:${cell.y}px;width:${cw}px;height:${ch}px;background:${cell.color}20;border-color:${cell.color}50;`;const sm=cw<60||ch<50,ty=cw<35||ch<30;if(!ty)div.innerHTML=`<div style="font-family:var(--font-mono);font-size:${sm?10:13}px;font-weight:700;color:${cell.color};text-align:center;padding:0 6px;line-height:1.3">${cell.name}</div><div style="font-family:var(--font-mono);font-size:${sm?9:12}px;color:${cell.color}cc;margin-top:2px">${cell.pct.toFixed(1)}%</div>${!sm?`<div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px;text-align:center;padding:0 4px">${cell.tickers.join(' · ')}</div>`:''}`;
-  container.appendChild(div);});
+
+  // 浮動 tooltip（單一實例重用）
+  let ttEl=document.getElementById('treemap-tt-popup');
+  if(!ttEl){ttEl=document.createElement('div');ttEl.id='treemap-tt-popup';ttEl.className='treemap-tooltip';ttEl.style.display='none';(container.parentElement||container).appendChild(ttEl);}
+  let activeCell=null;
+
+  function showTreemapTT(cell,divEl){
+    container.querySelectorAll('.treemap-cell').forEach(d=>d.classList.remove('active'));
+    divEl.classList.add('active');activeCell=divEl;
+    const totalPortfolio=holdingsData.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
+    const rows=cell.holdings.map(h=>{
+      const val=h.price*h.shares*(h.currency==='USD'?usdTwd:1);
+      const pnl=(h.price-h.cost)/h.cost*100;
+      const pc=pnl>=0?'var(--red)':'var(--green)';
+      const wt=totalPortfolio>0?(val/totalPortfolio*100):0;
+      return `<div class="treemap-tt-row"><span class="treemap-tt-ticker">${h.ticker}</span><span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);flex:1;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${TW_NAMES[h.ticker]||h.name}</span><span class="treemap-tt-pnl" style="color:${pc}">${pnl>=0?'+':''}${pnl.toFixed(1)}%</span><span class="treemap-tt-wt">${wt.toFixed(1)}%</span></div>`;
+    }).join('');
+    ttEl.innerHTML=`<div class="treemap-tt-title" style="color:${cell.color}">${cell.name}&nbsp;<span style="font-weight:400;color:var(--text-muted)">${cell.pct.toFixed(1)}%</span></div><div style="display:flex;justify-content:flex-end;gap:12px;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)"><span style="min-width:52px;text-align:right">損益%</span><span style="min-width:40px;text-align:right">佔比</span></div>${rows}`;
+    ttEl.style.display='block';
+    const parent=container.parentElement||container;
+    const parentRect=parent.getBoundingClientRect();
+    const cellRect=divEl.getBoundingClientRect();
+    const ttW=280,ttH=ttEl.offsetHeight||180;
+    let left=cellRect.right-parentRect.left+8;
+    let top=cellRect.top-parentRect.top;
+    if(left+ttW>parentRect.width-8)left=cellRect.left-parentRect.left-ttW-8;
+    if(left<4)left=4;
+    if(top+ttH>parentRect.height)top=Math.max(4,parentRect.height-ttH-4);
+    ttEl.style.left=left+'px';ttEl.style.top=top+'px';
+  }
+  function hideTreemapTT(){ttEl.style.display='none';if(activeCell)activeCell.classList.remove('active');activeCell=null;}
+  document.addEventListener('click',function onDocClick(e){if(!container.contains(e.target)&&e.target!==ttEl&&!ttEl.contains(e.target)){hideTreemapTT();document.removeEventListener('click',onDocClick);}});
+
+  cells.forEach(cell=>{
+    const div=document.createElement('div');div.className='treemap-cell';
+    const cw=Math.max(cell.w-3,10),ch=Math.max(cell.h-3,10);
+    div.style.cssText=`left:${cell.x}px;top:${cell.y}px;width:${cw}px;height:${ch}px;background:${cell.color}20;border-color:${cell.color}50;`;
+    const sm=cw<60||ch<50,ty=cw<35||ch<30;
+    if(!ty)div.innerHTML=`<div style="font-family:var(--font-mono);font-size:${sm?10:13}px;font-weight:700;color:${cell.color};text-align:center;padding:0 6px;line-height:1.3">${cell.name}</div><div style="font-family:var(--font-mono);font-size:${sm?9:12}px;color:${cell.color}cc;margin-top:2px">${cell.pct.toFixed(1)}%</div>${!sm?`<div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px;text-align:center;padding:0 4px">${cell.tickers.join(' · ')}</div>`:''}`;
+    div.addEventListener('click',function(e){e.stopPropagation();if(activeCell===div){hideTreemapTT();return;}showTreemapTT(cell,div);});
+    container.appendChild(div);
+  });
   legend.innerHTML=sorted.map(c=>`<div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)"><div style="width:8px;height:8px;border-radius:2px;background:${c.color};flex-shrink:0"></div>${c.name} ${c.pct.toFixed(1)}%</div>`).join('');
 }
 
@@ -1813,6 +1872,30 @@ window.ngToggleOverlay=function(key){
   ['pe','gold','fed'].forEach(k=>{const btn=document.getElementById('ng-btn-'+k);if(btn)btn.classList.toggle('active',ngOverlay===k);});
   ngDraw();
 };
+// === NG 即時比值 v3.10.0 ===
+async function fetchNGLive(){
+  try{
+    const[ndxR,gldR]=await Promise.all([
+      fetch('https://anthropic-proxy.issac0901.workers.dev/quote/%5ENDX'),
+      fetch('https://anthropic-proxy.issac0901.workers.dev/quote/GLD')
+    ]);
+    const[ndxD,gldD]=await Promise.all([ndxR.json(),gldR.json()]);
+    if(!ndxD.price||!gldD.price)return;
+    // GLD ≈ 黃金現價 / 10，比值 = NDX / (GLD * 10)
+    const ratio=ndxD.price/(gldD.price*10);
+    const now=new Date();
+    const yr=now.getFullYear(),mo=now.getMonth();
+    // 更新 monthly 最後一個點（當前月份）
+    const last=monthly[monthly.length-1];
+    if(last.year===yr&&last.month===mo){
+      monthly[monthly.length-1].value=parseFloat(ratio.toFixed(2));
+    } else {
+      monthly.push({year:yr,month:mo,value:parseFloat(ratio.toFixed(2))});
+    }
+    console.log('[NG Live] NDX='+ndxD.price.toFixed(0)+' GLD='+gldD.price.toFixed(2)+' ratio='+ratio.toFixed(2));
+  }catch(e){console.log('[NG Live] fetch failed:',e.message);}
+}
+
 function ngDraw(){
   const wrap=document.getElementById('ng-chart-wrap'),svg=document.getElementById('ng-svg');
   if(!wrap||!svg)return;
@@ -1866,8 +1949,11 @@ function ngDraw(){
   const lbl=document.getElementById('ng-pos-label'),zone=getZone(cur);
   if(lbl){lbl.textContent=`▲ 當前 ${cur.toFixed(1)} — ${zone.label}`;lbl.style.color=zone.color;}
   const cv=document.getElementById('ng-current-val'),cz=document.getElementById('ng-current-zone');
-  if(cv){cv.textContent=cur.toFixed(1);cv.style.color=zone.color;}
+  if(cv){cv.textContent=cur.toFixed(2);cv.style.color=zone.color;}
   if(cz){cz.textContent=zone.label;cz.style.color=zone.color;}
+  // 更新即時標籤年月
+  const clEl=document.getElementById('ng-current-label');
+  if(clEl){const last=monthly[monthly.length-1];const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];clEl.textContent=`即時 ${last.year}.${mn[last.month]}`;clEl.style.color='var(--accent)';}
   // 滑鼠事件
   svg.onmousemove=svg.ontouchmove=function(e){
     e.preventDefault();
@@ -1893,7 +1979,7 @@ function ngDraw(){
     const tt=document.getElementById('ng-tooltip');if(tt)tt.classList.remove('visible');
   };
 }
-function ngInit(){if(!document.getElementById('ng-svg'))return;ngDraw();}
+function ngInit(){if(!document.getElementById('ng-svg'))return;fetchNGLive().then(()=>ngDraw());}  
 window.addEventListener('resize',()=>{if(document.getElementById('ng-svg'))ngDraw();});
 // Hook 進 showPage
 const _origShowPage=window.showPage;
