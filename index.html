@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.10.0</title>
+<title>投資儀錶板 v3.10.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -628,6 +628,12 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v3.10.1 — 2026-03-30</div>
+        <div class="analysis-text">
+          ✦ 修正 Treemap tooltip 定位錯誤：改為相對 container 內部座標，解決頁面滾動導致 tooltip 飄到頂部的問題
+        </div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v3.10.0 — 2026-03-30</div>
         <div class="analysis-text">
@@ -1642,7 +1648,7 @@ function renderTreemap(){
 
   // 浮動 tooltip（單一實例重用）
   let ttEl=document.getElementById('treemap-tt-popup');
-  if(!ttEl){ttEl=document.createElement('div');ttEl.id='treemap-tt-popup';ttEl.className='treemap-tooltip';ttEl.style.display='none';(container.parentElement||container).appendChild(ttEl);}
+  if(!ttEl){ttEl=document.createElement('div');ttEl.id='treemap-tt-popup';ttEl.className='treemap-tooltip';ttEl.style.display='none';container.appendChild(ttEl);}
   let activeCell=null;
 
   function showTreemapTT(cell,divEl){
@@ -1658,15 +1664,20 @@ function renderTreemap(){
     }).join('');
     ttEl.innerHTML=`<div class="treemap-tt-title" style="color:${cell.color}">${cell.name}&nbsp;<span style="font-weight:400;color:var(--text-muted)">${cell.pct.toFixed(1)}%</span></div><div style="display:flex;justify-content:flex-end;gap:12px;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)"><span style="min-width:52px;text-align:right">損益%</span><span style="min-width:40px;text-align:right">佔比</span></div>${rows}`;
     ttEl.style.display='block';
-    const parent=container.parentElement||container;
-    const parentRect=parent.getBoundingClientRect();
-    const cellRect=divEl.getBoundingClientRect();
+    // 用 cell 的 offsetLeft/offsetTop（相對於 container）定位，避免滾動偏移問題
+    const cW=parseInt(divEl.style.width)||60;
+    const cH=parseInt(divEl.style.height)||40;
+    const cLeft=parseInt(divEl.style.left)||0;
+    const cTop=parseInt(divEl.style.top)||0;
     const ttW=280,ttH=ttEl.offsetHeight||180;
-    let left=cellRect.right-parentRect.left+8;
-    let top=cellRect.top-parentRect.top;
-    if(left+ttW>parentRect.width-8)left=cellRect.left-parentRect.left-ttW-8;
+    const contW=container.offsetWidth||700,contH=container.offsetHeight||300;
+    // 預設放右側，空間不足放左側
+    let left=cLeft+cW+8;
+    let top=cTop;
+    if(left+ttW>contW-4)left=Math.max(4,cLeft-ttW-8);
     if(left<4)left=4;
-    if(top+ttH>parentRect.height)top=Math.max(4,parentRect.height-ttH-4);
+    // 垂直：優先跟色塊頂部對齊，超出則往上推
+    if(top+ttH>contH-4)top=Math.max(0,contH-ttH-4);
     ttEl.style.left=left+'px';ttEl.style.top=top+'px';
   }
   function hideTreemapTT(){ttEl.style.display='none';if(activeCell)activeCell.classList.remove('active');activeCell=null;}
