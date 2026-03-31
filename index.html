@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.10.2</title>
+<title>投資儀錶板 v3.10.3</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.3</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -629,11 +629,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v3.10.2 — 2026-03-31</div>
+        <div class="analysis-section-title">v3.10.3 — 2026-03-31</div>
         <div class="analysis-text">
-          ✦ Google OAuth 改為靜默授權（prompt:''），只要 Google 帳號保持登入即可無感刷新<br>
-          ✦ 新增 Token 自動刷新機制：到期前 5 分鐘自動靜默取得新 Token，無需手動重新授權<br>
-          ✦ 取消連結時同步清除自動刷新計時器
+          ✦ 資產快照 guard 從 localStorage 改存 Sheets 設定!B11（跨裝置同步）<br>
+          ✦ 修正：換裝置或清快取後重複寫入同日快照的 bug<br>
+          ✦ 修正：只要當天有按「同步試算表」就會寫入，不再依賴 localStorage
         </div>
         <div class="analysis-section-title">v3.10.1 — 2026-03-30</div>
         <div class="analysis-text">
@@ -986,42 +986,20 @@ function showToast(msg){
 }
 
 // === GOOGLE OAUTH ===
-let _autoRefreshTimer = null;
 function loadGoogleToken(){
   const t=ls('google_token'),exp=ls('google_token_exp');
-  if(t&&exp&&Date.now()<parseInt(exp)){googleToken=t;scheduleTokenRefresh(parseInt(exp));}
+  if(t&&exp&&Date.now()<parseInt(exp))googleToken=t;
   else{googleToken=null;ls('google_token',null);ls('google_token_exp',null);}
 }
-function scheduleTokenRefresh(expMs){
-  if(_autoRefreshTimer)clearTimeout(_autoRefreshTimer);
-  const msUntilRefresh=expMs-Date.now()-5*60*1000; // 5分鐘前刷新
-  if(msUntilRefresh<=0){silentRefresh();return;}
-  _autoRefreshTimer=setTimeout(silentRefresh,msUntilRefresh);
-}
-function silentRefresh(){
-  if(!window.google)return;
-  google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:SCOPES,callback:(resp)=>{
-    if(resp.error){console.warn('[OAuth] 靜默刷新失敗:',resp.error);googleToken=null;ls('google_token',null);ls('google_token_exp',null);updateStatusBar();updateGoogleBtn();return;}
-    googleToken=resp.access_token;
-    const newExp=Date.now()+(resp.expires_in-60)*1000;
-    ls('google_token',googleToken);ls('google_token_exp',newExp.toString());
-    updateStatusBar();updateGoogleBtn();
-    scheduleTokenRefresh(newExp);
-    console.log('[OAuth] Token 自動刷新成功');
-  }}).requestAccessToken({prompt:''});
-}
 function startGoogleAuth(){
-  if(googleToken){if(confirm('已連結 Google。要取消連結嗎？')){googleToken=null;ls('google_token',null);ls('google_token_exp',null);if(_autoRefreshTimer)clearTimeout(_autoRefreshTimer);updateStatusBar();updateGoogleBtn();}return;}
+  if(googleToken){if(confirm('已連結 Google。要取消連結嗎？')){googleToken=null;ls('google_token',null);ls('google_token_exp',null);updateStatusBar();updateGoogleBtn();}return;}
   if(!window.google){alert('Google 授權套件尚未載入，請稍後再試。');return;}
   google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:SCOPES,callback:(resp)=>{
     if(resp.error){alert('授權失敗：'+resp.error);return;}
     googleToken=resp.access_token;
-    const newExp=Date.now()+(resp.expires_in-60)*1000;
-    ls('google_token',googleToken);ls('google_token_exp',newExp.toString());
-    updateStatusBar();updateGoogleBtn();
-    scheduleTokenRefresh(newExp);
-    alert('✅ Google 帳號連結成功！請點擊「同步試算表」載入持股。');fetchAllDCF();
-  }}).requestAccessToken({prompt:''});
+    ls('google_token',googleToken);ls('google_token_exp',(Date.now()+(resp.expires_in-60)*1000).toString());
+    updateStatusBar();updateGoogleBtn();alert('✅ Google 帳號連結成功！請點擊「同步試算表」載入持股。');fetchAllDCF();
+  }}).requestAccessToken({prompt:'consent'});
 }
 function updateGoogleBtn(){
   const btn=document.getElementById('btn-google-auth'),txt=document.getElementById('google-auth-text');
@@ -1184,7 +1162,7 @@ async function syncSheets(){
   renderWatchlist();
   const now=new Date().toLocaleTimeString('zh-TW');
   banner.innerHTML=`<div class="sync-banner synced">✓ 已同步 ${holdingsData.length} 筆持股 · 觀察清單 ${WATCHLIST.length} 支 · ${now} &nbsp;<span style="cursor:pointer;opacity:0.7;text-decoration:underline" onclick="syncSheets()">重新同步</span></div>`;
-  ls('last_snapshot_week',null);
+  ls('last_snapshot_week',null); // deprecated, guard now in Sheets B11
   await writeAssetSnapshot();
   await syncAllThesisToSheets();
   renderGrowthChart();
@@ -1225,18 +1203,30 @@ function updateAllocCards(meta){
 // === 資產快照 ===
 async function writeAssetSnapshot(){
   if(!googleToken||!holdingsData.length)return;
-  const now=new Date();const weekKey=now.toISOString().split('T')[0];
-  if(ls('last_snapshot_week')===weekKey)return;
-  let totalTWD=0,usdPnl=0,twPnl=0;
-  for(const h of holdingsData){const pnl=(h.price-h.cost)*h.shares;const val=h.price*h.shares;if(h.currency==='TWD'){totalTWD+=val;twPnl+=pnl;}else{totalTWD+=val*usdTwd;usdPnl+=pnl;}}
-  const totalMW=(totalTWD/10000).toFixed(1),dateStr=now.toISOString().split('T')[0];
-  const vixVal=indexData.vix?.price?.toFixed(2)||'';
+  const now=new Date();
+  const dateStr=now.toISOString().split('T')[0];
   try{
+    // 讀 設定!B11 確認今天是否已寫過（跨裝置 guard）
+    const guardRes=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B11')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const guardData=await guardRes.json();
+    const lastDate=(guardData.values?.[0]?.[0]||'').trim();
+    if(lastDate===dateStr){console.log('[快照] 今日已寫入，跳過');return;}
+    // 計算總資產
+    let totalTWD=0,usdPnl=0,twPnl=0;
+    for(const h of holdingsData){const pnl=(h.price-h.cost)*h.shares;const val=h.price*h.shares;if(h.currency==='TWD'){totalTWD+=val;twPnl+=pnl;}else{totalTWD+=val*usdTwd;usdPnl+=pnl;}}
+    const totalMW=(totalTWD/10000).toFixed(1);
+    const vixVal=indexData.vix?.price?.toFixed(2)||'';
+    // 寫入資產快照
     const cr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A:A')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const cd=await cr.json();const nr=(cd.values||[]).length+1;
     const wr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent(`資產快照!A${nr}:E${nr}`)}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateStr,totalMW,usdPnl.toFixed(0),twPnl.toFixed(0),vixVal]]})});
-    const wd=await wr.json();if(wd.updatedCells)ls('last_snapshot_week',weekKey);
-  }catch(e){}
+    const wd=await wr.json();
+    if(wd.updatedCells){
+      // 寫成功後更新 設定!B11 guard
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B11')}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateStr]]})});
+      console.log('[快照] 已寫入：',dateStr,totalMW+'萬');
+    }
+  }catch(e){console.error('[快照] 寫入失敗:',e);}
 }
 async function fetchAssetSnapshots(){
   if(!googleToken)return[];
