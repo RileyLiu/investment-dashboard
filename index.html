@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v3.10.11</title>
+<title>投資儀錶板 v4.0.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v3.10.11</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.0.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -638,11 +638,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v3.10.11 — 2026-04-01</div>
+        <div class="analysis-section-title">v4.0.0 — 2026-04-01</div>
         <div class="analysis-text">
-          ✦ 修正成長股/ETF 實際佔比：改用 JS 算持倉市值 ÷ (TTO－保留現金)，不從 Sheets G 欄讀取<br>
-          ✦ 保留現金改從 Sheets「現金」列 C 欄動態讀取，不寫死 50 萬<br>
-          ✦ 修正目標配置比例：B 欄百分比自動判斷小數或整數格式
+          ✦ 修正配置進度計算邏輯：改為「目標達成率」= 持倉市值 ÷ 目標金額 × 100<br>
+          ✦ 與 Sheets G欄公式 =sum(J14:J32)/C9 完全一致，成長股顯示 83.57%、ETF 29.16%<br>
+          ✦ 不再依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
         </div>
         <div class="analysis-section-title">v3.10.9 — 2026-03-31</div>
         <div class="analysis-text">
@@ -1094,7 +1094,7 @@ async function fetchAllDCF(){
 // === PARSE META ===
 function parseMeta(rows){
   let pureCash=0,tto=0,growthTarget=0.55,etfTarget=0.45,vix=null,forexPnl=null;
-  let growthActual=null,etfActual=null,dynamicReserve=0;
+  let growthActual=null,etfActual=null;
   for(const row of rows){
     const label=(row[0]||'').trim();
     const bVal=parseFloat((row[1]||'').replace(/,/g,'').replace('%',''));
@@ -1107,21 +1107,20 @@ function parseMeta(rows){
     if(fVal>25&&fVal<45)usdTwd=fVal;
     if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0)pureCash+=bVal;
     if(label==='TTO'&&!isNaN(bVal)&&bVal>0)tto=bVal;
-    const cVal=parseFloat((row[2]||'').replace(/,/g,''));
-    if(label==='現金'&&!isNaN(cVal)&&cVal>0)dynamicReserve=cVal;
-    if(label.includes(ALLOC_ROWS.growth)&&!isNaN(bVal)&&bVal>0){
-      growthTarget=bVal<2?bVal:bVal/100;
-      // v3.10.11：growthActual/etfActual 改由 updateAllocCards 用 JS 計算，不從 G 欄讀
+    if(label.includes(ALLOC_ROWS.growth)&&!isNaN(bVal)){
+      growthTarget=bVal/100;
+      // v3.10.9：改用includes比對，支援「持有ETF/藍籌」等帶後綴的標題
+      if(!isNaN(gPctVal)&&gPctVal>0)growthActual=gPctVal<2?gPctVal*100:gPctVal;
     }
-    if(label.includes(ALLOC_ROWS.etf)&&!isNaN(bVal)&&bVal>0){
-      etfTarget=bVal<2?bVal:bVal/100;
+    if(label.includes(ALLOC_ROWS.etf)&&!isNaN(bVal)){
+      etfTarget=bVal/100;
+      if(!isNaN(gPctVal)&&gPctVal>0)etfActual=gPctVal<2?gPctVal*100:gPctVal;
     }
     if(iVal==='VIX 數值'&&!isNaN(gVal)&&gVal>0)vix=gVal;
     if(lLabel==='USD匯兌損益'&&!isNaN(lVal))forexPnl=lVal;
   }
-  const reserveCashDynamic=dynamicReserve>0?dynamicReserve:RESERVE_CASH;
-  const deployable=Math.max(0,pureCash-reserveCashDynamic);
-  return{totalCash:tto,pureCash,reserveCash:reserveCashDynamic,deployable,growthTarget,etfTarget,growthActual:null,etfActual:null,vix,forexPnl};
+  const deployable=Math.max(0,pureCash-RESERVE_CASH);
+  return{totalCash:tto,pureCash,reserveCash:RESERVE_CASH,deployable,growthTarget,etfTarget,growthActual,etfActual,vix,forexPnl};
 }
 
 function parseHoldings(rows){
@@ -1218,20 +1217,18 @@ function updateAllocCards(meta){
     const val=h.price*h.shares*(h.currency==='USD'?usdTwd:1);
     if(h.type==='etf'||h.type==='wave')etfVal+=val;else growthVal+=val;
   }
-  // v3.10.11：reserveCash 從 Sheets 現金 C 欄動態讀取（parseMeta 已處理）
   const tto=totalCash-reserveCash;
   const gTarget=tto*growthTarget,eTarget=tto*etfTarget;
   const gGap=Math.max(0,gTarget-growthVal),eGap=Math.max(0,eTarget-etfVal);
   const fmt=n=>'NT$'+(n/10000).toFixed(0)+'萬';
-  // 實際佔比永遠用 JS 算：持倉市值 / (TTO - 保留現金) × 100
-  const base=tto>0?tto:1;
-  const gActualPct=growthVal/base*100;
-  const eActualPct=etfVal/base*100;
+  // v4.0.0：達成率 = 持倉市值 / 目標金額 × 100，與 Sheets G欄公式 sum(J14:J32)/C9 一致
+  const gActualPct=gTarget>0?(growthVal/gTarget*100):0;
+  const eActualPct=eTarget>0?(etfVal/eTarget*100):0;
   document.getElementById('alloc-growth-pct').textContent=gActualPct.toFixed(1)+'%';
-  document.getElementById('alloc-growth-sub').textContent=`目標 ${(growthTarget*100).toFixed(0)}% · 還差 ${fmt(gGap)}`;
+  document.getElementById('alloc-growth-sub').textContent=`目標達成率 · 還差 ${fmt(gGap)}`;
   document.getElementById('alloc-growth-bar').style.width=Math.min(100,gActualPct)+'%';
   document.getElementById('alloc-etf-pct').textContent=eActualPct.toFixed(1)+'%';
-  document.getElementById('alloc-etf-sub').textContent=`目標 ${(etfTarget*100).toFixed(0)}% · 還差 ${fmt(eGap)}`;
+  document.getElementById('alloc-etf-sub').textContent=`目標達成率 · 還差 ${fmt(eGap)}`;
   document.getElementById('alloc-etf-bar').style.width=Math.min(100,eActualPct)+'%';
   const d萬=(deployable/10000).toFixed(0),p萬=((meta.pureCash||0)/10000).toFixed(0),r萬=(reserveCash/10000).toFixed(0);
   document.getElementById('alloc-cash-val').textContent='NT$'+d萬+'萬';
