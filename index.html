@@ -640,9 +640,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="analysis-section">
         <div class="analysis-section-title">v4.0.0 — 2026-04-01</div>
         <div class="analysis-text">
-          ✦ 修正配置進度計算邏輯：改為「目標達成率」= 持倉市值 ÷ 目標金額 × 100<br>
-          ✦ 與 Sheets G欄公式 =sum(J14:J32)/C9 完全一致，成長股顯示 83.57%、ETF 29.16%<br>
-          ✦ 不再依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
+          ✦ 修正配置進度：改用「成本達成率」= 成本×股數 ÷ 目標金額，與 Sheets G欄 =sum(J14:J32)/C9 完全一致<br>
+          ✦ 成長股顯示 83.57%、ETF 29.16%（與 Sheets 同步）<br>
+          ✦ 不依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
         </div>
         <div class="analysis-section-title">v3.10.9 — 2026-03-31</div>
         <div class="analysis-text">
@@ -1214,14 +1214,15 @@ function updateAllocCards(meta){
   const{totalCash,reserveCash,deployable,growthTarget,etfTarget,growthActual,etfActual}=meta;
   let growthVal=0,etfVal=0;
   for(const h of holdingsData){
-    const val=h.price*h.shares*(h.currency==='USD'?usdTwd:1);
+    // v4.0.0：用成本×股數（與 Sheets J欄配置金額一致）
+    const val=h.cost*h.shares*(h.currency==='USD'?usdTwd:1);
     if(h.type==='etf'||h.type==='wave')etfVal+=val;else growthVal+=val;
   }
   const tto=totalCash-reserveCash;
   const gTarget=tto*growthTarget,eTarget=tto*etfTarget;
   const gGap=Math.max(0,gTarget-growthVal),eGap=Math.max(0,eTarget-etfVal);
   const fmt=n=>'NT$'+(n/10000).toFixed(0)+'萬';
-  // v4.0.0：達成率 = 持倉市值 / 目標金額 × 100，與 Sheets G欄公式 sum(J14:J32)/C9 一致
+  // v4.0.0：達成率 = 成本配置金額 / 目標金額，與 Sheets G欄 =sum(J14:J32)/C9 一致
   const gActualPct=gTarget>0?(growthVal/gTarget*100):0;
   const eActualPct=eTarget>0?(etfVal/eTarget*100):0;
   document.getElementById('alloc-growth-pct').textContent=gActualPct.toFixed(1)+'%';
