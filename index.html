@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.0.0</title>
+<title>投資儀錶板 v4.1.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -87,7 +87,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .badge-etf{background:#a78bfa20;color:var(--purple);border:1px solid #a78bfa40;}
 .badge-wave{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow-dim);}
 .stock-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-.metric-label{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;}
+.metric-label{font-family:var(--font-mono);font-size:14px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;}
+.earnings-badge{font-family:var(--font-mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:3px;letter-spacing:0.06em;white-space:nowrap;}
+.earnings-urgent{background:#f8717120;color:var(--red);border:1px solid var(--red-dim);}
+.earnings-soon{background:#fbbf2420;color:var(--yellow);border:1px solid var(--yellow-dim);}
 .metric-value{font-family:var(--font-mono);font-size:14px;font-weight:500;}
 .stock-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
 .cache-info{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);}
@@ -268,7 +271,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.0.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.1.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -644,6 +647,15 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           ✦ 成長股顯示 83.57%、ETF 29.16%（與 Sheets 同步）<br>
           ✦ 不依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
         </div>
+        <div class="analysis-section">
+        <div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
+        <div class="analysis-text">
+          ✦ 持股列表：財報日標籤顯示於 ticker 旁，從「財報日曆」Sheets 分頁讀取<br>
+          ✦ 顯示規則：≤7天紅色緊急、≤30天黃色提醒、超過30天不顯示<br>
+          ✦ syncSheets 時自動同步財報日曆（A=代號, C=日期，支援 YYYY/MM/DD）<br>
+          ✦ 觀察清單卡片 metric-label 字體改為 14px
+        </div>
+        </div>
         <div class="analysis-section-title">v3.10.9 — 2026-03-31</div>
         <div class="analysis-text">
           ✦ 修正配置比例抓取：改用 includes 比對 A 欄標題，支援「持有ETF/藍籌」等帶後綴名稱
@@ -786,6 +798,45 @@ let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={};
 let indexData={};
 let chartCategory=null,chartStocks=null,chartGrowth=null;
 let riskCdInterval=null,riskAiData=null;
+let earningsData={}; // { ticker: { date, daysLeft } }
+
+// === 財報日曆 ===
+async function fetchEarningsCalendar(){
+  if(!googleToken)return;
+  try{
+    const range=encodeURIComponent('財報日曆!A2:D50');
+    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const j=await r.json();
+    const rows=j.values||[];
+    earningsData={};
+    const today=new Date();today.setHours(0,0,0,0);
+    for(const row of rows){
+      const ticker=(row[0]||'').trim().toUpperCase();
+      const dateStr=(row[2]||'').trim();
+      if(!ticker||!dateStr)continue;
+      // 支援 YYYY/MM/DD 和 YYYY-MM-DD
+      const normalized=dateStr.replace(/\//g,'-');
+      const d=new Date(normalized);
+      if(isNaN(d.getTime()))continue;
+      d.setHours(0,0,0,0);
+      const daysLeft=Math.round((d-today)/86400000);
+      if(daysLeft>=-1&&daysLeft<=60){ // 只顯示未來60天及昨天
+        earningsData[ticker]={date:d,daysLeft,dateStr};
+      }
+    }
+  }catch(e){console.log('財報日曆讀取失敗',e);}
+}
+
+function getEarningsBadgeHTML(ticker){
+  const e=earningsData[ticker?.toUpperCase()];
+  if(!e)return '';
+  const{daysLeft,date}=e;
+  const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const label=`📊 ${mon[date.getMonth()]} ${date.getDate()}`;
+  if(daysLeft<=7)return `<span class="earnings-badge earnings-urgent">${label}</span>`;
+  if(daysLeft<=30)return `<span class="earnings-badge earnings-soon">${label}</span>`;
+  return '';
+}
 
 const ls=(k,v)=>v===undefined?localStorage.getItem(k):(v===null?localStorage.removeItem(k):localStorage.setItem(k,v));
 const getApiKey=()=>ls('anthropic_api_key')||'';
@@ -1197,6 +1248,7 @@ async function syncSheets(){
   banner.innerHTML=`<div class="sync-banner"><div class="loading-spinner" style="width:14px;height:14px;border-width:1.5px;margin:0"></div>&nbsp;正在建立觀察清單...</div>`;
   await buildWatchlistFromSheets(rows);
   await fetchAllDCF();
+  await fetchEarningsCalendar();
   renderWatchlist();
   const now=new Date().toLocaleTimeString('zh-TW');
   banner.innerHTML=`<div class="sync-banner synced">✓ 已同步 ${holdingsData.length} 筆持股 · 觀察清單 ${WATCHLIST.length} 支 · ${now} &nbsp;<span style="cursor:pointer;opacity:0.7;text-decoration:underline" onclick="syncSheets()">重新同步</span></div>`;
@@ -1396,8 +1448,9 @@ function renderHoldings(){
     const _dl=lc?(180-Math.floor((Date.now()-new Date(lc).getTime())/86400000)):null;
     const _fc=_dl!=null?(_dl<=0?'var(--red)':_dl<=30?'var(--yellow)':'var(--text-muted)'):'';
     const fHTML=lc?('<span style="font-family:var(--font-mono);font-size:9px;color:'+_fc+'">'+((_dl<=0)?('逾期 '+Math.abs(_dl)+' 天'):(_dl+' 天後信仰檢核'))+'</span>'):'<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span>';
+    const ebHTML=getEarningsBadgeHTML(h.ticker);
     return `<div class="holding-entry" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
-      <div><div class="holding-ticker">${h.ticker}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
+      <div><div class="holding-ticker">${h.ticker}${ebHTML?' <span style="vertical-align:middle">'+ebHTML+'</span>':''}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
       <div class="holding-metrics">
         <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
         <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
