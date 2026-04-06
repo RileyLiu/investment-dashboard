@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.1.0</title>
+<title>投資儀錶板 v4.1.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -271,7 +271,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.1.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.1.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -648,7 +648,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           ✦ 不依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
         </div>
         <div class="analysis-section">
-        <div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
+        <div class="analysis-section-title">v4.1.1 — 2026-04-06</div><div class="analysis-text">✦ ETF_TICKERS 新增 VTI（Vanguard全市場ETF）<br>✦ STATIC_INDUSTRY_MAP 新增 VTI → ETF-全市場分類</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
         <div class="analysis-text">
           ✦ 持股列表：財報日標籤顯示於 ticker 旁，從「財報日曆」Sheets 分頁讀取<br>
           ✦ 顯示規則：≤7天紅色緊急、≤30天黃色提醒、超過30天不顯示<br>
@@ -777,7 +777,7 @@ const RESERVE_CASH=500000; // NT$50萬固定保留現金
 let githubPAT=null;
 let snapshotWritten=false;
 const COLS={ticker:5,fullCode:6,name:7,shares:10,cost:11,price:13,ma200pct:15,ma50pct:2,trend:3,kd:4,w52low:16,w52high:17,pe:19,peL:20,peH:21};
-const ETF_TICKERS=['006208','SMH','QQQ','TQQQ','0050','JEPI','XLU','PHO','COPX'];
+const ETF_TICKERS=['006208','SMH','QQQ','TQQQ','0050','JEPI','VTI','XLU','PHO','COPX'];
 const TW_TICKERS=['2330','6669','5871','006208','IX0001'];
 const TW_NAMES={'2330':'台積電','6669':'緯穎','5871':'中租KY','006208':'富邦台50','0050':'元大台灣50'};
 const CASH_ROWS=['中信銀','DH投','NNB','Richart','日美韓幣持有'];
@@ -789,7 +789,7 @@ const SPX_TICKERS=['LLY','UNH']; // NYSE 個股（SPX 獨有）
 const NYSE_TICKERS=['LLY','UNH']; // 同上，用於排除 NDX 重疊
 const NDX_TICKERS=['MSFT','GOOG','GOOGL','COST','AAPL','META','AMZN','TSLA','QQQ','SNPS','CDNS','SOFI','PLTR'];
 const TREEMAP_COLORS=['#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#facc15','#60a5fa','#4ade80','#f87171','#c084fc'];
-const STATIC_INDUSTRY_MAP={'SMH':'半導體','2330':'半導體','MU':'半導體','AMD':'半導體','NVDA':'半導體','MSFT':'科技雲端','GOOG':'科技雲端','SNPS':'科技雲端','CDNS':'科技雲端','COST':'消費零售','5871':'金融租賃','LLY':'生技醫療','UNH':'生技醫療','SOFI':'金融科技','QQQ':'ETF-科技','006208':'ETF-科技','JEPI':'ETF-防禦收益','XLU':'ETF-防禦收益','PHO':'ETF-主題','COPX':'ETF-主題','PLTR':'企業軟體AI','VST':'個股-電力','FCX':'個股-銅礦'};
+const STATIC_INDUSTRY_MAP={'SMH':'半導體','2330':'半導體','MU':'半導體','AMD':'半導體','NVDA':'半導體','MSFT':'科技雲端','GOOG':'科技雲端','SNPS':'科技雲端','CDNS':'科技雲端','COST':'消費零售','5871':'金融租賃','LLY':'生技醫療','UNH':'生技醫療','SOFI':'金融科技','QQQ':'ETF-科技','006208':'ETF-科技','JEPI':'ETF-防禦收益','XLU':'ETF-防禦收益','PHO':'ETF-主題','COPX':'ETF-主題','VTI':'ETF-全市場','PLTR':'企業軟體AI','VST':'個股-電力','FCX':'個股-銅礦'};
 const CD_MINUTES=30;
 
 let WATCHLIST=[];
