@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.1.1</title>
+<title>投資儀錶板 v4.1.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -271,7 +271,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.1.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.1.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -648,7 +648,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           ✦ 不依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
         </div>
         <div class="analysis-section">
-        <div class="analysis-section-title">v4.1.1 — 2026-04-06</div><div class="analysis-text">✦ ETF_TICKERS 新增 VTI（Vanguard全市場ETF）<br>✦ STATIC_INDUSTRY_MAP 新增 VTI → ETF-全市場分類</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
+        <div class="analysis-section-title">v4.1.2 — 2026-04-11</div><div class="analysis-text">✦ 修正配置達成率計算邏輯：拆分目標比例行（B欄有值）與達成率行（E欄含「現配置比例」）<br>✦ 直接從 Sheets G12/G33 的現配置比例讀取，不再依賴 holdingsData 即時計算<br>✦ 修正後成長股/ETF 達成率與 Sheets 完全一致，不受匯率變動影響</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.1 — 2026-04-06</div><div class="analysis-text">✦ ETF_TICKERS 新增 VTI（Vanguard全市場ETF）<br>✦ STATIC_INDUSTRY_MAP 新增 VTI → ETF-全市場分類</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
         <div class="analysis-text">
           ✦ 持股列表：財報日標籤顯示於 ticker 旁，從「財報日曆」Sheets 分頁讀取<br>
           ✦ 顯示規則：≤7天紅色緊急、≤30天黃色提醒、超過30天不顯示<br>
@@ -1149,6 +1149,7 @@ function parseMeta(rows){
   for(const row of rows){
     const label=(row[0]||'').trim();
     const bVal=parseFloat((row[1]||'').replace(/,/g,'').replace('%',''));
+    const eVal=(row[4]||'').trim(); // E欄：KD判斷 or 現配置比例
     const fVal=parseFloat((row[5]||'').replace(/,/g,''));
     const iVal=(row[8]||'').trim();
     const gVal=parseFloat((row[6]||'').replace(/,/g,''));
@@ -1158,14 +1159,22 @@ function parseMeta(rows){
     if(fVal>25&&fVal<45)usdTwd=fVal;
     if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0)pureCash+=bVal;
     if(label==='TTO'&&!isNaN(bVal)&&bVal>0)tto=bVal;
-    if(label.includes(ALLOC_ROWS.growth)&&!isNaN(bVal)){
-      growthTarget=bVal/100;
-      // v3.10.9：改用includes比對，支援「持有ETF/藍籌」等帶後綴的標題
-      if(!isNaN(gPctVal)&&gPctVal>0)growthActual=gPctVal<2?gPctVal*100:gPctVal;
+    // v4.1.2：拆分目標行（B欄有比例，E欄非現配置比例）與達成率行（E欄含「現配置比例」，G欄有值）
+    if(label.includes(ALLOC_ROWS.growth)){
+      if(!eVal.includes('現配置比例')&&!isNaN(bVal)&&bVal>0&&bVal<=100){
+        growthTarget=bVal/100;
+      }
+      if(eVal.includes('現配置比例')&&!isNaN(gPctVal)&&gPctVal>0){
+        growthActual=gPctVal<2?gPctVal*100:gPctVal;
+      }
     }
-    if(label.includes(ALLOC_ROWS.etf)&&!isNaN(bVal)){
-      etfTarget=bVal/100;
-      if(!isNaN(gPctVal)&&gPctVal>0)etfActual=gPctVal<2?gPctVal*100:gPctVal;
+    if(label.includes(ALLOC_ROWS.etf)){
+      if(!eVal.includes('現配置比例')&&!isNaN(bVal)&&bVal>0&&bVal<=100){
+        etfTarget=bVal/100;
+      }
+      if(eVal.includes('現配置比例')&&!isNaN(gPctVal)&&gPctVal>0){
+        etfActual=gPctVal<2?gPctVal*100:gPctVal;
+      }
     }
     if(iVal==='VIX 數值'&&!isNaN(gVal)&&gVal>0)vix=gVal;
     if(lLabel==='USD匯兌損益'&&!isNaN(lVal))forexPnl=lVal;
