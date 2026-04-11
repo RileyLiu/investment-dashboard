@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.1.2</title>
+<title>投資儀錶板 v4.1.3</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -271,7 +271,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.1.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.1.3</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -648,7 +648,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           ✦ 不依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
         </div>
         <div class="analysis-section">
-        <div class="analysis-section-title">v4.1.2 — 2026-04-11</div><div class="analysis-text">✦ 修正配置達成率計算邏輯：拆分目標比例行（B欄有值）與達成率行（E欄含「現配置比例」）<br>✦ 直接從 Sheets G12/G33 的現配置比例讀取，不再依賴 holdingsData 即時計算<br>✦ 修正後成長股/ETF 達成率與 Sheets 完全一致，不受匯率變動影響</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.1 — 2026-04-06</div><div class="analysis-text">✦ ETF_TICKERS 新增 VTI（Vanguard全市場ETF）<br>✦ STATIC_INDUSTRY_MAP 新增 VTI → ETF-全市場分類</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
+        <div class="analysis-section-title">v4.1.3 — 2026-04-11</div><div class="analysis-text">✦ 修正配置達成率欄位：現配置比例在 F欄(index 5)，非 E欄，69.03% 正確讀取<br>✦ TQQQ 觀察清單卡片：估值位階改為波段操作建議（不追／可進場／積極建倉等）+ 預期報酬區間<br>✦ SPY 觀察清單卡片：估值位階改為加碼強度建議（大幅加碼／維持定額／暫緩加碼等）+ 說明文字<br>✦ TQQQ/SPY 標籤依 52週位置動態計算，其他標的維持原本估值邏輯</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.1 — 2026-04-06</div><div class="analysis-text">✦ ETF_TICKERS 新增 VTI（Vanguard全市場ETF）<br>✦ STATIC_INDUSTRY_MAP 新增 VTI → ETF-全市場分類</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
         <div class="analysis-text">
           ✦ 持股列表：財報日標籤顯示於 ticker 旁，從「財報日曆」Sheets 分頁讀取<br>
           ✦ 顯示規則：≤7天紅色緊急、≤30天黃色提醒、超過30天不顯示<br>
@@ -1149,8 +1149,8 @@ function parseMeta(rows){
   for(const row of rows){
     const label=(row[0]||'').trim();
     const bVal=parseFloat((row[1]||'').replace(/,/g,'').replace('%',''));
-    const eVal=(row[4]||'').trim(); // E欄：KD判斷 or 現配置比例
-    const fVal=parseFloat((row[5]||'').replace(/,/g,''));
+    const fLabel=(row[5]||'').trim(); // F欄：代號 或 現配置比例（標題行）
+    const fVal=parseFloat((row[5]||'').replace(/,/g,'')); // F欄數值（匯率用）
     const iVal=(row[8]||'').trim();
     const gVal=parseFloat((row[6]||'').replace(/,/g,''));
     const gPctVal=parseFloat((row[6]||'').replace(/,/g,'').replace('%',''));
@@ -1159,20 +1159,20 @@ function parseMeta(rows){
     if(fVal>25&&fVal<45)usdTwd=fVal;
     if(CASH_ROWS.includes(label)&&!isNaN(bVal)&&bVal>0)pureCash+=bVal;
     if(label==='TTO'&&!isNaN(bVal)&&bVal>0)tto=bVal;
-    // v4.1.2：拆分目標行（B欄有比例，E欄非現配置比例）與達成率行（E欄含「現配置比例」，G欄有值）
+    // v4.1.3：F欄含「現配置比例」= 達成率標題行；否則 B欄有比例 = 目標行
     if(label.includes(ALLOC_ROWS.growth)){
-      if(!eVal.includes('現配置比例')&&!isNaN(bVal)&&bVal>0&&bVal<=100){
+      if(!fLabel.includes('現配置比例')&&!isNaN(bVal)&&bVal>0&&bVal<=100){
         growthTarget=bVal/100;
       }
-      if(eVal.includes('現配置比例')&&!isNaN(gPctVal)&&gPctVal>0){
+      if(fLabel.includes('現配置比例')&&!isNaN(gPctVal)&&gPctVal>0){
         growthActual=gPctVal<2?gPctVal*100:gPctVal;
       }
     }
     if(label.includes(ALLOC_ROWS.etf)){
-      if(!eVal.includes('現配置比例')&&!isNaN(bVal)&&bVal>0&&bVal<=100){
+      if(!fLabel.includes('現配置比例')&&!isNaN(bVal)&&bVal>0&&bVal<=100){
         etfTarget=bVal/100;
       }
-      if(eVal.includes('現配置比例')&&!isNaN(gPctVal)&&gPctVal>0){
+      if(fLabel.includes('現配置比例')&&!isNaN(gPctVal)&&gPctVal>0){
         etfActual=gPctVal<2?gPctVal*100:gPctVal;
       }
     }
@@ -1526,6 +1526,25 @@ function renderDCFBand(ticker){
 
 // === WATCHLIST ===
 function get52WPos(t){const h=holdingsData.find(x=>x.ticker===t);if(!h||!h.w52low||!h.w52high||!h.price||h.w52high<=h.w52low)return null;return Math.max(0,Math.min(100,((h.price-h.w52low)/(h.w52high-h.w52low))*100));}
+// v4.1.3：TQQQ 波段標籤
+function getTQQQLabel(pos){
+  if(pos===null)return{badge:'val-mid',text:'資料載入中',ret:'—'};
+  if(pos<20)return{badge:'val-deep',text:'極度恐慌，大力買入',ret:'+60%～+150%'};
+  if(pos<35)return{badge:'val-low',text:'低估，積極建倉',ret:'+30%～+80%'};
+  if(pos<50)return{badge:'val-low',text:'合理，可進場',ret:'+15%～+40%'};
+  if(pos<70)return{badge:'val-mid',text:'偏高，觀望',ret:'+5%～+20%'};
+  if(pos<85)return{badge:'val-warn',text:'相對高點，不追',ret:'-5%～+15%'};
+  return{badge:'val-high',text:'高估，嚴禁入場',ret:'-20%～-50%'};
+}
+// v4.1.3：SPY 加碼強度標籤
+function getSPYLabel(pos){
+  if(pos===null)return{badge:'val-mid',text:'資料載入中',ret:'—'};
+  if(pos<30)return{badge:'val-deep',text:'大幅加碼機會',ret:'歷史底部'};
+  if(pos<50)return{badge:'val-low',text:'逢低加碼',ret:'優質進場'};
+  if(pos<70)return{badge:'val-mid',text:'維持定額',ret:'正常區間'};
+  if(pos<85)return{badge:'val-mid',text:'正常定額即可',ret:'偏高不出場'};
+  return{badge:'val-warn',text:'暫緩額外加碼',ret:'近期高點'};
+}
 function renderWatchlist(){
   const vList=WATCHLIST.filter(s=>s.type==='value'),eList=WATCHLIST.filter(s=>s.type==='etf'||s.type==='wave');
   const renderCard=s=>{
@@ -1535,19 +1554,32 @@ function renderWatchlist(){
     const vc=vt==='deep'?'val-deep':vt==='low'?'val-low':vt==='mid'?'val-mid':vt==='warn'?'val-warn':'val-high';
     const vtxt=vt==='deep'?'深度低估':vt==='low'?'低估買入':vt==='mid'?'合理區間':vt==='warn'?'偏高注意':'高估減碼';
     let mosD,mosC;
+    // 計算52週位置（ETF/波段共用）
+    let pos52=null;
     if(s.type==='etf'||s.type==='wave'){
-      const p=get52WPos(s.ticker);
-      if(p!=null){mosC=p<30?'var(--green)':p<70?'var(--yellow)':'var(--red)';mosD=`52週 ${p.toFixed(0)}% 位置`;}
-      else{const d=dcfCache[s.ticker];if(d&&d.isETF&&d.w52low&&d.w52high&&d.currentPrice){const pp=Math.max(0,Math.min(100,((d.currentPrice-d.w52low)/(d.w52high-d.w52low))*100));mosC=pp<30?'var(--green)':pp<70?'var(--yellow)':'var(--red)';mosD=`52週 ${pp.toFixed(0)}% 位置`;}else{mosC='var(--text-muted)';mosD='—';}}
+      pos52=get52WPos(s.ticker);
+      if(pos52!=null){mosC=pos52<30?'var(--green)':pos52<70?'var(--yellow)':'var(--red)';mosD=`52週 ${pos52.toFixed(0)}% 位置`;}
+      else{const d=dcfCache[s.ticker];if(d&&d.isETF&&d.w52low&&d.w52high&&d.currentPrice){pos52=Math.max(0,Math.min(100,((d.currentPrice-d.w52low)/(d.w52high-d.w52low))*100));mosC=pos52<30?'var(--green)':pos52<70?'var(--yellow)':'var(--red)';mosD=`52週 ${pos52.toFixed(0)}% 位置`;}else{mosC='var(--text-muted)';mosD='—';}}
     }else{
       const d=dcfCache[s.ticker];
       if(d&&d.mos!=null){mosC=d.mos>=20?'var(--green)':d.mos>=0?'var(--yellow)':'var(--red)';mosD=(d.mos>=0?'+':'')+d.mos.toFixed(0)+'%';}
       else{mosC=s.mos.startsWith('+')?'var(--green)':s.mos==='—'?'var(--text-muted)':'var(--red)';mosD=s.mos;}
     }
+    // v4.1.3：TQQQ/SPY 特殊估值欄
+    let valHTML;
+    if(s.ticker==='TQQQ'){
+      const lbl=getTQQQLabel(pos52);
+      valHTML=`<div><div class="metric-label">操作建議</div><div class="metric-value"><span class="val-badge ${lbl.badge}">${lbl.text}</span><div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:4px;">預期 ${lbl.ret}</div></div></div>`;
+    }else if(s.ticker==='SPY'){
+      const lbl=getSPYLabel(pos52);
+      valHTML=`<div><div class="metric-label">加碼建議</div><div class="metric-value"><span class="val-badge ${lbl.badge}">${lbl.text}</span><div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:4px;">${lbl.ret}</div></div></div>`;
+    }else{
+      valHTML=`<div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge ${vc}">${vtxt}</span></div></div>`;
+    }
     const ci=getCacheInfo('analysis_'+s.ticker);
     return`<div class="stock-card" onclick="openAnalysis('${s.ticker}')">
       <div class="stock-header"><div><div class="stock-ticker">${s.ticker}</div><div class="stock-name">${s.name}</div></div><span class="type-badge ${tc}">${tt}</span></div>
-      <div class="stock-metrics"><div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:${mosC}">${mosD}</div></div><div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge ${vc}">${vtxt}</span></div></div></div>
+      <div class="stock-metrics"><div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:${mosC}">${mosD}</div></div>${valHTML}</div>
       ${renderDCFBand(s.ticker)}
       <div class="stock-footer"><span class="cache-info">${ci?'快取：'+ci:'尚未分析'}</span><button class="analyze-btn">AI 分析 →</button></div>
     </div>`;
