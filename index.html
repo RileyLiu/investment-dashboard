@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.2.4</title>
+<title>投資儀錶板 v4.2.5</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -273,7 +273,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.2.4</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.2.5</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -371,7 +371,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="alloc-card"><div class="alloc-label">持有ETF</div><div class="alloc-value text-purple" id="alloc-etf-pct">—</div><div class="alloc-sub" id="alloc-etf-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-etf-bar" style="width:0%;background:var(--purple)"></div></div></div>
   </div>
   <div class="section-header"><span class="section-label">觀察清單</span><div class="section-line"></div></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch">
     <div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase">個股</div><div id="watchlist-grid-value" style="display:flex;flex-direction:column;gap:12px"></div></div>
     <div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase">ETF &amp; 波段</div><div id="watchlist-grid-etf" style="display:flex;flex-direction:column;gap:12px"></div></div>
   </div>
@@ -686,7 +686,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           ✦ 不依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
         </div>
         <div class="analysis-section">
-        <div class="analysis-section-title">v4.2.4 — 2026-04-12</div><div class="analysis-text">✦ 觀察清單「AI 分析 →」按鈕全數移除<br>✦ 論文狀態標籤從 Sheets 論文庫!D欄讀取：論文成立→綠 / 持觀察→黃 / 動態→紅；未填不顯示</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.3 — 2026-04-11</div><div class="analysis-text">✦ signal-desc 全局改為 14px + text-secondary，六格一致<br>✦ 安全邊際 desc 改為兩行顯示（危險/不足各一行）</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.2 — 2026-04-11</div><div class="analysis-text">✦ 安全邊際 desc 修正：危險和不足的 ticker 同時顯示，格式「危險：COST/MSFT · 不足：UNH/LLY」</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.1 — 2026-04-11</div><div class="analysis-text">✦ 安全邊際 / 估值健康：dangerList / warnList / warns / safes 加 ticker 去重，修正 MSFT 雙筆持倉重複顯示<br>✦ 估值健康區塊字體放大至 16px font-weight:600，對標配置達成率視覺層級<br>✦ health-tooltip 改為往下顯示（top 而非 bottom），避免頂部截斷</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.0 — 2026-04-11</div><div class="analysis-text">✦ 配置健診改版：美元曝險→估值健康（高估/低估持股數）、現金水位→安全邊際（MOS不足警示）、ETF執行→配置達成率（成長股+ETF並列）<br>✦ 三格新增 hover tooltip 說明燈號判斷邏輯<br>✦ renderHealthPage 新增 meta 參數，配置達成率直接讀 Sheets growthActual/etfActual<br>✦ 新增全域 lastMeta 暫存，tab 切換和 DCF 更新後皆可正確傳入</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.6 — 2026-04-11</div><div class="analysis-text">✦ STATIC_INDUSTRY_MAP 新增 GLD → ETF-黃金、SGOV → ETF-現金停泊，不再落入「其他」</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.5 — 2026-04-11</div><div class="analysis-text">✦ 修正「還差」金額語義：改為距離 100% 達成率還差多少（目標金額 × 未達比例），達成率超過目標時正確顯示剩餘空間</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.4 — 2026-04-11</div><div class="analysis-text">✦ 根本修正配置達成率：updateAllocCards 改用 Sheets 直接給的 growthActual/etfActual，不再自行計算<br>✦ 還差金額（gap）也改用 actual 金額反推，消除匯率誤差<br>✦ 無 Sheets 值時自動 fallback 即時計算，向下相容</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.3 — 2026-04-11</div><div class="analysis-text">✦ 修正配置達成率欄位：現配置比例在 F欄(index 5)，非 E欄，69.03% 正確讀取<br>✦ TQQQ 觀察清單卡片：估值位階改為波段操作建議（不追／可進場／積極建倉等）+ 預期報酬區間<br>✦ SPY 觀察清單卡片：估值位階改為加碼強度建議（大幅加碼／維持定額／暫緩加碼等）+ 說明文字<br>✦ TQQQ/SPY 標籤依 52週位置動態計算，其他標的維持原本估值邏輯</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.1 — 2026-04-06</div><div class="analysis-text">✦ ETF_TICKERS 新增 VTI（Vanguard全市場ETF）<br>✦ STATIC_INDUSTRY_MAP 新增 VTI → ETF-全市場分類</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
+        <div class="analysis-section-title">v4.2.5 — 2026-04-12</div><div class="analysis-text">✦ 觀察清單卡片移除 onclick，不再觸發 AI 分析 modal<br>✦ 觀察清單左右欄 align-items:stretch，個股/ETF 同排對齊<br>✦ 論文狀態標籤從 Sheets 論文庫!D欄讀取（跨裝置同步）：論文成立→綠 / 持觀察→黃 / 動態→紅；未填不顯示<br>✦ D欄對應修正：符合 Sheets 下拉選單實際值</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.3 — 2026-04-11</div><div class="analysis-text">✦ signal-desc 全局改為 14px + text-secondary，六格一致<br>✦ 安全邊際 desc 改為兩行顯示（危險/不足各一行）</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.2 — 2026-04-11</div><div class="analysis-text">✦ 安全邊際 desc 修正：危險和不足的 ticker 同時顯示，格式「危險：COST/MSFT · 不足：UNH/LLY」</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.1 — 2026-04-11</div><div class="analysis-text">✦ 安全邊際 / 估值健康：dangerList / warnList / warns / safes 加 ticker 去重，修正 MSFT 雙筆持倉重複顯示<br>✦ 估值健康區塊字體放大至 16px font-weight:600，對標配置達成率視覺層級<br>✦ health-tooltip 改為往下顯示（top 而非 bottom），避免頂部截斷</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.0 — 2026-04-11</div><div class="analysis-text">✦ 配置健診改版：美元曝險→估值健康（高估/低估持股數）、現金水位→安全邊際（MOS不足警示）、ETF執行→配置達成率（成長股+ETF並列）<br>✦ 三格新增 hover tooltip 說明燈號判斷邏輯<br>✦ renderHealthPage 新增 meta 參數，配置達成率直接讀 Sheets growthActual/etfActual<br>✦ 新增全域 lastMeta 暫存，tab 切換和 DCF 更新後皆可正確傳入</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.6 — 2026-04-11</div><div class="analysis-text">✦ STATIC_INDUSTRY_MAP 新增 GLD → ETF-黃金、SGOV → ETF-現金停泊，不再落入「其他」</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.5 — 2026-04-11</div><div class="analysis-text">✦ 修正「還差」金額語義：改為距離 100% 達成率還差多少（目標金額 × 未達比例），達成率超過目標時正確顯示剩餘空間</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.4 — 2026-04-11</div><div class="analysis-text">✦ 根本修正配置達成率：updateAllocCards 改用 Sheets 直接給的 growthActual/etfActual，不再自行計算<br>✦ 還差金額（gap）也改用 actual 金額反推，消除匯率誤差<br>✦ 無 Sheets 值時自動 fallback 即時計算，向下相容</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.3 — 2026-04-11</div><div class="analysis-text">✦ 修正配置達成率欄位：現配置比例在 F欄(index 5)，非 E欄，69.03% 正確讀取<br>✦ TQQQ 觀察清單卡片：估值位階改為波段操作建議（不追／可進場／積極建倉等）+ 預期報酬區間<br>✦ SPY 觀察清單卡片：估值位階改為加碼強度建議（大幅加碼／維持定額／暫緩加碼等）+ 說明文字<br>✦ TQQQ/SPY 標籤依 52週位置動態計算，其他標的維持原本估值邏輯</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.1 — 2026-04-06</div><div class="analysis-text">✦ ETF_TICKERS 新增 VTI（Vanguard全市場ETF）<br>✦ STATIC_INDUSTRY_MAP 新增 VTI → ETF-全市場分類</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
         <div class="analysis-text">
           ✦ 持股列表：財報日標籤顯示於 ticker 旁，從「財報日曆」Sheets 分頁讀取<br>
           ✦ 顯示規則：≤7天紅色緊急、≤30天黃色提醒、超過30天不顯示<br>
@@ -1624,7 +1624,7 @@ function renderWatchlist(){
       valHTML=`<div><div class="metric-label">估值位階</div><div class="metric-value"><span class="val-badge ${vc}">${vtxt}</span></div></div>`;
     }
     const ci=getCacheInfo('analysis_'+s.ticker);
-    return`<div class="stock-card" onclick="openAnalysis('${s.ticker}')">
+    return`<div class="stock-card" style="cursor:default">
       <div class="stock-header"><div><div class="stock-ticker">${s.ticker}</div><div class="stock-name">${s.name}</div></div><span class="type-badge ${tc}">${tt}</span></div>
       <div class="stock-metrics"><div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:${mosC}">${mosD}</div></div>${valHTML}</div>
       ${renderDCFBand(s.ticker)}
