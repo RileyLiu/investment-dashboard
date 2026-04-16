@@ -1471,13 +1471,8 @@ function renderCharts(gVal,eVal,cVal,sVals,meta){
   const COLORS=['#38bdf8','#a78bfa','#34d399','#fbbf24','#f87171','#818cf8','#6ee7b7','#fca5a5','#60a5fa','#c084fc','#4ade80','#fb923c'];
   const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#7a9abf',font:{family:'IBM Plex Mono',size:13},padding:12,boxWidth:12}},tooltip:{bodyFont:{family:'IBM Plex Mono'},titleFont:{family:'IBM Plex Mono'},callbacks:{label(ctx){const tot=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=tot>0?((ctx.parsed/tot)*100).toFixed(1):0;const amt=Math.round(ctx.parsed/10000);return ` ${ctx.label}: ${pct}% (NT$${amt}萬)`;}}}},cutout:'60%'};
   if(chartCategory)chartCategory.destroy();
-  // v4.3.1：甜甜圈改用目標達成率（與上方配置卡片一致），tooltip 同時顯示達成率% + NT$萬
-  const gActual=meta&&meta.growthActual!=null?meta.growthActual:null;
-  const eActual=meta&&meta.etfActual!=null?meta.etfActual:null;
-  const usePct=gActual!=null&&eActual!=null;
-  const catData=usePct?[gActual,eActual,cVal]:[gVal,eVal,cVal];
-  const catOpts=usePct?{...opts,plugins:{...opts.plugins,tooltip:{...opts.plugins.tooltip,callbacks:{label(ctx){const pct=ctx.parsed.toFixed(1);const rawVals=[gVal,eVal,cVal];const amt=Math.round(rawVals[ctx.dataIndex]/10000);return ` ${ctx.label}：達成率 ${pct}%（NT$${amt}萬）`;}}}}}: opts;
-  chartCategory=new Chart(el('chart-category'),{type:'doughnut',data:{labels:['成長型股票','持有ETF','現金停泊'],datasets:[{data:catData,backgroundColor:['#38bdf8','#a78bfa','#34d399'],borderColor:'#0d1526',borderWidth:2}]},options:{...catOpts}});
+  // v4.3.2：圓餅圖固定用原始市值（TWD），三類各自比例自然呈現
+  chartCategory=new Chart(el('chart-category'),{type:'doughnut',data:{labels:['成長型股票','持有ETF','現金停泊'],datasets:[{data:[gVal,eVal,cVal],backgroundColor:['#38bdf8','#a78bfa','#34d399'],borderColor:'#0d1526',borderWidth:2}]},options:{...opts}});
   if(chartStocks)chartStocks.destroy();
   const sorted=[...sVals].sort((a,b)=>b.val-a.val);
   chartStocks=new Chart(el('chart-stocks'),{type:'doughnut',data:{labels:sorted.map(s=>TW_NAMES[s.ticker]||s.ticker),datasets:[{data:sorted.map(s=>Math.round(s.val)),backgroundColor:COLORS.slice(0,sorted.length),borderColor:'#0d1526',borderWidth:2}]},options:{...opts,cutout:'55%'}});
