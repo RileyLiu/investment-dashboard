@@ -273,7 +273,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.3.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.3.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -684,7 +684,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section"><div class="analysis-section-title">v4.3.2 — 2026-04-16</div><div class="analysis-text">✦ 大類資產分布圓餅圖新增第三塊「現金停泊」（綠色）<br>✦ 新增 CASH_TICKERS=['SGOV']，SGOV 從 ETF 分類移出，獨立計為現金停泊<br>✦ renderCharts 加入 cVal 參數，三類市值各自計算</div></div><div class="analysis-section-title">v4.3.1 — 2026-04-16</div><div class="analysis-text">✦ 大類資產分布甜甜圈：改用目標達成率（growthActual/etfActual）取代持倉市值比例，與上方配置卡片數字一致<br>✦ Hover tooltip 同時顯示達成率% 及 NT$萬市值<br>✦ 修正 nav brand 版號顯示（v4.2.8 → v4.3.1）</div></div><div class="analysis-section"><div class="analysis-section-title">v4.3.0 — 2026-04-14</div>
+        <div class="analysis-section-title">v4.3.2 — 2026-04-16</div>
+        <div class="analysis-text">✦ 大類資產分布圓餅圖新增第三塊「現金停泊」（綠色）<br>✦ 新增 CASH_TICKERS=['SGOV']，SGOV 從 ETF 分類移出，獨立計為現金停泊<br>✦ renderCharts 加入 cVal 參數，三類市值各自計算</div>
+      </div>
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.3.1 — 2026-04-16</div><div class="analysis-text">✦ 大類資產分布甜甜圈：改用目標達成率（growthActual/etfActual）取代持倉市值比例，與上方配置卡片數字一致<br>✦ Hover tooltip 同時顯示達成率% 及 NT$萬市值<br>✦ 修正 nav brand 版號顯示（v4.2.8 → v4.3.1）</div></div><div class="analysis-section"><div class="analysis-section-title">v4.3.0 — 2026-04-14</div>
         <div class="analysis-text">
           ✦ Nasdaq/Gold 圖表新增時間範圍按鈕：5Y / 10Y / 全部，快速聚焦近期走勢<br>
           ✦ 修正 Changelog 巢狀顯示 bug（v4.2.8 被包進 v4.0.0 card 裡）
