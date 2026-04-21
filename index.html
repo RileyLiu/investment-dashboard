@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.3.2</title>
+<title>投資儀錶板 v4.3.3</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -48,7 +48,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .progress-bar{height:4px;background:var(--bg-elevated);border-radius:2px;margin-top:10px;overflow:hidden;}
 .progress-fill{height:100%;border-radius:2px;transition:width 0.6s ease;}
 /* ── INDEX BAR v3.8.0 ── */
-.index-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.index-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
 .index-cell{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;transition:border-color 0.2s;}
 .index-cell:hover{border-color:var(--border-bright);}
 .index-cell-label{display:flex;align-items:baseline;gap:6px;margin-bottom:5px;}
@@ -273,7 +273,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.3.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.3.3</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -293,27 +293,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <!-- ── v3.8.0 市場溫度計：VIX / SPX / NDX / SOX ── -->
   <div class="section-header"><span class="section-label">市場溫度計</span><div class="section-line"></div></div>
   <div class="index-bar">
-    <!-- VIX 恐慌指數 -->
-    <div class="index-cell" id="cell-vix">
-      <div class="index-cell-label"><span class="index-code">VIX</span><span class="index-cn">恐慌指數</span></div>
-      <div class="index-price" id="vix-price">—</div>
-      <div class="index-change" id="vix-change" style="color:var(--text-muted)">—</div>
-      <div class="index-52w-label"><span id="vix-52w-low">低</span><span id="vix-52w-pct">—</span><span id="vix-52w-high">高</span></div>
-      <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="vix-dot" style="left:50%;background:var(--yellow)"></div></div>
-      <!-- Hover -->
-      <div class="index-tooltip">
-        <div class="tt-title">VIX 歷史對照</div>
-        <div class="tt-row"><span class="tt-label">2020 疫情高峰</span><span class="tt-val" style="color:var(--red)">89.5</span></div>
-        <div class="tt-row"><span class="tt-label">2024 日圓閃崩</span><span class="tt-val" style="color:var(--red)">65.7</span></div>
-        <div class="tt-row"><span class="tt-label">2022 升息高峰</span><span class="tt-val" style="color:var(--yellow)">36.4</span></div>
-        <div class="tt-row"><span class="tt-label">極度恐慌線</span><span class="tt-val" style="color:var(--red)">≥ 30</span></div>
-        <div class="tt-row"><span class="tt-label">市場警戒線</span><span class="tt-val" style="color:var(--yellow)">≥ 20</span></div>
-        <div class="tt-row"><span class="tt-label">正常水位</span><span class="tt-val" style="color:var(--green)">12–15</span></div>
-        <div class="tt-divider"></div>
-        <div class="tt-row"><span class="tt-label">Buffett 法則</span><span class="tt-val" style="color:var(--accent)">恐慌時貪婪</span></div>
-        <div class="tt-row" id="vix-current-row" style="display:none"><span class="tt-label">當前位置</span><span class="tt-val" id="vix-current-desc">—</span></div>
-      </div>
-    </div>
     <!-- SPX 標普500 -->
     <div class="index-cell" id="cell-spx">
       <div class="index-cell-label"><span class="index-code">SPX</span><span class="index-cn">標普500</span></div>
@@ -482,7 +461,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <!-- 宏觀環境指標欄 -->
   <div id="macro-bar" style="display:none;margin-bottom:16px;">
     <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">宏觀環境指標 · Yahoo Finance 即時</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
 
       <!-- 短期利率 -->
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
@@ -544,12 +523,16 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         </div>
       </div>
 
+    </div>
+    <!-- 第二排：VIX + AAII -->
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+
       <!-- VIX -->
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
         <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">VIX 恐慌指數</div>
         <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vix">—</div>
         <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">^VIX</div>
-        <div class="macro-tooltip" style="left:auto;right:0;">
+        <div class="macro-tooltip">
           <div class="tt-title">VIX 恐慌指數</div>
           <div class="tt-row"><span class="tt-label">意義</span><span class="tt-val">市場隱含波動率（30天）</span></div>
           <div class="tt-divider"></div>
@@ -564,6 +547,32 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           <div class="tt-row"><span class="tt-label">2022 升息高峰</span><span class="tt-val">36.4</span></div>
           <div class="tt-divider"></div>
           <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VIX 30+ 且基本面未變 → 你的子彈就是為此刻準備的</div>
+        </div>
+      </div>
+
+      <!-- AAII 散戶情緒 -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">AAII 散戶情緒</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="aaii-bearish">—</div>
+          <div style="font-family:var(--font-mono);font-size:11px;" id="aaii-sigma-badge">—</div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">Bearish% · 週更</div>
+        <div class="macro-tooltip" style="left:auto;right:0;">
+          <div class="tt-title">AAII 散戶情緒 · 逆向指標</div>
+          <div class="tt-row"><span class="tt-label">當週 Bearish%</span><span class="tt-val" id="aaii-tt-bearish">—</span></div>
+          <div class="tt-row"><span class="tt-label">偏離程度</span><span class="tt-val" id="aaii-tt-sigma">—</span></div>
+          <div class="tt-row"><span class="tt-label">4週均值</span><span class="tt-val" id="aaii-tt-avg">—</span></div>
+          <div class="tt-row"><span class="tt-label">Bull-Bear Spread</span><span class="tt-val" id="aaii-tt-spread">—</span></div>
+          <div class="tt-row"><span class="tt-label">資料日期</span><span class="tt-val" id="aaii-tt-date">—</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">區間解讀</div>
+          <div class="tt-row"><span class="tt-label">Bearish &lt; +1σ（&lt;42%）</span><span class="tt-val" style="color:var(--text-muted)">正常範圍</span></div>
+          <div class="tt-row"><span class="tt-label">Bearish +1~+2σ（42–51%）</span><span class="tt-val" style="color:var(--yellow)">悲觀偏高，留意機會</span></div>
+          <div class="tt-row"><span class="tt-label">Bearish &gt; +2σ（&gt;51%）</span><span class="tt-val" style="color:var(--green)">極端恐慌，共振加碼區</span></div>
+          <div class="tt-row"><span class="tt-label">Bullish &gt; +1σ + VIX &lt; 15</span><span class="tt-val" style="color:var(--red)">過熱警戒，暫緩加碼</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">每週四更新 · GAS Weekly_Snapshot 自動寫入設定!B15</div>
         </div>
       </div>
 
@@ -683,6 +692,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.3.3 — 2026-04-21</div>
+        <div class="analysis-text">✦ 觀覽清單頁市場溫度計：移除 VIX 格，grid 4欄→3欄（SPX / NDX / SOX），fetchVIX() 邏輯保留供風險頁使用<br>✦ 風險頁宏觀指標欄重構：第一排 3 格（短期利率 / 10年公債 / 殖利率曲線），第二排 2 格（VIX / AAII 散戶情緒）<br>✦ AAII 格：主體顯示 Bearish% + σ 燈號，tooltip 顯示偏離σ / 4週均值 / Bull-Bear Spread / 區間解讀<br>✦ AAII 數據從 Sheets 設定!B15:B18 sync 時讀入，GAS Weekly_Snapshot 每週日自動寫入</div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.3.2 — 2026-04-16</div>
         <div class="analysis-text">✦ 大類資產分布圓餅圖新增第三塊「現金停泊」（綠色）<br>✦ 新增 CASH_TICKERS=['SGOV']，SGOV 從 ETF 分類移出，獨立計為現金停泊<br>✦ renderCharts 加入 cVal 參數，三類市值各自計算</div>
@@ -1307,6 +1320,21 @@ async function syncSheets(){
   renderGrowthChart();
   renderHealthPage(meta);
   fetchFIREProgress();
+  // 讀取 AAII 情緒數據（設定!B15:B18）
+  try{
+    const ar=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B15:B18')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const aj=await ar.json();
+    const av=aj.values||[];
+    if(av.length>=4){
+      const aaiiData={
+        bearish: parseFloat(av[0]?.[0])||0,
+        avg4w:   parseFloat(av[1]?.[0])||0,
+        spread:  parseFloat(av[2]?.[0])||0,
+        date:    av[3]?.[0]||'—'
+      };
+      renderAAIIBar(aaiiData);
+    }
+  }catch(e){console.warn('[AAII] 讀取失敗:',e);}
 }
 
 // === ALLOC CARDS (v3.8.0修正：tto = totalCash - reserveCash) ===
@@ -1892,6 +1920,40 @@ function renderMacroBar(fd){
   if(t10El){t10El.textContent=fmt(fd.t10y2y,3);t10El.style.color=fd.t10y2y!=null?(fd.t10y2y<0?'var(--red)':'var(--green)'):'var(--text-muted)';}
   if(vixEl){vixEl.textContent=fmtVix(fd.vix);vixEl.style.color=fd.vix!=null?(fd.vix>=30?'var(--red)':fd.vix>=20?'var(--yellow)':'var(--green)'):'var(--text-muted)';}
   bar.style.display='block';
+}
+function renderAAIIBar(aaiiData){
+  // aaiiData: {bearish, avg4w, spread, date}
+  const bearishEl=document.getElementById('aaii-bearish');
+  const badgeEl=document.getElementById('aaii-sigma-badge');
+  if(!bearishEl||!aaiiData)return;
+  const bearish=parseFloat(aaiiData.bearish)||0;
+  const avg4w=parseFloat(aaiiData.avg4w)||0;
+  const spread=parseFloat(aaiiData.spread)||0;
+  const date=aaiiData.date||'—';
+  // σ 計算
+  const MEAN=31.0,STD=9.0;
+  const sigma=(bearish-MEAN)/STD;
+  const sigmaSign=sigma>=0?'+':'';
+  let sigmaLabel,sigmaColor;
+  if(sigma>=2){sigmaLabel='極端恐慌';sigmaColor='var(--green)';}
+  else if(sigma>=1){sigmaLabel='悲觀偏高';sigmaColor='var(--yellow)';}
+  else if(sigma<=-1){sigmaLabel='樂觀偏高';sigmaColor='var(--red)';}
+  else{sigmaLabel='正常範圍';sigmaColor='var(--text-muted)';}
+  // 主體
+  bearishEl.textContent=bearish.toFixed(1)+'%';
+  bearishEl.style.color=sigmaColor;
+  if(badgeEl){badgeEl.textContent=sigmaSign+sigma.toFixed(1)+'σ '+sigmaLabel;badgeEl.style.color=sigmaColor;}
+  // tooltip
+  const ttBearish=document.getElementById('aaii-tt-bearish');
+  const ttSigma=document.getElementById('aaii-tt-sigma');
+  const ttAvg=document.getElementById('aaii-tt-avg');
+  const ttSpread=document.getElementById('aaii-tt-spread');
+  const ttDate=document.getElementById('aaii-tt-date');
+  if(ttBearish)ttBearish.textContent=bearish.toFixed(1)+'%';
+  if(ttSigma){ttSigma.textContent=sigmaSign+sigma.toFixed(2)+'σ（'+sigmaLabel+'）';ttSigma.style.color=sigmaColor;}
+  if(ttAvg)ttAvg.textContent=avg4w.toFixed(1)+'%';
+  if(ttSpread){ttSpread.textContent=(spread>=0?'+':'')+spread.toFixed(1)+'%';ttSpread.style.color=spread>=0?'var(--red)':'var(--green)';}
+  if(ttDate)ttDate.textContent=date;
 }
 
 async function initRiskPage(){renderTreemap();checkRiskCd();const fd=await fetchMacroData();renderMacroBar(fd);}
