@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.3.4</title>
+<title>投資儀錶板 v4.3.5</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -273,7 +273,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.3.4</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.3.5</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -781,6 +781,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.3.5 — 2026-04-23</div>
+        <div class="analysis-text">✦ 蒙地卡羅 DCA 輸入 bug 修正：onchange 改為 addEventListener input，解決直接修改數字不觸發更新的問題<br>✦ 新增區間後重新渲染不再破壞既有綁定（改用 DOM 元素建立取代 innerHTML）</div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.3.4 — 2026-04-23</div>
         <div class="analysis-text">✦ 新增「蒙地卡羅」分頁：登入後顯示，純前端 JS 執行，零 API 成本<br>✦ 支援分段美股 DCA（USD/月，可設年增率）+ 台股 DCA（006208 / 2330 各別月定額）<br>✦ 所有報酬率參數為滑桿，右側顯示歷史實績參考區間<br>✦ 輸出：50歲前 FIRE 機率 / 中位數達標年齡 / P50 & P10 最終資產 + 三張圖（路徑分布 / 達成年齡直方圖 / 最差5%路徑）</div>
@@ -2452,7 +2456,21 @@ function mcRenderStages(){
   mcStages.forEach((s,i)=>{
     const d=document.createElement('div');
     d.className='mc-dca-stage';
-    d.innerHTML=`<input type="number" value="${s.from}" min="20" max="70" onchange="mcStages[${i}].from=+this.value"><input type="number" value="${s.to}" min="20" max="70" onchange="mcStages[${i}].to=+this.value"><input type="number" value="${s.monthly}" min="0" max="10000" onchange="mcStages[${i}].monthly=+this.value"><input type="number" value="${s.growRate}" min="0" max="20" step="0.5" onchange="mcStages[${i}].growRate=+this.value"><button class="mc-del-btn" onclick="mcDelStage(${i})">✕</button>`;
+    const mkInp=(val,field,min,max,step)=>{
+      const el=document.createElement('input');
+      el.type='number';el.value=val;el.min=min;el.max=max;
+      if(step!==undefined)el.step=step;
+      el.addEventListener('input',function(){mcStages[i][field]=+this.value;});
+      return el;
+    };
+    d.appendChild(mkInp(s.from,'from',20,70));
+    d.appendChild(mkInp(s.to,'to',20,70));
+    d.appendChild(mkInp(s.monthly,'monthly',0,10000));
+    d.appendChild(mkInp(s.growRate,'growRate',0,20,0.5));
+    const btn=document.createElement('button');
+    btn.className='mc-del-btn';btn.textContent='✕';
+    btn.addEventListener('click',function(){mcDelStage(i);});
+    d.appendChild(btn);
     c.appendChild(d);
   });
 }
