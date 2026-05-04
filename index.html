@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.4.0</title>
+<title>投資儀錶板 v4.4.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -297,7 +297,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -851,6 +851,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.4.1 — 2026-05-04</div>
+        <div class="analysis-text">✦ FRED API Key hardcode，估值週期圖頁面載入自動渲染，無需手動設定</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.0 — 2026-05-04</div>
         <div class="analysis-text">
@@ -2188,20 +2191,10 @@ async function initRiskPage(){
   checkRiskCd();
   const fd=await fetchMacroData();
   renderMacroBar(fd);
-  // v4.4.0：讀取 FRED Key 後初始化估值週期
-  await fetchFredKeyAndInitValCycle();
+  await initValCycle();
 }
 
 async function fetchFredKeyAndInitValCycle(){
-  // 先從 localStorage 嘗試
-  if(!ls('fred_api_key')&&googleToken&&getSheetId()){
-    try{
-      const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B7')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
-      const d=await r.json();
-      const key=(d.values&&d.values[0]&&d.values[0][0])||'';
-      if(key)ls('fred_api_key',key);
-    }catch(e){}
-  }
   await initValCycle();
 }
 function renderTreemap(){
@@ -2476,12 +2469,7 @@ async function fetchFredSeries(seriesId,fredKey,limit){
 }
 
 async function initValCycle(){
-  const fredKey=ls('fred_api_key')||'';
-  if(!fredKey){
-    document.getElementById('vc-buffett-val').textContent='需設定 FRED API Key';
-    document.getElementById('vc-cli-val').textContent='需設定 FRED API Key';
-    return;
-  }
+  const fredKey='267ae52fdec3515c8a54bcfdeeafe51e';
   document.getElementById('vc-loading').style.display='block';
   try{
     const[will,gdp,cliUS,cliWorld]=await Promise.all([
