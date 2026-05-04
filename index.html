@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.4.3</title>
+<title>投資儀錶板 v4.4.4</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -297,7 +297,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.3</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.4</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -851,6 +851,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.4.4 — 2026-05-04</div>
+        <div class="analysis-text">✦ 修正CORS封鎖：fetchFredSeries改走Cloudflare Worker代理（/fred/:seriesId），不再直接呼叫api.stlouisfed.org<br>✦ Worker新增limit/observation_start參數支援</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.3 — 2026-05-04</div>
         <div class="analysis-text">✦ 修正 initValCycle is not defined：函數定義移至 initRiskPage 之前，解決 async function hoisting 問題</div></div>
@@ -2197,7 +2200,8 @@ let vcBuffettChart=null,vcCliChart=null;
 
 async function fetchFredSeries(seriesId,fredKey,limit,startDate){
   const start=startDate||'2004-01-01';
-  const url=`https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${fredKey}&file_type=json&sort_order=asc&limit=${limit||300}&observation_start=${start}`;
+  const lim=limit||300;
+  const url=`https://anthropic-proxy.issac0901.workers.dev/fred/${seriesId}?key=${fredKey}&limit=${lim}&start=${start}`;
   const r=await fetch(url);
   if(!r.ok)throw new Error('FRED '+seriesId+' failed');
   const d=await r.json();
