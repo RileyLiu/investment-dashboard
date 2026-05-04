@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.4.2</title>
+<title>投資儀錶板 v4.4.3</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -297,7 +297,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.3</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -851,6 +851,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.4.3 — 2026-05-04</div>
+        <div class="analysis-text">✦ 修正 initValCycle is not defined：函數定義移至 initRiskPage 之前，解決 async function hoisting 問題</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.2 — 2026-05-04</div>
         <div class="analysis-text">✦ 修正估值週期圖空白根本原因：FRED API 加 observation_start=2004-01-01，避免拿到1940-70年代舊資料<br>✦ WILL5000IND limit 100→300（確保20年月度資料完整）<br>✦ Chart.js fill 改用 label 字串方式，修正 v4.x σ色帶不填色問題<br>✦ canvas height 160→200px 改善可讀性</div></div>
@@ -2189,6 +2192,145 @@ function renderAAIIBar(aaiiData){
   if(ttDate)ttDate.textContent=date;
 }
 
+// === v4.4.0 估值週期：巴菲特指標 + OECD CLI ===
+let vcBuffettChart=null,vcCliChart=null;
+
+async function fetchFredSeries(seriesId,fredKey,limit,startDate){
+  const start=startDate||'2004-01-01';
+  const url=`https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${fredKey}&file_type=json&sort_order=asc&limit=${limit||300}&observation_start=${start}`;
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('FRED '+seriesId+' failed');
+  const d=await r.json();
+  return (d.observations||[]).filter(o=>o.value&&o.value!=='.'&&!isNaN(parseFloat(o.value))).map(o=>({date:o.date,value:parseFloat(o.value)}));
+}
+
+async function initValCycle(){
+  const fredKey='267ae52fdec3515c8a54bcfdeeafe51e';
+  document.getElementById('vc-loading').style.display='block';
+  try{
+    const[will,gdp,cliUS,cliWorld]=await Promise.all([
+      fetchFredSeries('WILL5000IND',fredKey,300,'2004-01-01'),
+      fetchFredSeries('GDP',fredKey,100,'2004-01-01'),
+      fetchFredSeries('USALOLITONOSTSAM',fredKey,300,'2004-01-01'),
+      fetchFredSeries('OECDLOLITONOSTSAM',fredKey,300,'2004-01-01')
+    ]);
+    renderBuffettChart(will,gdp);
+    renderCLIChart(cliUS,cliWorld);
+  }catch(e){
+    console.error('[ValCycle]',e);
+    document.getElementById('vc-buffett-val').textContent='載入失敗';
+    document.getElementById('vc-cli-val').textContent='載入失敗';
+  }finally{
+    document.getElementById('vc-loading').style.display='none';
+  }
+}
+
+function renderBuffettChart(will,gdp){
+  // 對齊季度：以GDP日期為基準（季度），Wilshire取最接近該日期的值
+  const willMap=new Map(will.map(d=>[d.date.substring(0,7),d.value]));
+  const points=[];
+  for(const g of gdp){
+    const qDate=g.date.substring(0,7);
+    // 找最接近的Wilshire月份（同季）
+    let wVal=null;
+    for(let m=0;m<=2;m++){
+      const d=new Date(g.date);d.setMonth(d.getMonth()+m);
+      const key=d.toISOString().substring(0,7);
+      if(willMap.has(key)){wVal=willMap.get(key);break;}
+    }
+    if(wVal&&g.value>0){
+      const ratio=wVal/g.value*100;
+      const yr=parseInt(g.date.substring(0,4));
+      if(yr>=2004)points.push({date:g.date,ratio:parseFloat(ratio.toFixed(1))});
+    }
+  }
+  if(!points.length)return;
+  // 計算趨勢線（線性回歸）和σ
+  const n=points.length;
+  const xs=points.map((_,i)=>i);
+  const ys=points.map(p=>p.ratio);
+  const mx=xs.reduce((a,b)=>a+b,0)/n;
+  const my=ys.reduce((a,b)=>a+b,0)/n;
+  const slope=(xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0))/(xs.reduce((s,x)=>s+(x-mx)**2,0));
+  const intercept=my-slope*mx;
+  const trend=xs.map(x=>parseFloat((intercept+slope*x).toFixed(1)));
+  const residuals=ys.map((y,i)=>y-trend[i]);
+  const sigma=Math.sqrt(residuals.reduce((s,r)=>s+r*r,0)/n);
+  const p1up=trend.map(v=>parseFloat((v+sigma).toFixed(1)));
+  const p2up=trend.map(v=>parseFloat((v+2*sigma).toFixed(1)));
+  const p1dn=trend.map(v=>parseFloat((v-sigma).toFixed(1)));
+  // 更新badge
+  const last=points[points.length-1];
+  const lastTrend=trend[trend.length-1];
+  const lastResid=last.ratio-lastTrend;
+  const sigmaPos=lastResid/sigma;
+  const sigmaSign=sigmaPos>=0?'+':'';
+  document.getElementById('vc-buffett-val').textContent=`當前 ${last.ratio.toFixed(0)}% · ${sigmaSign}${sigmaPos.toFixed(1)}σ`;
+  const badge=document.getElementById('vc-buffett-badge');
+  badge.className='valcycle-badge '+(sigmaPos>=2?'vc-red':sigmaPos>=1?'vc-orange':sigmaPos<=-1?'vc-green':'vc-yellow');
+  badge.childNodes[0].textContent=sigmaPos>=2?'🔴 強烈高估':sigmaPos>=1?'🟠 偏高':sigmaPos<=-1?'🟢 低估區':'🟡 中性';
+  const labels=points.map(p=>p.date.substring(0,7));
+  if(vcBuffettChart)vcBuffettChart.destroy();
+  const isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const tc=isDark?'#475569':'#94a3b8';
+  const gc=isDark?'rgba(71,85,105,0.3)':'rgba(148,163,184,0.15)';
+  vcBuffettChart=new Chart(document.getElementById('vc-buffett-chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'+2σ',data:p2up,borderColor:'rgba(248,113,113,0.3)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false,tension:0.3},
+      {label:'+1σ',data:p1up,borderColor:'rgba(248,113,113,0.4)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(248,113,113,0.12)',fill:{target:'+2σ',above:'rgba(248,113,113,0.1)',below:'rgba(248,113,113,0.1)'},tension:0.3},
+      {label:'趨勢',data:trend,borderColor:'#34d399',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,tension:0.3},
+      {label:'-1σ',data:p1dn,borderColor:'rgba(52,211,153,0.35)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(52,211,153,0.08)',fill:{target:'趨勢',above:'rgba(52,211,153,0.08)',below:'rgba(52,211,153,0.08)'},tension:0.3},
+      {label:'指標',data:ys,borderColor:'#38bdf8',borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,tension:0.3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='指標'?`${ctx.parsed.y.toFixed(0)}% (${sigmaSign}${sigmaPos.toFixed(1)}σ)`:null,filter:i=>i.dataset.label==='指標'}}},
+      scales:{x:{ticks:{color:tc,font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{color:gc}},y:{ticks:{color:tc,font:{size:9},callback:v=>v+'%'},grid:{color:gc}}}}
+  });
+}
+
+function renderCLIChart(cliUS,cliWorld){
+  const cutoff=new Date();cutoff.setFullYear(cutoff.getFullYear()-20);
+  const filterRecent=arr=>arr.filter(d=>new Date(d.date)>=cutoff);
+  const usData=filterRecent(cliUS);
+  const wdData=filterRecent(cliWorld);
+  if(!usData.length)return;
+  // 對齊日期標籤
+  const allDates=[...new Set([...usData.map(d=>d.date.substring(0,7)),...wdData.map(d=>d.date.substring(0,7))])].sort();
+  const usMap=new Map(usData.map(d=>[d.date.substring(0,7),d.value]));
+  const wdMap=new Map(wdData.map(d=>[d.date.substring(0,7),d.value]));
+  const usVals=allDates.map(d=>usMap.get(d)||null);
+  const wdVals=allDates.map(d=>wdMap.get(d)||null);
+  // 更新badge方向
+  const lastUS=usData[usData.length-1];
+  const prevUS=usData[usData.length-2];
+  const dir=lastUS&&prevUS?(lastUS.value>prevUS.value?'↑':'↓'):'—';
+  const dirColor=dir==='↑'?'vc-green':dir==='↓'?'vc-red':'vc-gray';
+  const lastWorld=wdData[wdData.length-1];
+  document.getElementById('vc-cli-val').textContent=`美國 ${lastUS?lastUS.value.toFixed(1):'—'} ${dir} · 全球 ${lastWorld?lastWorld.value.toFixed(1):'—'}`;
+  const cliBadge=document.getElementById('vc-cli-badge');
+  cliBadge.className='valcycle-badge '+dirColor;
+  const above100=lastUS&&lastUS.value>=100;
+  cliBadge.textContent=dir==='↑'?(above100?'景氣擴張':'底部回升'):dir==='↓'?(above100?'高峰回落':'景氣收縮'):'—';
+  if(vcCliChart)vcCliChart.destroy();
+  const isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const tc=isDark?'#475569':'#94a3b8';
+  const gc=isDark?'rgba(71,85,105,0.3)':'rgba(148,163,184,0.15)';
+  const baseline=allDates.map(()=>100);
+  vcCliChart=new Chart(document.getElementById('vc-cli-chart'),{
+    type:'line',
+    data:{labels:allDates,datasets:[
+      {label:'基準線100',data:baseline,borderColor:'rgba(255,255,255,0.2)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
+      {label:'全球CLI',data:wdVals,borderColor:'#fb923c',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false,tension:0.3,spanGaps:true},
+      {label:'美國CLI',data:usVals,borderColor:'#a78bfa',borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,tension:0.3,spanGaps:true}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label!=='基準線100'?`${ctx.dataset.label}: ${ctx.parsed.y?ctx.parsed.y.toFixed(2):'—'}`:null,filter:i=>i.dataset.label!=='基準線100'}}},
+      scales:{x:{ticks:{color:tc,font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{color:gc}},y:{min:96,max:104,ticks:{color:tc,font:{size:9},callback:v=>v.toFixed(0)},grid:{color:gc}}}}
+  });
+}
+
+
 async function initRiskPage(){
   renderTreemap();
   checkRiskCd();
@@ -2460,144 +2602,6 @@ window.ngToggleOverlay=function(key){
   ngDraw();
 };
 // === NG 即時比值 v3.10.0 ===
-// === v4.4.0 估值週期：巴菲特指標 + OECD CLI ===
-let vcBuffettChart=null,vcCliChart=null;
-
-async function fetchFredSeries(seriesId,fredKey,limit,startDate){
-  const start=startDate||'2004-01-01';
-  const url=`https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${fredKey}&file_type=json&sort_order=asc&limit=${limit||300}&observation_start=${start}`;
-  const r=await fetch(url);
-  if(!r.ok)throw new Error('FRED '+seriesId+' failed');
-  const d=await r.json();
-  return (d.observations||[]).filter(o=>o.value&&o.value!=='.'&&!isNaN(parseFloat(o.value))).map(o=>({date:o.date,value:parseFloat(o.value)}));
-}
-
-async function initValCycle(){
-  const fredKey='267ae52fdec3515c8a54bcfdeeafe51e';
-  document.getElementById('vc-loading').style.display='block';
-  try{
-    const[will,gdp,cliUS,cliWorld]=await Promise.all([
-      fetchFredSeries('WILL5000IND',fredKey,300,'2004-01-01'),
-      fetchFredSeries('GDP',fredKey,100,'2004-01-01'),
-      fetchFredSeries('USALOLITONOSTSAM',fredKey,300,'2004-01-01'),
-      fetchFredSeries('OECDLOLITONOSTSAM',fredKey,300,'2004-01-01')
-    ]);
-    renderBuffettChart(will,gdp);
-    renderCLIChart(cliUS,cliWorld);
-  }catch(e){
-    console.error('[ValCycle]',e);
-    document.getElementById('vc-buffett-val').textContent='載入失敗';
-    document.getElementById('vc-cli-val').textContent='載入失敗';
-  }finally{
-    document.getElementById('vc-loading').style.display='none';
-  }
-}
-
-function renderBuffettChart(will,gdp){
-  // 對齊季度：以GDP日期為基準（季度），Wilshire取最接近該日期的值
-  const willMap=new Map(will.map(d=>[d.date.substring(0,7),d.value]));
-  const points=[];
-  for(const g of gdp){
-    const qDate=g.date.substring(0,7);
-    // 找最接近的Wilshire月份（同季）
-    let wVal=null;
-    for(let m=0;m<=2;m++){
-      const d=new Date(g.date);d.setMonth(d.getMonth()+m);
-      const key=d.toISOString().substring(0,7);
-      if(willMap.has(key)){wVal=willMap.get(key);break;}
-    }
-    if(wVal&&g.value>0){
-      const ratio=wVal/g.value*100;
-      const yr=parseInt(g.date.substring(0,4));
-      if(yr>=2004)points.push({date:g.date,ratio:parseFloat(ratio.toFixed(1))});
-    }
-  }
-  if(!points.length)return;
-  // 計算趨勢線（線性回歸）和σ
-  const n=points.length;
-  const xs=points.map((_,i)=>i);
-  const ys=points.map(p=>p.ratio);
-  const mx=xs.reduce((a,b)=>a+b,0)/n;
-  const my=ys.reduce((a,b)=>a+b,0)/n;
-  const slope=(xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0))/(xs.reduce((s,x)=>s+(x-mx)**2,0));
-  const intercept=my-slope*mx;
-  const trend=xs.map(x=>parseFloat((intercept+slope*x).toFixed(1)));
-  const residuals=ys.map((y,i)=>y-trend[i]);
-  const sigma=Math.sqrt(residuals.reduce((s,r)=>s+r*r,0)/n);
-  const p1up=trend.map(v=>parseFloat((v+sigma).toFixed(1)));
-  const p2up=trend.map(v=>parseFloat((v+2*sigma).toFixed(1)));
-  const p1dn=trend.map(v=>parseFloat((v-sigma).toFixed(1)));
-  // 更新badge
-  const last=points[points.length-1];
-  const lastTrend=trend[trend.length-1];
-  const lastResid=last.ratio-lastTrend;
-  const sigmaPos=lastResid/sigma;
-  const sigmaSign=sigmaPos>=0?'+':'';
-  document.getElementById('vc-buffett-val').textContent=`當前 ${last.ratio.toFixed(0)}% · ${sigmaSign}${sigmaPos.toFixed(1)}σ`;
-  const badge=document.getElementById('vc-buffett-badge');
-  badge.className='valcycle-badge '+(sigmaPos>=2?'vc-red':sigmaPos>=1?'vc-orange':sigmaPos<=-1?'vc-green':'vc-yellow');
-  badge.childNodes[0].textContent=sigmaPos>=2?'🔴 強烈高估':sigmaPos>=1?'🟠 偏高':sigmaPos<=-1?'🟢 低估區':'🟡 中性';
-  const labels=points.map(p=>p.date.substring(0,7));
-  if(vcBuffettChart)vcBuffettChart.destroy();
-  const isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const tc=isDark?'#475569':'#94a3b8';
-  const gc=isDark?'rgba(71,85,105,0.3)':'rgba(148,163,184,0.15)';
-  vcBuffettChart=new Chart(document.getElementById('vc-buffett-chart'),{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'+2σ',data:p2up,borderColor:'rgba(248,113,113,0.3)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false,tension:0.3},
-      {label:'+1σ',data:p1up,borderColor:'rgba(248,113,113,0.4)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(248,113,113,0.12)',fill:{target:'+2σ',above:'rgba(248,113,113,0.1)',below:'rgba(248,113,113,0.1)'},tension:0.3},
-      {label:'趨勢',data:trend,borderColor:'#34d399',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,tension:0.3},
-      {label:'-1σ',data:p1dn,borderColor:'rgba(52,211,153,0.35)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(52,211,153,0.08)',fill:{target:'趨勢',above:'rgba(52,211,153,0.08)',below:'rgba(52,211,153,0.08)'},tension:0.3},
-      {label:'指標',data:ys,borderColor:'#38bdf8',borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,tension:0.3}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='指標'?`${ctx.parsed.y.toFixed(0)}% (${sigmaSign}${sigmaPos.toFixed(1)}σ)`:null,filter:i=>i.dataset.label==='指標'}}},
-      scales:{x:{ticks:{color:tc,font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{color:gc}},y:{ticks:{color:tc,font:{size:9},callback:v=>v+'%'},grid:{color:gc}}}}
-  });
-}
-
-function renderCLIChart(cliUS,cliWorld){
-  const cutoff=new Date();cutoff.setFullYear(cutoff.getFullYear()-20);
-  const filterRecent=arr=>arr.filter(d=>new Date(d.date)>=cutoff);
-  const usData=filterRecent(cliUS);
-  const wdData=filterRecent(cliWorld);
-  if(!usData.length)return;
-  // 對齊日期標籤
-  const allDates=[...new Set([...usData.map(d=>d.date.substring(0,7)),...wdData.map(d=>d.date.substring(0,7))])].sort();
-  const usMap=new Map(usData.map(d=>[d.date.substring(0,7),d.value]));
-  const wdMap=new Map(wdData.map(d=>[d.date.substring(0,7),d.value]));
-  const usVals=allDates.map(d=>usMap.get(d)||null);
-  const wdVals=allDates.map(d=>wdMap.get(d)||null);
-  // 更新badge方向
-  const lastUS=usData[usData.length-1];
-  const prevUS=usData[usData.length-2];
-  const dir=lastUS&&prevUS?(lastUS.value>prevUS.value?'↑':'↓'):'—';
-  const dirColor=dir==='↑'?'vc-green':dir==='↓'?'vc-red':'vc-gray';
-  const lastWorld=wdData[wdData.length-1];
-  document.getElementById('vc-cli-val').textContent=`美國 ${lastUS?lastUS.value.toFixed(1):'—'} ${dir} · 全球 ${lastWorld?lastWorld.value.toFixed(1):'—'}`;
-  const cliBadge=document.getElementById('vc-cli-badge');
-  cliBadge.className='valcycle-badge '+dirColor;
-  const above100=lastUS&&lastUS.value>=100;
-  cliBadge.textContent=dir==='↑'?(above100?'景氣擴張':'底部回升'):dir==='↓'?(above100?'高峰回落':'景氣收縮'):'—';
-  if(vcCliChart)vcCliChart.destroy();
-  const isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const tc=isDark?'#475569':'#94a3b8';
-  const gc=isDark?'rgba(71,85,105,0.3)':'rgba(148,163,184,0.15)';
-  const baseline=allDates.map(()=>100);
-  vcCliChart=new Chart(document.getElementById('vc-cli-chart'),{
-    type:'line',
-    data:{labels:allDates,datasets:[
-      {label:'基準線100',data:baseline,borderColor:'rgba(255,255,255,0.2)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
-      {label:'全球CLI',data:wdVals,borderColor:'#fb923c',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false,tension:0.3,spanGaps:true},
-      {label:'美國CLI',data:usVals,borderColor:'#a78bfa',borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,tension:0.3,spanGaps:true}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label!=='基準線100'?`${ctx.dataset.label}: ${ctx.parsed.y?ctx.parsed.y.toFixed(2):'—'}`:null,filter:i=>i.dataset.label!=='基準線100'}}},
-      scales:{x:{ticks:{color:tc,font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{color:gc}},y:{min:96,max:104,ticks:{color:tc,font:{size:9},callback:v=>v.toFixed(0)},grid:{color:gc}}}}
-  });
-}
-
 async function fetchNGLive(){
   try{
     const[ndxR,gldR]=await Promise.all([
