@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.3.5</title>
+<title>投資儀錶板 v4.3.6</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -273,7 +273,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.3.5</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.3.6</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -769,7 +769,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <div class="modal-overlay" id="settings-modal">
   <div class="settings-modal">
     <div class="settings-title">⚙ 系統設定</div>
-    <div class="settings-section"><div class="settings-section-title">🤖 Anthropic API</div><div class="settings-note">API Key 僅存於本地瀏覽器，不會上傳至任何伺服器。</div><div class="settings-field"><label class="settings-label">API Key</label><input type="password" class="settings-input" id="input-apikey" placeholder="sk-ant-..."></div></div>
+    <div class="settings-section"><div class="settings-section-title">🤖 Anthropic API</div><div class="settings-note">API Key 優先從 Google Sheets 設定!B4 自動載入；手動填寫後儲存亦可。</div><div class="settings-field"><label class="settings-label">API Key</label><input type="password" class="settings-input" id="input-apikey" placeholder="sk-ant-..."></div></div>
     <div class="settings-section"><div class="settings-section-title">📊 Google Sheets 連結</div><div class="settings-note">授權後自動從「持股資訊」分頁讀取持股，跨裝置同步。</div><div class="settings-field"><label class="settings-label">試算表 ID</label><input type="text" class="settings-input" id="input-sheetid" placeholder="試算表網址中的長串ID"></div><button class="btn-google" id="btn-google-auth" onclick="startGoogleAuth()"><span>🔗</span><span id="google-auth-text">連結 Google 帳號</span></button></div>
     <div class="settings-section"><div class="settings-section-title">🚀 GitHub 自動上傳</div><div class="settings-note">GitHub PAT 優先從試算表「設定」分頁 B1 讀取。</div><div class="settings-field"><label class="settings-label">GitHub PAT</label><input type="password" class="settings-input" id="input-github-pat" placeholder="github_pat_..."></div><div class="settings-field"><label class="settings-label">Repo（owner/name）</label><input type="text" class="settings-input" id="input-github-repo" placeholder="RileyLiu/investment-dashboard"></div><div class="settings-field"><label class="settings-label">Branch</label><input type="text" class="settings-input" id="input-github-branch" placeholder="main"></div></div>
     <button class="btn-save" onclick="saveSettings()">儲存設定</button>
@@ -781,6 +781,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.3.6 — 2026-05-04</div>
+        <div class="analysis-text">✦ Google OAuth 改為靜默重登：頁面載入自動取得新 token（prompt:none），不再需要每天手動點授權<br>✦ 新增 fetchSettingsApiKey()：OAuth 成功後自動從 Sheets 設定!B4 讀取 Anthropic API Key 並填入，不需手動貼 Key<br>✦ 設定頁 API Key 說明文字更新：反映從 Sheets 自動載入的新行為</div>
+      </div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.3.5 — 2026-04-23</div>
         <div class="analysis-text">✦ 蒙地卡羅 DCA 輸入 bug 修正：onchange 改為 addEventListener input，解決直接修改數字不觸發更新的問題<br>✦ 新增區間後重新渲染不再破壞既有綁定（改用 DOM 元素建立取代 innerHTML）</div>
@@ -1025,7 +1029,14 @@ function init(){
   loadGoogleToken();renderWatchlist();updateStatusBar();
   fetchAllIndexData();
   fetchETFQuotes();
-  if(googleToken){fetchAllDCF();syncSheets();}
+  if(googleToken){
+    fetchSettingsApiKey(); // token 仍有效時，直接讀 API Key
+    fetchAllDCF();syncSheets();
+  } else {
+    // token 過期或首次訪問：等 GIS library 載入後靜默取得新 token
+    const trySilent=()=>{if(window.google)silentGoogleAuth();else setTimeout(trySilent,500);};
+    setTimeout(trySilent,800);
+  }
 }
 
 // === INDEX BAR ===
@@ -1221,6 +1232,45 @@ function loadGoogleToken(){
   if(t&&exp&&Date.now()<parseInt(exp))googleToken=t;
   else{googleToken=null;ls('google_token',null);ls('google_token_exp',null);}
 }
+
+// 靜默重新取得 token（頁面載入時自動呼叫，不彈視窗）
+function silentGoogleAuth(){
+  if(!window.google)return;
+  if(googleToken)return; // token 仍有效，不需要重取
+  google.accounts.oauth2.initTokenClient({
+    client_id:GOOGLE_CLIENT_ID,
+    scope:SCOPES,
+    callback:(resp)=>{
+      if(resp.error)return; // 靜默失敗不提示，等使用者手動登入
+      googleToken=resp.access_token;
+      ls('google_token',googleToken);
+      ls('google_token_exp',(Date.now()+(resp.expires_in-60)*1000).toString());
+      updateStatusBar();updateGoogleBtn();
+      fetchSettingsApiKey(); // 取得 token 後自動讀 Sheets B4
+      fetchAllDCF();syncSheets();
+    }
+  }).requestAccessToken({prompt:'none'}); // prompt:none = 完全靜默，不彈任何視窗
+}
+
+// 從 Sheets 設定!B4 讀取 Anthropic API Key 並自動填入
+async function fetchSettingsApiKey(){
+  if(!googleToken)return;
+  try{
+    const range=encodeURIComponent('設定!B4');
+    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    if(!r.ok)return;
+    const d=await r.json();
+    const key=(d.values&&d.values[0]&&d.values[0][0])||'';
+    if(key&&key.startsWith('sk-')){
+      ls('anthropic_api_key',key);
+      // 若設定 modal 已開啟，也同步更新欄位
+      const inp=document.getElementById('input-apikey');
+      if(inp&&!inp.value)inp.value=key;
+      updateStatusBar();
+    }
+  }catch(e){}
+}
+
 function startGoogleAuth(){
   if(googleToken){if(confirm('已連結 Google。要取消連結嗎？')){googleToken=null;ls('google_token',null);ls('google_token_exp',null);updateStatusBar();updateGoogleBtn();}return;}
   if(!window.google){alert('Google 授權套件尚未載入，請稍後再試。');return;}
@@ -1228,8 +1278,10 @@ function startGoogleAuth(){
     if(resp.error){alert('授權失敗：'+resp.error);return;}
     googleToken=resp.access_token;
     ls('google_token',googleToken);ls('google_token_exp',(Date.now()+(resp.expires_in-60)*1000).toString());
-    updateStatusBar();updateGoogleBtn();alert('✅ Google 帳號連結成功！請點擊「同步試算表」載入持股。');fetchAllDCF();
-  }}).requestAccessToken({prompt:'consent'});
+    updateStatusBar();updateGoogleBtn();
+    fetchSettingsApiKey(); // 手動登入後也自動讀 API Key
+    alert('✅ Google 帳號連結成功！請點擊「同步試算表」載入持股。');fetchAllDCF();
+  }}).requestAccessToken({prompt:''});
 }
 function updateGoogleBtn(){
   const btn=document.getElementById('btn-google-auth'),txt=document.getElementById('google-auth-text');
