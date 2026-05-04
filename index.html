@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.4.1</title>
+<title>投資儀錶板 v4.4.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -177,7 +177,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .vc-tt-desc{color:var(--text-muted);font-size:10px;flex:1;line-height:1.4;}
 .vc-blind-box{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:6px;padding:8px 10px;margin-top:10px;font-size:10px;color:var(--text-secondary);line-height:1.5;}
 .valcycle-charts{display:grid;grid-template-columns:1fr;gap:12px;}
-.vc-chart-area{position:relative;width:100%;height:160px;}
+.vc-chart-area{position:relative;width:100%;height:200px;}
 .vc-sub-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
 .vc-legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .vc-loading{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-align:center;padding:20px;}
@@ -297,7 +297,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -851,6 +851,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.4.2 — 2026-05-04</div>
+        <div class="analysis-text">✦ 修正估值週期圖空白根本原因：FRED API 加 observation_start=2004-01-01，避免拿到1940-70年代舊資料<br>✦ WILL5000IND limit 100→300（確保20年月度資料完整）<br>✦ Chart.js fill 改用 label 字串方式，修正 v4.x σ色帶不填色問題<br>✦ canvas height 160→200px 改善可讀性</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.1 — 2026-05-04</div>
         <div class="analysis-text">✦ FRED API Key hardcode，估值週期圖頁面載入自動渲染，無需手動設定</div></div>
@@ -2460,8 +2463,9 @@ window.ngToggleOverlay=function(key){
 // === v4.4.0 估值週期：巴菲特指標 + OECD CLI ===
 let vcBuffettChart=null,vcCliChart=null;
 
-async function fetchFredSeries(seriesId,fredKey,limit){
-  const url=`https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${fredKey}&file_type=json&sort_order=asc&limit=${limit||240}`;
+async function fetchFredSeries(seriesId,fredKey,limit,startDate){
+  const start=startDate||'2004-01-01';
+  const url=`https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${fredKey}&file_type=json&sort_order=asc&limit=${limit||300}&observation_start=${start}`;
   const r=await fetch(url);
   if(!r.ok)throw new Error('FRED '+seriesId+' failed');
   const d=await r.json();
@@ -2473,10 +2477,10 @@ async function initValCycle(){
   document.getElementById('vc-loading').style.display='block';
   try{
     const[will,gdp,cliUS,cliWorld]=await Promise.all([
-      fetchFredSeries('WILL5000IND',fredKey,100),
-      fetchFredSeries('GDP',fredKey,100),
-      fetchFredSeries('USALOLITONOSTSAM',fredKey,300),
-      fetchFredSeries('OECDLOLITONOSTSAM',fredKey,300)
+      fetchFredSeries('WILL5000IND',fredKey,300,'2004-01-01'),
+      fetchFredSeries('GDP',fredKey,100,'2004-01-01'),
+      fetchFredSeries('USALOLITONOSTSAM',fredKey,300,'2004-01-01'),
+      fetchFredSeries('OECDLOLITONOSTSAM',fredKey,300,'2004-01-01')
     ]);
     renderBuffettChart(will,gdp);
     renderCLIChart(cliUS,cliWorld);
@@ -2542,9 +2546,9 @@ function renderBuffettChart(will,gdp){
     type:'line',
     data:{labels,datasets:[
       {label:'+2σ',data:p2up,borderColor:'rgba(248,113,113,0.3)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false,tension:0.3},
-      {label:'+1σ',data:p1up,borderColor:'rgba(248,113,113,0.5)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(248,113,113,0.1)',fill:0,tension:0.3},
+      {label:'+1σ',data:p1up,borderColor:'rgba(248,113,113,0.4)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(248,113,113,0.12)',fill:{target:'+2σ',above:'rgba(248,113,113,0.1)',below:'rgba(248,113,113,0.1)'},tension:0.3},
       {label:'趨勢',data:trend,borderColor:'#34d399',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,tension:0.3},
-      {label:'-1σ',data:p1dn,borderColor:'rgba(52,211,153,0.4)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(52,211,153,0.08)',fill:2,tension:0.3},
+      {label:'-1σ',data:p1dn,borderColor:'rgba(52,211,153,0.35)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(52,211,153,0.08)',fill:{target:'趨勢',above:'rgba(52,211,153,0.08)',below:'rgba(52,211,153,0.08)'},tension:0.3},
       {label:'指標',data:ys,borderColor:'#38bdf8',borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,tension:0.3}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
