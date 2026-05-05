@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.4.6</title>
+<title>投資儀錶板 v4.4.7</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -181,6 +181,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .vc-sub-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
 .vc-legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .vc-loading{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-align:center;padding:20px;}
+/* v4.4.7 時間範圍按鈕 */
+.vc-range-btns{display:flex;gap:4px;}
+.vc-range-btn{font-family:var(--font-mono);font-size:9px;padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.15s;}
+.vc-range-btn.active{background:var(--border-bright);color:var(--text-primary);border-color:var(--border-bright);}
+.vc-range-btn:hover:not(.active){color:var(--text-primary);}
 .treemap-cell{position:absolute;display:flex;flex-direction:column;justify-content:center;align-items:center;border:2px solid #0d1117;border-radius:4px;cursor:pointer;transition:opacity 0.2s,border-color 0.15s;overflow:hidden;}
 .treemap-cell:hover{opacity:0.85;}
 .treemap-cell.active{border-color:#fff4;opacity:1;}
@@ -297,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.6</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.7</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -679,7 +684,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="valcycle-wrap">
       <div class="valcycle-header">
         <div class="valcycle-title">巴菲特指標 · 美股市值(Fed Flow of Funds) / GDP · 近20年</div>
-        <div class="valcycle-signal">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="vc-range-btns">
+            <button class="vc-range-btn active" onclick="setVcRange(20,this)">20Y</button>
+            <button class="vc-range-btn" onclick="setVcRange(10,this)">10Y</button>
+            <button class="vc-range-btn" onclick="setVcRange(5,this)">5Y</button>
+          </div>
+          <div class="valcycle-signal">
           <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);" id="vc-buffett-val">載入中…</span>
           <div class="valcycle-badge vc-gray" id="vc-buffett-badge">—
             <div class="vc-tooltip" id="vc-buffett-tip">
@@ -690,6 +701,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
               <div class="vc-tt-row"><span class="vc-tt-sig" style="background:rgba(248,113,113,0.2);color:#f87171;">🔴 停止追高</span><span class="vc-tt-desc">巴菲特 &gt;+2σ + CLI下行 → 歷史最高風險，6M平均−16%</span></div>
               <div class="vc-blind-box">⚡ 外生衝擊盲點：若30天內急跌&gt;25% + VIX&gt;40，繞過此框架，視為加速DCA機會（COVID 2020 實證：訊號看空但6M實際+38%）</div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -851,6 +863,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.4.7 — 2026-05-05</div>
+        <div class="analysis-text">✦ 估值週期新增 20Y/10Y/5Y 動態時間範圍按鈕，兩張圖同步切換<br>✦ 巴菲特指標+CLI雙圖加入11個歷史事件標記（垂直虛線+旋轉文字標籤）<br>✦ 快取全部資料，切換時間範圍無需重新打API</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.6 — 2026-05-05</div>
         <div class="analysis-text">✦ 巴菲特指標資料來源：WILL5000INDFC（FRED已於2024-06移除）→ NCBEILQ027S（Fed Flow of Funds 非金融企業股票市值，百萬美元）<br>✦ 換算公式修正：市值÷1000→十億美元，再÷GDP×100，2024Q1驗證值≈197%符合預期</div></div>
@@ -2235,11 +2250,42 @@ async function initValCycle(){
   }
 }
 
+// v4.4.7 全域資料快取 + 時間範圍
+let vcAllPoints=null,vcAllTrend=null,vcAllSigma=null,vcAllLabels=null,vcAllYs=null,vcAllP1up=null,vcAllP2up=null,vcAllP1dn=null;
+let vcCliUSAll=null,vcCliWDAll=null;
+let vcCurrentRange=20;
+
+const VC_EVENTS=[
+  {date:'2007-10',label:'次貸頂部',color:'rgba(248,113,113,0.8)'},
+  {date:'2009-03',label:'海嘯底部',color:'rgba(52,211,153,0.8)'},
+  {date:'2011-08',label:'歐債危機',color:'rgba(251,191,36,0.8)'},
+  {date:'2015-08',label:'中國崩盤',color:'rgba(251,191,36,0.8)'},
+  {date:'2018-12',label:'縮表恐慌',color:'rgba(251,146,60,0.8)'},
+  {date:'2020-02',label:'COVID崩盤',color:'rgba(248,113,113,0.8)'},
+  {date:'2021-11',label:'泡沫高點',color:'rgba(248,113,113,0.8)'},
+  {date:'2022-02',label:'俄烏開戰',color:'rgba(251,146,60,0.8)'},
+  {date:'2022-10',label:'升息底部',color:'rgba(52,211,153,0.8)'},
+  {date:'2025-04',label:'關稅衝擊',color:'rgba(251,146,60,0.8)'},
+  {date:'2026-02',label:'中東衝突',color:'rgba(251,146,60,0.8)'},
+];
+
+function getVcCutoff(years){
+  const d=new Date();
+  d.setFullYear(d.getFullYear()-years);
+  return d.toISOString().substring(0,7);
+}
+
+function setVcRange(years,btn){
+  vcCurrentRange=years;
+  document.querySelectorAll('.vc-range-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(vcAllPoints)redrawBuffettChart();
+  if(vcCliUSAll)redrawCLIChart();
+}
+
 function renderBuffettChart(will,gdp){
-  // NCBEILQ027S（百萬美元）÷ 1000 → 十億美元，再 ÷ GDP（十億美元）× 100 = %
   const willMap=new Map(will.map(d=>[d.date.substring(0,7),d.value/1000]));
   const gdpMap=new Map(gdp.map(d=>[d.date.substring(0,7),d.value]));
-  // 取兩者共同季度
   const points=[];
   for(const [qKey,wVal] of willMap){
     if(gdpMap.has(qKey)&&wVal>0&&gdpMap.get(qKey)>0){
@@ -2248,11 +2294,7 @@ function renderBuffettChart(will,gdp){
     }
   }
   points.sort((a,b)=>a.date.localeCompare(b.date));
-  if(!points.length){
-    document.getElementById('vc-buffett-val').textContent='資料對齊失敗';
-    return;
-  }
-  // 計算趨勢線（線性回歸）和σ
+  if(!points.length){document.getElementById('vc-buffett-val').textContent='資料對齊失敗';return;}
   const n=points.length;
   const xs=points.map((_,i)=>i);
   const ys=points.map(p=>p.ratio);
@@ -2263,24 +2305,49 @@ function renderBuffettChart(will,gdp){
   const trend=xs.map(x=>parseFloat((intercept+slope*x).toFixed(1)));
   const residuals=ys.map((y,i)=>y-trend[i]);
   const sigma=Math.sqrt(residuals.reduce((s,r)=>s+r*r,0)/n);
-  const p1up=trend.map(v=>parseFloat((v+sigma).toFixed(1)));
-  const p2up=trend.map(v=>parseFloat((v+2*sigma).toFixed(1)));
-  const p1dn=trend.map(v=>parseFloat((v-sigma).toFixed(1)));
-  // 更新badge
+  vcAllPoints=points;vcAllTrend=trend;vcAllSigma=sigma;
+  vcAllLabels=points.map(p=>p.date);vcAllYs=ys;
+  vcAllP1up=trend.map(v=>parseFloat((v+sigma).toFixed(1)));
+  vcAllP2up=trend.map(v=>parseFloat((v+2*sigma).toFixed(1)));
+  vcAllP1dn=trend.map(v=>parseFloat((v-sigma).toFixed(1)));
   const last=points[points.length-1];
-  const lastTrend=trend[trend.length-1];
-  const lastResid=last.ratio-lastTrend;
-  const sigmaPos=lastResid/sigma;
+  const sigmaPos=(last.ratio-trend[trend.length-1])/sigma;
   const sigmaSign=sigmaPos>=0?'+':'';
   document.getElementById('vc-buffett-val').textContent=`當前 ${last.ratio.toFixed(0)}% · ${sigmaSign}${sigmaPos.toFixed(1)}σ`;
   const badge=document.getElementById('vc-buffett-badge');
   badge.className='valcycle-badge '+(sigmaPos>=2?'vc-red':sigmaPos>=1?'vc-orange':sigmaPos<=-1?'vc-green':'vc-yellow');
   badge.childNodes[0].textContent=sigmaPos>=2?'🔴 強烈高估':sigmaPos>=1?'🟠 偏高':sigmaPos<=-1?'🟢 低估區':'🟡 中性';
-  const labels=points.map(p=>p.date.substring(0,7));
-  if(vcBuffettChart)vcBuffettChart.destroy();
+  redrawBuffettChart();
+}
+
+function redrawBuffettChart(){
+  if(!vcAllPoints)return;
+  const cutoff=getVcCutoff(vcCurrentRange);
+  const idxStart=vcAllLabels.findIndex(l=>l>=cutoff);
+  const start=idxStart<0?0:idxStart;
+  const labels=vcAllLabels.slice(start);
+  const ys=vcAllYs.slice(start);
+  const trend=vcAllTrend.slice(start);
+  const p1up=vcAllP1up.slice(start);
+  const p2up=vcAllP2up.slice(start);
+  const p1dn=vcAllP1dn.slice(start);
   const isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
   const tc=isDark?'#475569':'#94a3b8';
   const gc=isDark?'rgba(71,85,105,0.3)':'rgba(148,163,184,0.15)';
+  const visibleEvents=VC_EVENTS.filter(e=>e.date>=cutoff&&labels.includes(e.date));
+  const evPlugin={id:'vcEvents',afterDraw(chart){
+    const ctx=chart.ctx,xAxis=chart.scales.x,yAxis=chart.scales.y;
+    visibleEvents.forEach(ev=>{
+      const idx=labels.indexOf(ev.date);if(idx<0)return;
+      const x=xAxis.getPixelForValue(idx);
+      ctx.save();ctx.beginPath();ctx.setLineDash([3,3]);ctx.strokeStyle=ev.color;ctx.lineWidth=1;
+      ctx.moveTo(x,yAxis.top);ctx.lineTo(x,yAxis.bottom);ctx.stroke();ctx.setLineDash([]);
+      ctx.font='9px monospace';ctx.fillStyle=ev.color;ctx.textAlign='center';
+      ctx.save();ctx.translate(x,yAxis.top+4);ctx.rotate(-Math.PI/2);ctx.fillText(ev.label,0,0);ctx.restore();
+      ctx.restore();
+    });
+  }};
+  if(vcBuffettChart)vcBuffettChart.destroy();
   vcBuffettChart=new Chart(document.getElementById('vc-buffett-chart'),{
     type:'line',
     data:{labels,datasets:[
@@ -2290,40 +2357,57 @@ function renderBuffettChart(will,gdp){
       {label:'-1σ',data:p1dn,borderColor:'rgba(52,211,153,0.35)',borderWidth:1,borderDash:[2,2],pointRadius:0,backgroundColor:'rgba(52,211,153,0.08)',fill:{target:'趨勢',above:'rgba(52,211,153,0.08)',below:'rgba(52,211,153,0.08)'},tension:0.3},
       {label:'指標',data:ys,borderColor:'#38bdf8',borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,tension:0.3}
     ]},
+    plugins:[evPlugin],
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='指標'?`${ctx.parsed.y.toFixed(0)}% (${sigmaSign}${sigmaPos.toFixed(1)}σ)`:null,filter:i=>i.dataset.label==='指標'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='指標'?`${ctx.parsed.y.toFixed(0)}%`:null,filter:i=>i.dataset.label==='指標'}}},
       scales:{x:{ticks:{color:tc,font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{color:gc}},y:{ticks:{color:tc,font:{size:9},callback:v=>v+'%'},grid:{color:gc}}}}
   });
 }
 
 function renderCLIChart(cliUS,cliWorld){
-  const cutoff=new Date();cutoff.setFullYear(cutoff.getFullYear()-20);
-  const filterRecent=arr=>arr.filter(d=>new Date(d.date)>=cutoff);
-  const usData=filterRecent(cliUS);
-  const wdData=filterRecent(cliWorld);
-  if(!usData.length)return;
-  // 對齊日期標籤
-  const allDates=[...new Set([...usData.map(d=>d.date.substring(0,7)),...wdData.map(d=>d.date.substring(0,7))])].sort();
-  const usMap=new Map(usData.map(d=>[d.date.substring(0,7),d.value]));
-  const wdMap=new Map(wdData.map(d=>[d.date.substring(0,7),d.value]));
-  const usVals=allDates.map(d=>usMap.get(d)||null);
-  const wdVals=allDates.map(d=>wdMap.get(d)||null);
-  // 更新badge方向
-  const lastUS=usData[usData.length-1];
-  const prevUS=usData[usData.length-2];
+  vcCliUSAll=cliUS;vcCliWDAll=cliWorld;
+  const lastUS=cliUS[cliUS.length-1];
+  const prevUS=cliUS[cliUS.length-2];
   const dir=lastUS&&prevUS?(lastUS.value>prevUS.value?'↑':'↓'):'—';
   const dirColor=dir==='↑'?'vc-green':dir==='↓'?'vc-red':'vc-gray';
-  const lastWorld=wdData[wdData.length-1];
+  const lastWorld=cliWorld[cliWorld.length-1];
   document.getElementById('vc-cli-val').textContent=`美國 ${lastUS?lastUS.value.toFixed(1):'—'} ${dir} · 全球 ${lastWorld?lastWorld.value.toFixed(1):'—'}`;
   const cliBadge=document.getElementById('vc-cli-badge');
   cliBadge.className='valcycle-badge '+dirColor;
   const above100=lastUS&&lastUS.value>=100;
   cliBadge.textContent=dir==='↑'?(above100?'景氣擴張':'底部回升'):dir==='↓'?(above100?'高峰回落':'景氣收縮'):'—';
-  if(vcCliChart)vcCliChart.destroy();
+  redrawCLIChart();
+}
+
+function redrawCLIChart(){
+  if(!vcCliUSAll)return;
+  const cutoff=getVcCutoff(vcCurrentRange);
+  const usData=vcCliUSAll.filter(d=>d.date.substring(0,7)>=cutoff);
+  const wdData=vcCliWDAll.filter(d=>d.date.substring(0,7)>=cutoff);
+  if(!usData.length)return;
+  const allDates=[...new Set([...usData.map(d=>d.date.substring(0,7)),...wdData.map(d=>d.date.substring(0,7))])].sort();
+  const usMap=new Map(usData.map(d=>[d.date.substring(0,7),d.value]));
+  const wdMap=new Map(wdData.map(d=>[d.date.substring(0,7),d.value]));
+  const usVals=allDates.map(d=>usMap.get(d)||null);
+  const wdVals=allDates.map(d=>wdMap.get(d)||null);
   const isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
   const tc=isDark?'#475569':'#94a3b8';
   const gc=isDark?'rgba(71,85,105,0.3)':'rgba(148,163,184,0.15)';
   const baseline=allDates.map(()=>100);
+  const visibleEvents=VC_EVENTS.filter(e=>allDates.some(d=>d>=e.date&&d<=e.date));
+  const evPlugin={id:'vcCliEvents',afterDraw(chart){
+    const ctx=chart.ctx,xAxis=chart.scales.x,yAxis=chart.scales.y;
+    visibleEvents.forEach(ev=>{
+      const idx=allDates.findIndex(d=>d>=ev.date);if(idx<0)return;
+      const x=xAxis.getPixelForValue(idx);
+      ctx.save();ctx.beginPath();ctx.setLineDash([3,3]);ctx.strokeStyle=ev.color;ctx.lineWidth=1;
+      ctx.moveTo(x,yAxis.top);ctx.lineTo(x,yAxis.bottom);ctx.stroke();ctx.setLineDash([]);
+      ctx.font='9px monospace';ctx.fillStyle=ev.color;ctx.textAlign='center';
+      ctx.save();ctx.translate(x,yAxis.top+4);ctx.rotate(-Math.PI/2);ctx.fillText(ev.label,0,0);ctx.restore();
+      ctx.restore();
+    });
+  }};
+  if(vcCliChart)vcCliChart.destroy();
   vcCliChart=new Chart(document.getElementById('vc-cli-chart'),{
     type:'line',
     data:{labels:allDates,datasets:[
@@ -2331,6 +2415,7 @@ function renderCLIChart(cliUS,cliWorld){
       {label:'全球CLI',data:wdVals,borderColor:'#fb923c',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false,tension:0.3,spanGaps:true},
       {label:'美國CLI',data:usVals,borderColor:'#a78bfa',borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,tension:0.3,spanGaps:true}
     ]},
+    plugins:[evPlugin],
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label!=='基準線100'?`${ctx.dataset.label}: ${ctx.parsed.y?ctx.parsed.y.toFixed(2):'—'}`:null,filter:i=>i.dataset.label!=='基準線100'}}},
       scales:{x:{ticks:{color:tc,font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{color:gc}},y:{min:96,max:104,ticks:{color:tc,font:{size:9},callback:v=>v.toFixed(0)},grid:{color:gc}}}}
