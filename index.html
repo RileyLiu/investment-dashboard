@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.4.5</title>
+<title>投資儀錶板 v4.4.6</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -297,7 +297,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.5</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.6</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -678,7 +678,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="risk-panel-title">估值週期</div>
     <div class="valcycle-wrap">
       <div class="valcycle-header">
-        <div class="valcycle-title">巴菲特指標 · Wilshire5000 / GDP · 近20年</div>
+        <div class="valcycle-title">巴菲特指標 · 美股市值(Fed Flow of Funds) / GDP · 近20年</div>
         <div class="valcycle-signal">
           <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);" id="vc-buffett-val">載入中…</span>
           <div class="valcycle-badge vc-gray" id="vc-buffett-badge">—
@@ -851,6 +851,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.4.6 — 2026-05-05</div>
+        <div class="analysis-text">✦ 巴菲特指標資料來源：WILL5000INDFC（FRED已於2024-06移除）→ NCBEILQ027S（Fed Flow of Funds 非金融企業股票市值，百萬美元）<br>✦ 換算公式修正：市值÷1000→十億美元，再÷GDP×100，2024Q1驗證值≈197%符合預期</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.5 — 2026-05-04</div>
         <div class="analysis-text">✦ 巴菲特指標：WILL5000IND→WILL5000INDFC（季度市值），移除月度匹配邏輯，改為季度直接對齊<br>✦ 美國CLI：USALOLITONOSTSAM（停更至2024-01）→ USALOLITOAASTSAM（更新至2026-03）<br>✦ 全球CLI：OECDLOLITONOSTSAM → G20LOLITONOSTSAM</div></div>
@@ -2216,7 +2219,7 @@ async function initValCycle(){
   document.getElementById('vc-loading').style.display='block';
   try{
     const[will,gdp,cliUS,cliWorld]=await Promise.all([
-      fetchFredSeries('WILL5000INDFC',fredKey,100,'2004-01-01'),
+      fetchFredSeries('NCBEILQ027S',fredKey,100,'2004-01-01'),
       fetchFredSeries('GDP',fredKey,100,'2004-01-01'),
       fetchFredSeries('USALOLITOAASTSAM',fredKey,300,'2004-01-01'),
       fetchFredSeries('G20LOLITONOSTSAM',fredKey,300,'2004-01-01')
@@ -2233,8 +2236,8 @@ async function initValCycle(){
 }
 
 function renderBuffettChart(will,gdp){
-  // WILL5000INDFC（季度，十億美元）÷ GDP（季度，十億美元）直接對齊
-  const willMap=new Map(will.map(d=>[d.date.substring(0,7),d.value]));
+  // NCBEILQ027S（百萬美元）÷ 1000 → 十億美元，再 ÷ GDP（十億美元）× 100 = %
+  const willMap=new Map(will.map(d=>[d.date.substring(0,7),d.value/1000]));
   const gdpMap=new Map(gdp.map(d=>[d.date.substring(0,7),d.value]));
   // 取兩者共同季度
   const points=[];
