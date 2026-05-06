@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.4.8</title>
+<title>投資儀錶板 v4.4.9</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.8</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.9</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -863,6 +863,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
+      <div class="analysis-section">
+        <div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
+        <div class="analysis-text">✦ 巴菲特/CLI事件標籤：位置從頂部改到線條上方（取資料點Y座標-8px），避免頂部被截字<br>✦ 旋轉角度 -90°→-50° 對齊Nasdaq圖風格</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.8 — 2026-05-06</div>
         <div class="analysis-text">✦ 三張圖事件標籤字體統一放大：Nasdaq圖 8→14px，巴菲特/CLI圖 9→14px</div></div>
@@ -2343,10 +2346,11 @@ function redrawBuffettChart(){
     visibleEvents.forEach(ev=>{
       const idx=labels.indexOf(ev.date);if(idx<0)return;
       const x=xAxis.getPixelForValue(idx);
+      const dataY=ys[idx]!=null?yAxis.getPixelForValue(ys[idx]):yAxis.top;
       ctx.save();ctx.beginPath();ctx.setLineDash([3,3]);ctx.strokeStyle=ev.color;ctx.lineWidth=1;
       ctx.moveTo(x,yAxis.top);ctx.lineTo(x,yAxis.bottom);ctx.stroke();ctx.setLineDash([]);
-      ctx.font='14px monospace';ctx.fillStyle=ev.color;ctx.textAlign='center';
-      ctx.save();ctx.translate(x,yAxis.top+4);ctx.rotate(-Math.PI/2);ctx.fillText(ev.label,0,0);ctx.restore();
+      ctx.font='14px monospace';ctx.fillStyle=ev.color;
+      ctx.save();ctx.translate(x,dataY-8);ctx.rotate(-50*Math.PI/180);ctx.textAlign='left';ctx.fillText(ev.label,0,0);ctx.restore();
       ctx.restore();
     });
   }};
@@ -2403,10 +2407,11 @@ function redrawCLIChart(){
     visibleEvents.forEach(ev=>{
       const idx=allDates.findIndex(d=>d>=ev.date);if(idx<0)return;
       const x=xAxis.getPixelForValue(idx);
+      const dataY=usVals[idx]!=null?yAxis.getPixelForValue(usVals[idx]):yAxis.top;
       ctx.save();ctx.beginPath();ctx.setLineDash([3,3]);ctx.strokeStyle=ev.color;ctx.lineWidth=1;
       ctx.moveTo(x,yAxis.top);ctx.lineTo(x,yAxis.bottom);ctx.stroke();ctx.setLineDash([]);
-      ctx.font='14px monospace';ctx.fillStyle=ev.color;ctx.textAlign='center';
-      ctx.save();ctx.translate(x,yAxis.top+4);ctx.rotate(-Math.PI/2);ctx.fillText(ev.label,0,0);ctx.restore();
+      ctx.font='14px monospace';ctx.fillStyle=ev.color;
+      ctx.save();ctx.translate(x,dataY-8);ctx.rotate(-50*Math.PI/180);ctx.textAlign='left';ctx.fillText(ev.label,0,0);ctx.restore();
       ctx.restore();
     });
   }};
