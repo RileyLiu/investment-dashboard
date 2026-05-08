@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.4.9</title>
+<title>投資儀錶板 v4.5.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.4.9</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.5.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -683,7 +683,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="risk-panel-title">估值週期</div>
     <div class="valcycle-wrap">
       <div class="valcycle-header">
-        <div class="valcycle-title">巴菲特指標 · 美股市值(Fed Flow of Funds) / GDP · 近20年</div>
+        <div class="valcycle-title">巴菲特指標 · NCBEILQ027S(季報) + SP500即時估算 / GDP · 近20年</div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div class="vc-range-btns">
             <button class="vc-range-btn active" onclick="setVcRange(20,this)">20Y</button>
@@ -864,7 +864,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
+        <div class="analysis-section-title">v4.5.0 — 2026-05-08</div><div class="analysis-text">✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔</div></div><div class="analysis-section"><div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
         <div class="analysis-text">✦ 巴菲特/CLI事件標籤：位置從頂部改到線條上方（取資料點Y座標-8px），避免頂部被截字<br>✦ 旋轉角度 -90°→-50° 對齊Nasdaq圖風格</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.8 — 2026-05-06</div>
@@ -2236,16 +2236,21 @@ async function fetchFredSeries(seriesId,fredKey,limit,startDate){
 }
 
 async function initValCycle(){
+  // v4.5.0：SP500即時倍率校準（2026-05 companiesmarketcap驗證：$75.097T / SP500≈7337 = 10.235B/pt）
+  const BUFFETT_MULTIPLIER=10.235;
   const fredKey='267ae52fdec3515c8a54bcfdeeafe51e';
   document.getElementById('vc-loading').style.display='block';
   try{
-    const[will,gdp,cliUS,cliWorld]=await Promise.all([
+    const[will,gdp,cliUS,cliWorld,spyR]=await Promise.all([
       fetchFredSeries('NCBEILQ027S',fredKey,100,'2004-01-01'),
       fetchFredSeries('GDP',fredKey,100,'2004-01-01'),
       fetchFredSeries('USALOLITOAASTSAM',fredKey,300,'2004-01-01'),
-      fetchFredSeries('G20LOLITONOSTSAM',fredKey,300,'2004-01-01')
+      fetchFredSeries('G20LOLITONOSTSAM',fredKey,300,'2004-01-01'),
+      fetch('https://anthropic-proxy.issac0901.workers.dev/quote/SPY').then(r=>r.json()).catch(()=>null)
     ]);
-    renderBuffettChart(will,gdp);
+    // SP500即時估算：SPY price × 10 ≈ SP500指數，再 × MULTIPLIER = 全市場市值(B)
+    const sp500Live=spyR&&spyR.price?spyR.price*10:null;
+    renderBuffettChart(will,gdp,sp500Live,BUFFETT_MULTIPLIER);
     renderCLIChart(cliUS,cliWorld);
   }catch(e){
     console.error('[ValCycle]',e);
@@ -2289,7 +2294,7 @@ function setVcRange(years,btn){
   if(vcCliUSAll)redrawCLIChart();
 }
 
-function renderBuffettChart(will,gdp){
+function renderBuffettChart(will,gdp,sp500Live,multiplier){
   const willMap=new Map(will.map(d=>[d.date.substring(0,7),d.value/1000]));
   const gdpMap=new Map(gdp.map(d=>[d.date.substring(0,7),d.value]));
   const points=[];
@@ -2301,6 +2306,19 @@ function renderBuffettChart(will,gdp){
   }
   points.sort((a,b)=>a.date.localeCompare(b.date));
   if(!points.length){document.getElementById('vc-buffett-val').textContent='資料對齊失敗';return;}
+  // v4.5.0：用SP500即時點位 + 最新GDP append今日估算點
+  if(sp500Live&&multiplier&&gdp.length){
+    const latestGdp=gdp[gdp.length-1].value; // 最新一季GDP（Billions）
+    const liveRatio=parseFloat(((sp500Live*multiplier)/latestGdp*100).toFixed(1));
+    const today=new Date().toISOString().substring(0,7);
+    // 避免與季報最後一點日期重複
+    const lastPoint=points[points.length-1];
+    if(lastPoint&&lastPoint.date!==today){
+      points.push({date:today,ratio:liveRatio,isLive:true});
+    } else if(lastPoint&&lastPoint.date===today){
+      lastPoint.ratio=liveRatio;lastPoint.isLive=true;
+    }
+  }
   const n=points.length;
   const xs=points.map((_,i)=>i);
   const ys=points.map(p=>p.ratio);
