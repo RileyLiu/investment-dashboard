@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.5.1</title>
+<title>投資儀錶板 v4.5.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.5.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.5.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -575,6 +575,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           <div class="tt-row"><span class="tt-label">VIX 歷史高點</span><span class="tt-val">2020 疫情 89.5</span></div>
           <div class="tt-row"><span class="tt-label">2024 日圓閃崩</span><span class="tt-val">65.7</span></div>
           <div class="tt-row"><span class="tt-label">2022 升息高峰</span><span class="tt-val">36.4</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">歷史建倉報酬率實證（S&amp;P500）</div>
+          <div class="tt-row"><span class="tt-label">VIX &gt; 30 後1年</span><span class="tt-val" style="color:var(--green)">平均 +25%</span></div>
+          <div class="tt-row"><span class="tt-label">VIX &gt; 50 後1年</span><span class="tt-val" style="color:var(--green)">平均 +35%</span></div>
+          <div class="tt-row"><span class="tt-label">VIX &gt; 50 後5年</span><span class="tt-val" style="color:var(--green)">平均 +129%</span></div>
+          <div class="tt-row"><span class="tt-label">正報酬勝率</span><span class="tt-val" style="color:var(--green)">100%（1988年以來每次）</span></div>
+          <div class="tt-row"><span class="tt-label">2020疫情VIX89→建倉</span><span class="tt-val" style="color:var(--green)">1年後 +42.96%</span></div>
           <div class="tt-divider"></div>
           <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VIX 30+ 且基本面未變 → 你的子彈就是為此刻準備的</div>
         </div>
@@ -864,7 +871,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v4.5.1 — 2026-05-11</div><div class="analysis-text">✦ AI 模型升級：claude-sonnet-4-20250514 → claude-sonnet-4-6（財務分析 benchmark 最佳，成本不變）<br>✦ AI 風險審查 JSON parse 強化：清除控制字元 + fallback 換行跳脫，防止新模型回傳格式導致解析失敗</div></div><div class="analysis-section"><div class="analysis-section-title">v4.5.0 — 2026-05-08</div><div class="analysis-text">✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔</div></div><div class="analysis-section"><div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
+        <div class="analysis-section-title">v4.5.2 — 2026-05-11</div><div class="analysis-text">✦ VIX Tooltip 新增「歷史建倉報酬率實證」：VIX&gt;30後1年均+25%、VIX&gt;50後1年均+35%、後5年均+129%、勝率100%（1988以來）、2020疫情建倉案例+42.96%</div></div><div class="analysis-section"><div class="analysis-section-title">v4.5.1 — 2026-05-11</div><div class="analysis-text">✦ AI 模型升級：claude-sonnet-4-20250514 → claude-sonnet-4-6（財務分析 benchmark 最佳，成本不變）<br>✦ AI 風險審查 JSON parse 強化：清除控制字元 + fallback 換行跳脫，防止新模型回傳格式導致解析失敗</div></div><div class="analysis-section"><div class="analysis-section-title">v4.5.0 — 2026-05-08</div><div class="analysis-text">✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔</div></div><div class="analysis-section"><div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
         <div class="analysis-text">✦ 巴菲特/CLI事件標籤：位置從頂部改到線條上方（取資料點Y座標-8px），避免頂部被截字<br>✦ 旋轉角度 -90°→-50° 對齊Nasdaq圖風格</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.8 — 2026-05-06</div>
@@ -2236,7 +2243,7 @@ async function fetchFredSeries(seriesId,fredKey,limit,startDate){
 }
 
 async function initValCycle(){
-  // v4.5.1：SP500即時倍率校準（2026-05 companiesmarketcap驗證：$75.097T / SP500≈7337 = 10.235B/pt）
+  // v4.5.2：SP500即時倍率校準（2026-05 companiesmarketcap驗證：$75.097T / SP500≈7337 = 10.235B/pt）
   const BUFFETT_MULTIPLIER=10.235;
   const fredKey='267ae52fdec3515c8a54bcfdeeafe51e';
   document.getElementById('vc-loading').style.display='block';
@@ -2306,7 +2313,7 @@ function renderBuffettChart(will,gdp,sp500Live,multiplier){
   }
   points.sort((a,b)=>a.date.localeCompare(b.date));
   if(!points.length){document.getElementById('vc-buffett-val').textContent='資料對齊失敗';return;}
-  // v4.5.1：用SP500即時點位 + 最新GDP append今日估算點
+  // v4.5.2：用SP500即時點位 + 最新GDP append今日估算點
   if(sp500Live&&multiplier&&gdp.length){
     const latestGdp=gdp[gdp.length-1].value; // 最新一季GDP（Billions）
     const liveRatio=parseFloat(((sp500Live*multiplier)/latestGdp*100).toFixed(1));
