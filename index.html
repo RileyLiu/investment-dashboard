@@ -864,7 +864,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v4.5.1 — 2026-05-11</div><div class="analysis-text">✦ AI 模型升級：claude-sonnet-4-20250514 → claude-sonnet-4-6（財務分析 benchmark 最佳，成本不變）</div></div><div class="analysis-section"><div class="analysis-section-title">v4.5.0 — 2026-05-08</div><div class="analysis-text">✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔</div></div><div class="analysis-section"><div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
+        <div class="analysis-section-title">v4.5.1 — 2026-05-11</div><div class="analysis-text">✦ AI 模型升級：claude-sonnet-4-20250514 → claude-sonnet-4-6（財務分析 benchmark 最佳，成本不變）<br>✦ AI 風險審查 JSON parse 強化：清除控制字元 + fallback 換行跳脫，防止新模型回傳格式導致解析失敗</div></div><div class="analysis-section"><div class="analysis-section-title">v4.5.0 — 2026-05-08</div><div class="analysis-text">✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔</div></div><div class="analysis-section"><div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
         <div class="analysis-text">✦ 巴菲特/CLI事件標籤：位置從頂部改到線條上方（取資料點Y座標-8px），避免頂部被截字<br>✦ 旋轉角度 -90°→-50° 對齊Nasdaq圖風格</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.8 — 2026-05-06</div>
@@ -2590,8 +2590,15 @@ async function runRiskAnalysis(){
     const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const data=await r.json();if(data.error)throw new Error(data.error.message);
     const tb=data.content.find(b=>b.type==='text');const raw=tb?tb.text:'';
-    const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('解析失敗');
-    riskAiData=JSON.parse(m[0]);
+    // 強化 JSON parse：清控制字元 → 直接 parse → fallback 把換行跳脫
+    const cleaned=raw.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g,'');
+    const m=cleaned.match(/\{[\s\S]*\}/);if(!m)throw new Error('解析失敗');
+    let jsonToParse=m[0];
+    try{riskAiData=JSON.parse(jsonToParse);}catch(e2){
+      // fallback：把 JSON string value 內的裸換行全部跳脫
+      jsonToParse=jsonToParse.replace(/"((?:[^"\\]|\\.)*)"/g,function(_,p){return '"'+p.replace(/\n/g,'\\n').replace(/\r/g,'\\r')+'"';});
+      riskAiData=JSON.parse(jsonToParse);
+    }
     await writeRiskCdTime(new Date().toISOString());
     renderTreemap();
     // 顯示分析結果
