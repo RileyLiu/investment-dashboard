@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.5.0</title>
+<title>投資儀錶板 v4.5.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.5.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.5.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -864,7 +864,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
     <div class="modal-body">
       <div class="analysis-section">
-        <div class="analysis-section-title">v4.5.0 — 2026-05-08</div><div class="analysis-text">✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔</div></div><div class="analysis-section"><div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
+        <div class="analysis-section-title">v4.5.1 — 2026-05-11</div><div class="analysis-text">✦ AI 模型升級：claude-sonnet-4-20250514 → claude-sonnet-4-6（財務分析 benchmark 最佳，成本不變）</div></div><div class="analysis-section"><div class="analysis-section-title">v4.5.0 — 2026-05-08</div><div class="analysis-text">✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔</div></div><div class="analysis-section"><div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
         <div class="analysis-text">✦ 巴菲特/CLI事件標籤：位置從頂部改到線條上方（取資料點Y座標-8px），避免頂部被截字<br>✦ 旋轉角度 -90°→-50° 對齊Nasdaq圖風格</div></div>
       <div class="analysis-section">
         <div class="analysis-section-title">v4.4.8 — 2026-05-06</div>
@@ -1977,7 +1977,7 @@ async function runAnalysis(ticker,stock){
   };
   const pk=stock?.type==='wave'?'wave':stock?.type==='etf'?'etf':'value';
   try{
-    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompts[pk]}]})});
+    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompts[pk]}]})});
     const data=await r.json();if(data.error)throw new Error(data.error.message);
     const tb=data.content.find(b=>b.type==='text');const raw=tb?tb.text:'';
     const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('解析失敗，請重試');
@@ -2115,7 +2115,7 @@ async function runHealthPlan(){
 請生成本月3個具體行動項目，只輸出JSON：
 {"actions":[{"priority":"HIGH/MID/LOW","action":"具體行動（含金額或比例）","reason":"30字內理由","type":"BUY/SELL/HOLD/REBALANCE"}]}`;
   try{
-    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,messages:[{role:'user',content:prompt}]})});
     const data=await r.json();if(data.error)throw new Error(data.error.message);
     const tb=data.content.find(b=>b.type==='text');const raw=tb?tb.text:'';
     const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('解析失敗');
@@ -2236,7 +2236,7 @@ async function fetchFredSeries(seriesId,fredKey,limit,startDate){
 }
 
 async function initValCycle(){
-  // v4.5.0：SP500即時倍率校準（2026-05 companiesmarketcap驗證：$75.097T / SP500≈7337 = 10.235B/pt）
+  // v4.5.1：SP500即時倍率校準（2026-05 companiesmarketcap驗證：$75.097T / SP500≈7337 = 10.235B/pt）
   const BUFFETT_MULTIPLIER=10.235;
   const fredKey='267ae52fdec3515c8a54bcfdeeafe51e';
   document.getElementById('vc-loading').style.display='block';
@@ -2306,7 +2306,7 @@ function renderBuffettChart(will,gdp,sp500Live,multiplier){
   }
   points.sort((a,b)=>a.date.localeCompare(b.date));
   if(!points.length){document.getElementById('vc-buffett-val').textContent='資料對齊失敗';return;}
-  // v4.5.0：用SP500即時點位 + 最新GDP append今日估算點
+  // v4.5.1：用SP500即時點位 + 最新GDP append今日估算點
   if(sp500Live&&multiplier&&gdp.length){
     const latestGdp=gdp[gdp.length-1].value; // 最新一季GDP（Billions）
     const liveRatio=parseFloat(((sp500Live*multiplier)/latestGdp*100).toFixed(1));
@@ -2587,7 +2587,7 @@ async function runRiskAnalysis(){
 {"title":"🎯 一句話總結","content":"現在最需要做的一件具體事..."}
 ]}`;
   try{
-    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const data=await r.json();if(data.error)throw new Error(data.error.message);
     const tb=data.content.find(b=>b.type==='text');const raw=tb?tb.text:'';
     const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('解析失敗');
