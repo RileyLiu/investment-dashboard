@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.5.2</title>
+<title>投資儀錶板 v4.6.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.5.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -314,7 +314,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="status-pill"><div class="status-dot" id="dot-api"></div><span id="txt-api">API未設定</span></div>
     <div class="status-pill"><div class="status-dot" id="dot-sheets"></div><span id="txt-sheets">未連結Sheets</span></div>
     <button class="btn-nav" onclick="openSettings()">⚙ 設定</button>
-    <button class="btn-nav" onclick="document.getElementById('changelog-modal').classList.add('open')" style="opacity:0.6">📋 log</button>
+    <button class="btn-nav" onclick="renderChangelog();document.getElementById('changelog-modal').classList.add('open')" style="opacity:0.6">📋 log</button>
   </div>
 </nav>
 <main>
@@ -869,196 +869,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <div class="modal-overlay" id="changelog-modal">
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div><div class="modal-ticker">CHANGELOG</div><div class="modal-name">版本更迭紀錄</div></div><button class="modal-close" onclick="closeModal('changelog-modal')">✕</button></div>
-    <div class="modal-body">
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.5.2 — 2026-05-11</div><div class="analysis-text">✦ VIX Tooltip 新增「歷史建倉報酬率實證」：VIX&gt;30後1年均+25%、VIX&gt;50後1年均+35%、後5年均+129%、勝率100%（1988以來）、2020疫情建倉案例+42.96%</div></div><div class="analysis-section"><div class="analysis-section-title">v4.5.1 — 2026-05-11</div><div class="analysis-text">✦ AI 模型升級：claude-sonnet-4-20250514 → claude-sonnet-4-6（財務分析 benchmark 最佳，成本不變）<br>✦ AI 風險審查 JSON parse 強化：清除控制字元 + fallback 換行跳脫，防止新模型回傳格式導致解析失敗</div></div><div class="analysis-section"><div class="analysis-section-title">v4.5.0 — 2026-05-08</div><div class="analysis-text">✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔</div></div><div class="analysis-section"><div class="analysis-section-title">v4.4.9 — 2026-05-06</div>
-        <div class="analysis-text">✦ 巴菲特/CLI事件標籤：位置從頂部改到線條上方（取資料點Y座標-8px），避免頂部被截字<br>✦ 旋轉角度 -90°→-50° 對齊Nasdaq圖風格</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.8 — 2026-05-06</div>
-        <div class="analysis-text">✦ 三張圖事件標籤字體統一放大：Nasdaq圖 8→14px，巴菲特/CLI圖 9→14px</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.7 — 2026-05-05</div>
-        <div class="analysis-text">✦ 估值週期新增 20Y/10Y/5Y 動態時間範圍按鈕，兩張圖同步切換<br>✦ 巴菲特指標+CLI雙圖加入11個歷史事件標記（垂直虛線+旋轉文字標籤）<br>✦ 快取全部資料，切換時間範圍無需重新打API</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.6 — 2026-05-05</div>
-        <div class="analysis-text">✦ 巴菲特指標資料來源：WILL5000INDFC（FRED已於2024-06移除）→ NCBEILQ027S（Fed Flow of Funds 非金融企業股票市值，百萬美元）<br>✦ 換算公式修正：市值÷1000→十億美元，再÷GDP×100，2024Q1驗證值≈197%符合預期</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.5 — 2026-05-04</div>
-        <div class="analysis-text">✦ 巴菲特指標：WILL5000IND→WILL5000INDFC（季度市值），移除月度匹配邏輯，改為季度直接對齊<br>✦ 美國CLI：USALOLITONOSTSAM（停更至2024-01）→ USALOLITOAASTSAM（更新至2026-03）<br>✦ 全球CLI：OECDLOLITONOSTSAM → G20LOLITONOSTSAM</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.4 — 2026-05-04</div>
-        <div class="analysis-text">✦ 修正CORS封鎖：fetchFredSeries改走Cloudflare Worker代理（/fred/:seriesId），不再直接呼叫api.stlouisfed.org<br>✦ Worker新增limit/observation_start參數支援</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.3 — 2026-05-04</div>
-        <div class="analysis-text">✦ 修正 initValCycle is not defined：函數定義移至 initRiskPage 之前，解決 async function hoisting 問題</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.2 — 2026-05-04</div>
-        <div class="analysis-text">✦ 修正估值週期圖空白根本原因：FRED API 加 observation_start=2004-01-01，避免拿到1940-70年代舊資料<br>✦ WILL5000IND limit 100→300（確保20年月度資料完整）<br>✦ Chart.js fill 改用 label 字串方式，修正 v4.x σ色帶不填色問題<br>✦ canvas height 160→200px 改善可讀性</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.1 — 2026-05-04</div>
-        <div class="analysis-text">✦ FRED API Key hardcode，估值週期圖頁面載入自動渲染，無需手動設定</div></div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.4.0 — 2026-05-04</div>
-        <div class="analysis-text">
-          ✦ 新增「估值週期」區塊（Nasdaq/Gold圖下方、產業分布前）<br>
-          ✦ 巴菲特指標圖：FRED WILL5000IND ÷ GDP，近20年季度數據，線性回歸趨勢線 + ±1σ/±2σ色帶，當前σ位置燈號<br>
-          ✦ OECD CLI圖：美國CLI（實線）+ 全球CLI（虛線）雙線疊加，100基準榮枯線，方向箭頭↑↓+4段景氣標籤<br>
-          ✦ 組合訊號Tooltip：歷史7大事件驗證邏輯（🟢+22% / 🔴-16% / ⚡外生衝擊盲點）<br>
-          ✦ FRED Key 自動從 Sheets 設定!B7 讀取，頁面載入自動觸發，零Token消耗
-        </div>
-        <div class="analysis-text">✦ Google OAuth 改為靜默重登：頁面載入自動取得新 token（prompt:none），不再需要每天手動點授權<br>✦ 新增 fetchSettingsApiKey()：OAuth 成功後自動從 Sheets 設定!B4 讀取 Anthropic API Key 並填入，不需手動貼 Key<br>✦ 設定頁 API Key 說明文字更新：反映從 Sheets 自動載入的新行為</div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.3.5 — 2026-04-23</div>
-        <div class="analysis-text">✦ 蒙地卡羅 DCA 輸入 bug 修正：onchange 改為 addEventListener input，解決直接修改數字不觸發更新的問題<br>✦ 新增區間後重新渲染不再破壞既有綁定（改用 DOM 元素建立取代 innerHTML）</div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.3.4 — 2026-04-23</div>
-        <div class="analysis-text">✦ 新增「蒙地卡羅」分頁：登入後顯示，純前端 JS 執行，零 API 成本<br>✦ 支援分段美股 DCA（USD/月，可設年增率）+ 台股 DCA（006208 / 2330 各別月定額）<br>✦ 所有報酬率參數為滑桿，右側顯示歷史實績參考區間<br>✦ 輸出：50歲前 FIRE 機率 / 中位數達標年齡 / P50 & P10 最終資產 + 三張圖（路徑分布 / 達成年齡直方圖 / 最差5%路徑）</div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.3.3 — 2026-04-21</div>
-        <div class="analysis-text">✦ 觀覽清單頁市場溫度計：移除 VIX 格，grid 4欄→3欄（SPX / NDX / SOX），fetchVIX() 邏輯保留供風險頁使用<br>✦ 風險頁宏觀指標欄重構：第一排 3 格（短期利率 / 10年公債 / 殖利率曲線），第二排 2 格（VIX / AAII 散戶情緒）<br>✦ AAII 格：主體顯示 Bearish% + σ 燈號，tooltip 顯示偏離σ / 4週均值 / Bull-Bear Spread / 區間解讀<br>✦ AAII 數據從 Sheets 設定!B15:B18 sync 時讀入，GAS Weekly_Snapshot 每週日自動寫入</div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.3.2 — 2026-04-16</div>
-        <div class="analysis-text">✦ 大類資產分布圓餅圖新增第三塊「現金停泊」（綠色）<br>✦ 新增 CASH_TICKERS=['SGOV']，SGOV 從 ETF 分類移出，獨立計為現金停泊<br>✦ renderCharts 加入 cVal 參數，三類市值各自計算</div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.3.1 — 2026-04-16</div><div class="analysis-text">✦ 大類資產分布甜甜圈：改用目標達成率（growthActual/etfActual）取代持倉市值比例，與上方配置卡片數字一致<br>✦ Hover tooltip 同時顯示達成率% 及 NT$萬市值<br>✦ 修正 nav brand 版號顯示（v4.2.8 → v4.3.1）</div></div><div class="analysis-section"><div class="analysis-section-title">v4.3.0 — 2026-04-14</div>
-        <div class="analysis-text">
-          ✦ Nasdaq/Gold 圖表新增時間範圍按鈕：5Y / 10Y / 全部，快速聚焦近期走勢<br>
-          ✦ 修正 Changelog 巢狀顯示 bug（v4.2.8 被包進 v4.0.0 card 裡）
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.2.8 — 2026-04-13</div>
-        <div class="analysis-text">✦ 安全邊際燈號語義修正：🔴 危險改為🟠 高估區，對應「現價高於合理價，暫停加碼」而非「持倉危險」，避免誤讀核心防禦股訊號</div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v4.0.0 — 2026-04-01</div>
-        <div class="analysis-text">
-          ✦ 修正配置進度：改用「成本達成率」= 成本×股數 ÷ 目標金額，與 Sheets G欄 =sum(J14:J32)/C9 完全一致<br>
-          ✦ 成長股顯示 83.57%、ETF 29.16%（與 Sheets 同步）<br>
-          ✦ 不依賴 Sheets G欄讀取，純 JS 計算，新增持股自動納入
-        </div>
-      </div><div class="analysis-section">
-        <div class="analysis-section-title">v4.2.6 — 2026-04-12</div><div class="analysis-text">✦ 觀察清單卡片等高：JS 同步所有卡片 minHeight，以最高卡片為基準<br>✦ 移除設定頁「立即上傳至 GitHub」按鈕（改用手動拖拉上傳）<br>✦ 觀察清單卡片移除 onclick、AI 分析按鈕移除<br>✦ 論文狀態標籤從 Sheets 論文庫!D欄讀取：論文成立→綠 / 持觀察→黃 / 動態→紅</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.3 — 2026-04-11</div><div class="analysis-text">✦ signal-desc 全局改為 14px + text-secondary，六格一致<br>✦ 安全邊際 desc 改為兩行顯示（危險/不足各一行）</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.2 — 2026-04-11</div><div class="analysis-text">✦ 安全邊際 desc 修正：危險和不足的 ticker 同時顯示，格式「危險：COST/MSFT · 不足：UNH/LLY」</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.1 — 2026-04-11</div><div class="analysis-text">✦ 安全邊際 / 估值健康：dangerList / warnList / warns / safes 加 ticker 去重，修正 MSFT 雙筆持倉重複顯示<br>✦ 估值健康區塊字體放大至 16px font-weight:600，對標配置達成率視覺層級<br>✦ health-tooltip 改為往下顯示（top 而非 bottom），避免頂部截斷</div></div><div class="analysis-section"><div class="analysis-section-title">v4.2.0 — 2026-04-11</div><div class="analysis-text">✦ 配置健診改版：美元曝險→估值健康（高估/低估持股數）、現金水位→安全邊際（MOS不足警示）、ETF執行→配置達成率（成長股+ETF並列）<br>✦ 三格新增 hover tooltip 說明燈號判斷邏輯<br>✦ renderHealthPage 新增 meta 參數，配置達成率直接讀 Sheets growthActual/etfActual<br>✦ 新增全域 lastMeta 暫存，tab 切換和 DCF 更新後皆可正確傳入</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.6 — 2026-04-11</div><div class="analysis-text">✦ STATIC_INDUSTRY_MAP 新增 GLD → ETF-黃金、SGOV → ETF-現金停泊，不再落入「其他」</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.5 — 2026-04-11</div><div class="analysis-text">✦ 修正「還差」金額語義：改為距離 100% 達成率還差多少（目標金額 × 未達比例），達成率超過目標時正確顯示剩餘空間</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.4 — 2026-04-11</div><div class="analysis-text">✦ 根本修正配置達成率：updateAllocCards 改用 Sheets 直接給的 growthActual/etfActual，不再自行計算<br>✦ 還差金額（gap）也改用 actual 金額反推，消除匯率誤差<br>✦ 無 Sheets 值時自動 fallback 即時計算，向下相容</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.3 — 2026-04-11</div><div class="analysis-text">✦ 修正配置達成率欄位：現配置比例在 F欄(index 5)，非 E欄，69.03% 正確讀取<br>✦ TQQQ 觀察清單卡片：估值位階改為波段操作建議（不追／可進場／積極建倉等）+ 預期報酬區間<br>✦ SPY 觀察清單卡片：估值位階改為加碼強度建議（大幅加碼／維持定額／暫緩加碼等）+ 說明文字<br>✦ TQQQ/SPY 標籤依 52週位置動態計算，其他標的維持原本估值邏輯</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.1 — 2026-04-06</div><div class="analysis-text">✦ ETF_TICKERS 新增 VTI（Vanguard全市場ETF）<br>✦ STATIC_INDUSTRY_MAP 新增 VTI → ETF-全市場分類</div></div><div class="analysis-section"><div class="analysis-section-title">v4.1.0 — 2026-04-03</div>
-        <div class="analysis-text">
-          ✦ 持股列表：財報日標籤顯示於 ticker 旁，從「財報日曆」Sheets 分頁讀取<br>
-          ✦ 顯示規則：≤7天紅色緊急、≤30天黃色提醒、超過30天不顯示<br>
-          ✦ syncSheets 時自動同步財報日曆（A=代號, C=日期，支援 YYYY/MM/DD）<br>
-          ✦ 觀察清單卡片 metric-label 字體改為 14px
-        </div>
-        </div>
-        <div class="analysis-section-title">v3.10.9 — 2026-03-31</div>
-        <div class="analysis-text">
-          ✦ 修正配置比例抓取：改用 includes 比對 A 欄標題，支援「持有ETF/藍籌」等帶後綴名稱
-        </div>
-        <div class="analysis-section-title">v3.10.8 — 2026-03-31</div>
-        <div class="analysis-text">
-          ✦ 修正配置比例：Sheets百分比格式API回傳小數(0.8357)，正確×100轉換為83.57%顯示<br>
-          ✦ 配置進度改為實際佔比（G欄），小字顯示「目標X% · 還差NT$YY萬」<br>
-          ✦ FIRE達成率加入總損益橫幅（C21/C29動態計算）<br>
-          ✦ 財富規劃行號修正：年分B15、年末投資B21<br>
-          ✦ 快照範圍A2:E無上限、去重、session防重複寫入<br>
-          ✦ 頁面載入自動同步
-        </div>
-        <div class="analysis-section-title">v3.10.3 — 2026-03-31</div>
-        <div class="analysis-text">
-          ✦ 資產快照 guard 從 localStorage 改存 Sheets 設定!B11（跨裝置同步）<br>
-          ✦ 修正：換裝置或清快取後重複寫入同日快照的 bug<br>
-          ✦ 修正：只要當天有按「同步試算表」就會寫入，不再依賴 localStorage
-        </div>
-        <div class="analysis-section-title">v3.10.1 — 2026-03-30</div>
-        <div class="analysis-text">
-          ✦ 修正 Treemap tooltip 定位錯誤：改為相對 container 內部座標，解決頁面滾動導致 tooltip 飄到頂部的問題
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v3.10.0 — 2026-03-30</div>
-        <div class="analysis-text">
-          ✦ Nasdaq/Gold 比值即時化：頁面載入時自動抓 /quote/%5ENDX + /quote/GLD，計算當前比值（NDX ÷ GLD×10）<br>
-          ✦ 圖表右端最後數據點更新為即時值，中間統計格顯示「即時 YYYY.Mon」標籤<br>
-          ✦ Treemap 點擊互動：點擊產業色塊展開浮動 tooltip<br>
-          ✦ Tooltip 顯示：產業名稱 + 總佔比 / 各持股 ticker + 損益% + 佔組合比重%<br>
-          ✦ 點其他地方或再點同一塊關閉，色塊選中時白色邊框高亮
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v3.9.0 — 2026-03-30</div>
-        <div class="analysis-text">
-          ✦ 風險總覽新增「Nasdaq / Gold 比值週期圖」（1995–2026）<br>
-          ✦ 五色風險區間色帶：極度低估 / 機會區 / 中性 / 高風險 / 極度危險<br>
-          ✦ 可疊加三條指標：Nasdaq P/E / 黃金價格 / Fed 利率（虛線疊加）<br>
-          ✦ Crosshair tooltip：懸停顯示當月比值、P/E、黃金、Fed 四欄數據<br>
-          ✦ 歷史事件標記：千禧泡沫 / 911 / SARS / 金融海嘯 / COVID / 升息 / 關稅 / 美伊戰爭<br>
-          ✦ 當前位置橫條 + 三大關鍵數值（2000高點 / 當前 / 2011低點）<br>
-          ✦ 插入位置：宏觀環境指標欄之後、產業分布 Treemap 之前
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v3.8.5 — 2026-03-20</div>
-        <div class="analysis-text">
-          ✦ 宏觀指標四格加入 Hover tooltip<br>
-          ✦ 短期利率：利率區間 vs 持倉影響說明<br>
-          ✦ 10年期公債：DCF 折現率影響、估值壓縮量化<br>
-          ✦ 殖利率曲線：倒掛定義 + 歷史衰退紀錄 + 各持股具體影響<br>
-          ✦ VIX：三段區間解讀 + Buffett 歷史對照 + 子彈提醒
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v3.8.4 — 2026-03-20</div>
-        <div class="analysis-text">
-          ✦ 補回宏觀環境指標欄（v3.8.x 架構重整時誤刪）<br>
-          ✦ 四格顯示：短期利率(^IRX) / 10年公債(^TNX) / 殖利率曲線(TNX-FVX) / VIX<br>
-          ✦ 點擊「AI 風險審查」自動抓取並顯示，數據納入 AI prompt context
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v3.8.3 — 2026-03-19</div>
-        <div class="analysis-text">
-          ✦ 52週高低點顯示數字（四個指數動態顯示）<br>
-          ✦ 字體修正：低/位置/高 8px → 12px<br>
-          ✦ SPX hover 改為 NYSE 白名單（LLY、UNH），排除 ETF<br>
-          ✦ NDX hover 移除 LLY（NYSE），保留 NASDAQ 個股<br>
-          ✦ SPX / NDX hover 底部加曝險金額 + 佔組合比重<br>
-          ✦ 未來新增股票按交易所自動分類：NYSE→SPX、NASDAQ→NDX、半導體→SOX
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v3.8.2 — 2026-03-19</div>
-        <div class="analysis-text">
-          ✦ 修正 Script 崩潰根本原因：三元運算子內的 IIFE arrow function `lc?()=>{...}():...` 造成 Node/嚴格解析器語法錯誤，導致所有函數未定義<br>
-          ✦ 改寫為標準條件式，Node --check 驗證通過
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v3.8.1 — 2026-03-19</div>
-        <div class="analysis-text">
-          ✦ 修正設定視窗無法開啟：page-risk 移回 &lt;main&gt; 內，所有 .page 切換恢復正常<br>
-          ✦ 移除重複的 thesisCache 宣告（第 1183 行冗餘定義）<br>
-          ✦ 補上匯兌損益渲染：total-pnl-forex 現在正確顯示 USD/TWD 匯兌損益
-        </div>
-      </div>
-      <div class="analysis-section">
-        <div class="analysis-section-title">v3.8.0 — 2026-03-19</div>
-        <div class="analysis-text">
-          ✦ 配置進度修正：目標金額改為 (TTO - 保留現金NT$50萬) × 目標比例，與 Sheets (B7-C8)*B9/B10 一致<br>
-          ✦ VIX 同排升級為四格市場溫度計：VIX恐慌指數 / SPX標普500 / NDX那斯達克100 / SOX費城半導體<br>
-          ✦ 每格：中文名稱、當前點位、當日±數值與%（漲紅跌綠）、52週高低橫條+位置%<br>
-          ✦ Hover 浮動視窗：VIX歷史對照 / SPX美股持倉 / NDX那斯達克持倉 / SOX半導體曝險+佔比<br>
-          ✦ 浮窗智慧位置：第3、4格向左展開防超出螢幕，手機版隱藏<br>
-          ✦ 風險總覽頁：AI 分析輸出改為五段風險論文格式（移除 PE Band / 安全邊際）
-        </div>
-      </div>
-      <div class="analysis-section"><div class="analysis-section-title">v3.7.3 — 2026-03-17</div><div class="analysis-text">✦ 保留現金固定 NT$50萬，可部署子彈自動計算</div></div>
-      <div class="analysis-section"><div class="analysis-section-title">v3.7.2 — 2026-03-17</div><div class="analysis-text">✦ 行動計畫儲存至 Sheets「行動紀錄」分頁<br>✦ 新增 USD 匯兌損益欄位</div></div>
-      <div class="analysis-section"><div class="analysis-section-title">v3.7.1 — 2026-03-17</div><div class="analysis-text">✦ 宏觀數據改用 Yahoo Finance（^IRX / ^TNX / ^VIX）取代 FRED</div></div>
-      <div class="analysis-section"><div class="analysis-section-title">v3.7.0 — 2026-03-17</div><div class="analysis-text">✦ 風險總覽 AI 角色改為宏觀 CRO + Munger 多元思維<br>✦ 五段分析：產業集中度 / 宏觀環境 / 護城河 / 尾端風險 / 總結</div></div>
-      <div class="analysis-section"><div class="analysis-section-title">v3.6.x — 2026-03-16</div><div class="analysis-text">✦ 配置健診 tab：六個燈號（集中度/地區/美元/槓桿/現金/ETF）<br>✦ 本月行動計畫 AI 診斷</div></div>
-      <div class="analysis-section"><div class="analysis-section-title">v3.5.0 — 2026-03-12</div><div class="analysis-text">✦ Treemap 靜態產業分類底層，不需 AI 即可顯示</div></div>
-    </div>
+    <div class="modal-body" id="changelog-body"></div>
   </div>
 </div>
 <script>
@@ -1089,6 +900,38 @@ const TREEMAP_COLORS=['#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#facc15
 const STATIC_INDUSTRY_MAP={'SMH':'半導體','2330':'半導體','MU':'半導體','AMD':'半導體','NVDA':'半導體','MSFT':'科技雲端','GOOG':'科技雲端','SNPS':'科技雲端','CDNS':'科技雲端','COST':'消費零售','5871':'金融租賃','LLY':'生技醫療','UNH':'生技醫療','SOFI':'金融科技','QQQ':'ETF-科技','006208':'ETF-科技','JEPI':'ETF-防禦收益','XLU':'ETF-防禦收益','PHO':'ETF-主題','COPX':'ETF-主題','VTI':'ETF-全市場','PLTR':'企業軟體AI','VST':'個股-電力','FCX':'個股-銅礦','GLD':'ETF-黃金','SGOV':'ETF-現金停泊'};
 const CD_MINUTES=30;
 
+// === FRED SERIES 定義（集中管理，防止 observation_start 遺漏）===
+const FRED_SERIES={
+  buffett: {id:'NCBEILQ027S',         limit:100, start:'2004-01-01'},
+  gdp:     {id:'GDP',                  limit:100, start:'2004-01-01'},
+  usCLI:   {id:'USALOLITOAASTSAM',     limit:300, start:'2004-01-01'},
+  globalCLI:{id:'G20LOLITONOSTSAM',    limit:300, start:'2004-01-01'},
+};
+
+// === FUNCTION ORDER INDEX ===
+// 1. Utility/Helpers : ls, el, getApiKey, getSheetId, getDCFSheetName, showToast
+// 2. Data-Fetch      : fetchSheetRows, fetchSheetTabNames, fetchDCFSheet, fetchAllDCF
+//                     fetchFredSeries, fetchMacroData, fetchAAIIData
+// 3. Parse           : parseMeta, parseHoldings, buildWatchlistFromSheets
+// 4. Sync            : syncSheets, writeAssetSnapshot, fetchAssetSnapshots
+//                     fetchFIREProgress, fetchWealthTargets, loadHoldings
+// 5. Render-Holdings : computeAndRenderPnL, renderCharts, renderRiskMonitor, renderHoldings
+// 6. Render-Watch    : renderDCFBand, renderWatchlist, syncWatchlistCardHeights
+// 7. Render-Health   : renderHealthPage, runHealthPlan, renderActionLog, saveActionLogToSheets
+// 8. Render-Risk     : renderMacroBar, renderAAIIBar, renderTreemap, checkRiskCd,
+//                     startCdTimer, writeRiskCdTime, runRiskAnalysis
+// 9. ValCycle        : fetchFredSeries, initValCycle, renderBuffettChart,
+//                     redrawBuffettChart, renderCLIChart, redrawCLIChart, setVcRange
+//10. Index/ETF       : fetchAllIndexData, fetchVIX, fetchIndexQuote, renderIndexCell,
+//                     updateIndexHovers, fetchETFQuotes
+//11. Auth/Settings   : loadGoogleToken, silentGoogleAuth, startGoogleAuth, updateGoogleBtn,
+//                     fetchSettingsApiKey, saveSettings, openSettings
+//12. Modal/Thesis    : closeModal, openAnalysis, runAnalysis, renderAnalysis,
+//                     openThesisModal, setThesisStatus, saveThesis,
+//                     saveThesisToSheets, syncAllThesisToSheets, markFaithCheck
+//13. Init/Nav        : init, showPage, updateStatusBar
+// ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
+
 let WATCHLIST=[];
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={};
@@ -1096,6 +939,41 @@ let indexData={};
 let chartCategory=null,chartStocks=null,chartGrowth=null;
 let riskCdInterval=null,riskAiData=null;
 let earningsData={}; // { ticker: { date, daysLeft } }
+
+// === CHANGELOG DATA ===
+const CHANGELOG_DATA=[
+  {v:'4.6.0',date:'2026-06-01',notes:'✦ FRED_SERIES 集中管理常數：四個 series（NCBEILQ027S / GDP / USALOLITOAASTSAM / G20LOLITONOSTSAM）的 id / limit / start 統一定義，防止 observation_start 遺漏<br>✦ Changelog 改為 data-driven：JS array render 取代靜態 HTML，根本消除 div nesting bug 風險<br>✦ 新增函數順序索引表（13 個分類），協助維護 async hoisting 順序'},
+  {v:'4.5.2',date:'2026-05-11',notes:'✦ VIX Tooltip 新增「歷史建倉報酬率實證」：VIX&gt;30後1年均+25%、VIX&gt;50後1年均+35%、後5年均+129%、勝率100%（1988以來）、2020疫情建倉案例+42.96%'},
+  {v:'4.5.1',date:'2026-05-11',notes:'✦ AI 模型升級：claude-sonnet-4-20250514 → claude-sonnet-4-6（財務分析 benchmark 最佳，成本不變）<br>✦ AI 風險審查 JSON parse 強化：清除控制字元 + fallback 換行跳脫，防止新模型回傳格式導致解析失敗'},
+  {v:'4.5.0',date:'2026-05-08',notes:'✦ 巴菲特指標即時化：季報資料(NCBEILQ027S)末端自動 append SP500即時估算點，圖表延伸至今日<br>✦ 換算公式：SP500指數(SPY×10) × 10.235B/pt ÷ 最新GDP × 100%，2026-05校準值 235.6%<br>✦ 倍率 BUFFETT_MULTIPLIER=10.235，依 companiesmarketcap 全市場市值$75.097T / SP500≈7337 校準<br>✦ 即時點以虛線視覺延伸顯示，與歷史季報資料明顯區隔'},
+  {v:'4.4.9',date:'2026-05-06',notes:'✦ 巴菲特/CLI事件標籤：位置從頂部改到線條上方（取資料點Y座標-8px），避免頂部被截字<br>✦ 旋轉角度 -90°→-50° 對齊Nasdaq圖風格'},
+  {v:'4.4.8',date:'2026-05-06',notes:'✦ 三張圖事件標籤字體統一放大：Nasdaq圖 8→14px，巴菲特/CLI圖 9→14px'},
+  {v:'4.4.7',date:'2026-05-05',notes:'✦ 估值週期新增 20Y/10Y/5Y 動態時間範圍按鈕，兩張圖同步切換<br>✦ 巴菲特指標+CLI雙圖加入11個歷史事件標記（垂直虛線+旋轉文字標籤）<br>✦ 快取全部資料，切換時間範圍無需重新打API'},
+  {v:'4.4.6',date:'2026-05-05',notes:'✦ 巴菲特指標資料來源：WILL5000INDFC（FRED已於2024-06移除）→ NCBEILQ027S（Fed Flow of Funds 非金融企業股票市值，百萬美元）<br>✦ 換算公式修正：市值÷1000→十億美元，再÷GDP×100，2024Q1驗證值≈197%符合預期'},
+  {v:'4.4.5',date:'2026-05-04',notes:'✦ 巴菲特指標：WILL5000IND→WILL5000INDFC（季度市值），移除月度匹配邏輯，改為季度直接對齊<br>✦ 美國CLI：USALOLITONOSTSAM（停更至2024-01）→ USALOLITOAASTSAM（更新至2026-03）<br>✦ 全球CLI：OECDLOLITONOSTSAM → G20LOLITONOSTSAM'},
+  {v:'4.4.4',date:'2026-05-04',notes:'✦ 修正CORS封鎖：fetchFredSeries改走Cloudflare Worker代理（/fred/:seriesId），不再直接呼叫api.stlouisfed.org<br>✦ Worker新增limit/observation_start參數支援'},
+  {v:'4.4.3',date:'2026-05-04',notes:'✦ 修正 initValCycle is not defined：函數定義移至 initRiskPage 之前，解決 async function hoisting 問題'},
+  {v:'4.4.2',date:'2026-05-04',notes:'✦ 修正估值週期圖空白根本原因：FRED API 加 observation_start=2004-01-01，避免拿到1940-70年代舊資料<br>✦ WILL5000IND limit 100→300（確保20年月度資料完整）<br>✦ Chart.js fill 改用 label 字串方式，修正 v4.x σ色帶不填色問題<br>✦ canvas height 160→200px 改善可讀性'},
+  {v:'4.4.1',date:'2026-05-04',notes:'✦ FRED API Key hardcode，估值週期圖頁面載入自動渲染，無需手動設定'},
+  {v:'4.4.0',date:'2026-05-04',notes:'✦ 風險總覽新增「估值週期」區塊：巴菲特指標（市值/GDP）歷史折線圖 + OECD CLI 景氣領先指標雙圖<br>✦ 巴菲特指標：σ 色帶（+1σ高估區/−1σ低估區）+ 趨勢線 + 組合訊號燈號（🟢強力買入/🟡維持定額/🟠縮減加碼/🔴停止追高）<br>✦ OECD CLI：美國實線 + 全球虛線，榮枯分界線100，景氣動向判斷<br>✦ 盲點提醒：外生衝擊（VIX>40 + 30天急跌>25%）繞過框架邏輯'},
+  {v:'4.3.5',date:'2026-04-26',notes:'✦ AAII 散戶情緒格：主體顯示 Bearish% + σ 燈號，tooltip 顯示偏離σ / 4週均值 / Bull-Bear Spread / 區間解讀<br>✦ AAII 數據從 Sheets 設定!B15:B18 sync 時讀入，GAS Weekly_Snapshot 每週日自動寫入'},
+  {v:'4.3.2',date:'2026-04-16',notes:'✦ 圓餅圖改用即時市值（price×shares）替代成本×股數<br>✦ 資產快照寫入從「同步試算表」時觸發，讀取 設定!B11 跨裝置防重複寫入'},
+  {v:'4.3.0',date:'2026-04-14',notes:'✦ 宏觀環境指標欄改版：Row 1（3格）短期利率/10年公債/殖利率曲線；Row 2（2格）VIX恐慌指數/AAII散戶情緒<br>✦ VIX格加入歷史對照 + Buffett建倉法則提醒'},
+  {v:'4.2.6',date:'2026-04-12',notes:'✦ 觀察清單卡片等高：JS 同步所有卡片 minHeight，以最高卡片為基準<br>✦ 移除設定頁「立即上傳至 GitHub」按鈕（改用手動拖拉上傳）<br>✦ 論文狀態標籤從 Sheets 論文庫!D欄讀取：論文成立→綠 / 持觀察→黃 / 動態→紅'},
+  {v:'4.2.0',date:'2026-04-11',notes:'✦ 配置健診改版：美元曝險→估值健康（高估/低估持股數）、現金水位→安全邊際（MOS不足警示）、ETF執行→配置達成率（成長股+ETF並列）<br>✦ 三格新增 hover tooltip 說明燈號判斷邏輯'},
+  {v:'4.1.3',date:'2026-04-11',notes:'✦ TQQQ 觀察清單卡片：估值位階改為波段操作建議（不追／可進場／積極建倉等）+ 預期報酬區間<br>✦ SPY 觀察清單卡片：加碼強度建議（大幅加碼／維持定額／暫緩加碼等）'},
+  {v:'4.1.0',date:'2026-04-03',notes:'✦ 持股列表：財報日標籤顯示於 ticker 旁，從「財報日曆」Sheets 分頁讀取<br>✦ 顯示規則：≤7天紅色緊急、≤30天黃色提醒'},
+  {v:'3.10.0',date:'2026-03-30',notes:'✦ Nasdaq/Gold 比值即時化：頁面載入時自動抓 /quote/%5ENDX + /quote/GLD，計算當前比值<br>✦ Treemap 點擊互動：點擊產業色塊展開浮動 tooltip'},
+  {v:'3.9.0',date:'2026-03-30',notes:'✦ 風險總覽新增「Nasdaq / Gold 比值週期圖」（1995–2026）<br>✦ 五色風險區間色帶 + 可疊加三條指標（Nasdaq P/E / 黃金價格 / Fed 利率）<br>✦ Crosshair tooltip + 歷史事件標記'},
+  {v:'3.8.0',date:'2026-03-19',notes:'✦ VIX 同排升級為四格市場溫度計：VIX恐慌指數 / SPX標普500 / NDX那斯達克100 / SOX費城半導體<br>✦ Hover 浮動視窗：各指數持倉曝險 + 52週位置'},
+  {v:'3.6.0',date:'2026-03-16',notes:'✦ 配置健診 tab：六個燈號（集中度/地區/美元/槓桿/現金/ETF）<br>✦ 本月行動計畫 AI 診斷'},
+  {v:'3.5.0',date:'2026-03-12',notes:'✦ Treemap 靜態產業分類底層，不需 AI 即可顯示'},
+];
+function renderChangelog(){
+  const body=document.getElementById('changelog-body');
+  if(!body)return;
+  body.innerHTML=CHANGELOG_DATA.map(c=>`<div class="analysis-section"><div class="analysis-section-title">v${c.v} — ${c.date}</div><div class="analysis-text">${c.notes}</div></div>`).join('');
+}
 
 // === 財報日曆 ===
 async function fetchEarningsCalendar(){
@@ -2249,10 +2127,10 @@ async function initValCycle(){
   document.getElementById('vc-loading').style.display='block';
   try{
     const[will,gdp,cliUS,cliWorld,spyR]=await Promise.all([
-      fetchFredSeries('NCBEILQ027S',fredKey,100,'2004-01-01'),
-      fetchFredSeries('GDP',fredKey,100,'2004-01-01'),
-      fetchFredSeries('USALOLITOAASTSAM',fredKey,300,'2004-01-01'),
-      fetchFredSeries('G20LOLITONOSTSAM',fredKey,300,'2004-01-01'),
+      fetchFredSeries(FRED_SERIES.buffett.id,fredKey,FRED_SERIES.buffett.limit,FRED_SERIES.buffett.start),
+      fetchFredSeries(FRED_SERIES.gdp.id,fredKey,FRED_SERIES.gdp.limit,FRED_SERIES.gdp.start),
+      fetchFredSeries(FRED_SERIES.usCLI.id,fredKey,FRED_SERIES.usCLI.limit,FRED_SERIES.usCLI.start),
+      fetchFredSeries(FRED_SERIES.globalCLI.id,fredKey,FRED_SERIES.globalCLI.limit,FRED_SERIES.globalCLI.start),
       fetch('https://anthropic-proxy.issac0901.workers.dev/quote/SPY').then(r=>r.json()).catch(()=>null)
     ]);
     // SP500即時估算：SPY price × 10 ≈ SP500指數，再 × MULTIPLIER = 全市場市值(B)
