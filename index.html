@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.0</title>
+<title>投資儀錶板 v4.6.1</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -130,7 +130,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .cache-badge{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);padding:2px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:3px;}
 .refresh-btn{font-family:var(--font-mono);font-size:9px;font-weight:500;color:var(--text-muted);background:none;border:1px solid var(--border);padding:3px 9px;border-radius:3px;cursor:pointer;transition:all 0.2s;}
 .refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
-.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:160px 1fr 240px 140px;gap:20px;align-items:center;cursor:pointer;transition:all 0.2s;}
+.holding-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:160px 1fr 340px 140px;gap:20px;align-items:center;cursor:pointer;transition:all 0.2s;}
 .holding-entry:hover{background:var(--bg-card-hover);border-color:var(--border-bright);}
 .holding-ticker{font-family:var(--font-mono);font-size:17px;font-weight:600;}
 .holding-name{font-size:12px;color:var(--text-muted);margin-top:2px;}
@@ -280,7 +280,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   .settings-modal{max-width:100%;border-radius:0;max-height:100vh;}
 }
 @media(min-width:641px) and (max-width:1024px){
-  .holding-entry{grid-template-columns:140px 1fr 200px 120px;}
+  .holding-entry{grid-template-columns:140px 1fr 270px 120px;}
 }
 /* ── Nasdaq/Gold 比值週期圖 v3.9.0 ── */
 .ng-section{margin-bottom:20px;}
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.1</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -942,6 +942,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.6.1',date:'2026-06-01',notes:'✦ 持股列表左側邊框依類型上色：現金停泊（綠）/ ETF+波段（紫）/ 個股（藍），搭配同色調極淡底色，一眼辨識持倉結構<br>✦ 持股列表新增「投入金額」欄位：股數 × 成本均價，顯示每筆部位實際資金投入規模'},
   {v:'4.6.0',date:'2026-06-01',notes:'✦ FRED_SERIES 集中管理常數：四個 series（NCBEILQ027S / GDP / USALOLITOAASTSAM / G20LOLITONOSTSAM）的 id / limit / start 統一定義，防止 observation_start 遺漏<br>✦ Changelog 改為 data-driven：JS array render 取代靜態 HTML，根本消除 div nesting bug 風險<br>✦ 新增函數順序索引表（13 個分類），協助維護 async hoisting 順序'},
   {v:'4.5.2',date:'2026-05-11',notes:'✦ VIX Tooltip 新增「歷史建倉報酬率實證」：VIX&gt;30後1年均+25%、VIX&gt;50後1年均+35%、後5年均+129%、勝率100%（1988以來）、2020疫情建倉案例+42.96%'},
   {v:'4.5.1',date:'2026-05-11',notes:'✦ AI 模型升級：claude-sonnet-4-20250514 → claude-sonnet-4-6（財務分析 benchmark 最佳，成本不變）<br>✦ AI 風險審查 JSON parse 強化：清除控制字元 + fallback 換行跳脫，防止新模型回傳格式導致解析失敗'},
@@ -1686,12 +1687,17 @@ function renderHoldings(){
     const _statMap={yes:{lbl:'論文成立',c:'var(--green)',bg:'var(--green-dim)'},partial:{lbl:'持觀察',c:'var(--yellow)',bg:'var(--yellow-dim)'},no:{lbl:'動態',c:'var(--red)',bg:'var(--red-dim)'}};
     const _sm2=_tstat?_statMap[_tstat]:null;
     const thesisTagHTML=_sm2?`<span style="font-family:var(--font-mono);font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;background:${_sm2.bg};color:${_sm2.c};border:1px solid ${_sm2.c}40;margin-left:6px">${_sm2.lbl}</span>`:'';
-    return `<div class="holding-entry" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
+    const _borderCol=h.type==='cash'?'rgba(52,211,153,0.5)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.5)':'rgba(56,189,248,0.5)';
+    const _bgTint=h.type==='cash'?'rgba(52,211,153,0.04)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.04)':'rgba(56,189,248,0.04)';
+    const invested=h.shares*h.cost;
+    const investedFmt=h.currency==='TWD'?'NT$'+Math.round(invested).toLocaleString():'US$'+invested.toLocaleString(undefined,{maximumFractionDigits:0});
+    return `<div class="holding-entry" style="border-left:3px solid ${_borderCol};background:var(--bg-card);background-image:linear-gradient(to right,${_bgTint},transparent 120px);" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
       <div><div style="display:flex;align-items:center;gap:4px"><span class="holding-ticker">${h.ticker}</span>${ebHTML?'<span style="vertical-align:middle">'+ebHTML+'</span>':''} ${thesisTagHTML}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
       <div class="holding-metrics">
         <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
         <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
         <div style="width:110px;flex-shrink:0"><div class="h-metric-label">現價</div><div class="h-metric-value">${curr}${h.price.toLocaleString()}</div></div>
+        <div style="width:110px;flex-shrink:0"><div class="h-metric-label">投入金額</div><div class="h-metric-value" style="color:var(--text-secondary)">${investedFmt}</div></div>
       </div>
       <div class="tech-col">${techHTML}</div>
       <div class="holding-pnl"><div class="pnl-value" style="color:${col}">${sign}${curr}${Math.abs(pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="pnl-pct" style="color:${col}">${sign}${pct}%</div></div>
