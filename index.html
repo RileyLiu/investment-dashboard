@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.1</title>
+<title>投資儀錶板 v4.6.2</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.1</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.2</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -942,6 +942,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.6.2',date:'2026-06-01',notes:'✦ 投入金額統一以台幣（NT$）顯示，USD 持股自動乘以 Sheets 匯率（usdTwd）換算'},
   {v:'4.6.1',date:'2026-06-01',notes:'✦ 持股列表左側邊框依類型上色：現金停泊（綠）/ ETF+波段（紫）/ 個股（藍），搭配同色調極淡底色，一眼辨識持倉結構<br>✦ 持股列表新增「投入金額」欄位：股數 × 成本均價，顯示每筆部位實際資金投入規模'},
   {v:'4.6.0',date:'2026-06-01',notes:'✦ FRED_SERIES 集中管理常數：四個 series（NCBEILQ027S / GDP / USALOLITOAASTSAM / G20LOLITONOSTSAM）的 id / limit / start 統一定義，防止 observation_start 遺漏<br>✦ Changelog 改為 data-driven：JS array render 取代靜態 HTML，根本消除 div nesting bug 風險<br>✦ 新增函數順序索引表（13 個分類），協助維護 async hoisting 順序'},
   {v:'4.5.2',date:'2026-05-11',notes:'✦ VIX Tooltip 新增「歷史建倉報酬率實證」：VIX&gt;30後1年均+25%、VIX&gt;50後1年均+35%、後5年均+129%、勝率100%（1988以來）、2020疫情建倉案例+42.96%'},
@@ -1689,8 +1690,8 @@ function renderHoldings(){
     const thesisTagHTML=_sm2?`<span style="font-family:var(--font-mono);font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;background:${_sm2.bg};color:${_sm2.c};border:1px solid ${_sm2.c}40;margin-left:6px">${_sm2.lbl}</span>`:'';
     const _borderCol=h.type==='cash'?'rgba(52,211,153,0.5)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.5)':'rgba(56,189,248,0.5)';
     const _bgTint=h.type==='cash'?'rgba(52,211,153,0.04)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.04)':'rgba(56,189,248,0.04)';
-    const invested=h.shares*h.cost;
-    const investedFmt=h.currency==='TWD'?'NT$'+Math.round(invested).toLocaleString():'US$'+invested.toLocaleString(undefined,{maximumFractionDigits:0});
+    const invested=h.shares*h.cost*(h.currency==='USD'?usdTwd:1);
+    const investedFmt='NT$'+Math.round(invested).toLocaleString();
     return `<div class="holding-entry" style="border-left:3px solid ${_borderCol};background:var(--bg-card);background-image:linear-gradient(to right,${_bgTint},transparent 120px);" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
       <div><div style="display:flex;align-items:center;gap:4px"><span class="holding-ticker">${h.ticker}</span>${ebHTML?'<span style="vertical-align:middle">'+ebHTML+'</span>':''} ${thesisTagHTML}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
       <div class="holding-metrics">
