@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.3</title>
+<title>投資儀錶板 v4.6.4</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.3</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.4</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -1797,7 +1797,27 @@ function syncWatchlistCardHeights(){
   }
 }
 function renderWatchlist(){
-  const vList=WATCHLIST.filter(s=>s.type==='value'),eList=WATCHLIST.filter(s=>s.type==='etf'||s.type==='wave');
+  // 依估值位置排序：越靠近保守端排越前面
+  function getDCFPos(s){
+    if(s.type==='value'){
+      const d=dcfCache[s.ticker];
+      if(d&&d.conservative!=null&&d.optimistic!=null&&d.optimistic>d.conservative){
+        const cp=getLivePrice(s.ticker)||d.currentPrice||0;
+        const low=d.conservative*0.9,high=d.optimistic*1.05,range=high-low;
+        return range>0?((cp-low)/range)*100:50;
+      }
+      return 999; // 無資料排最後
+    }else{
+      const p=get52WPos(s.ticker);
+      if(p!=null)return p;
+      const d=dcfCache[s.ticker];
+      if(d&&d.isETF&&d.w52low&&d.w52high&&d.currentPrice)
+        return((d.currentPrice-d.w52low)/(d.w52high-d.w52low))*100;
+      return 999;
+    }
+  }
+  const vList=[...WATCHLIST.filter(s=>s.type==='value')].sort((a,b)=>getDCFPos(a)-getDCFPos(b));
+  const eList=[...WATCHLIST.filter(s=>s.type==='etf'||s.type==='wave')].sort((a,b)=>getDCFPos(a)-getDCFPos(b));
   const renderCard=s=>{
     const tc=s.type==='value'?'badge-value':s.type==='etf'?'badge-etf':'badge-wave';
     const tt=s.type==='value'?'價值投資':s.type==='etf'?'ETF':'波段';
