@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.2</title>
+<title>投資儀錶板 v4.6.3</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.2</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.3</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -1311,14 +1311,14 @@ async function fetchSheetTabNames(){
 }
 async function fetchDCFSheet(sheetName){
   if(!googleToken)return null;
-  const range=encodeURIComponent(`${sheetName}!F2:J5`);
+  const range=encodeURIComponent(`${sheetName}!F2:K5`);
   try{
     const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     if(!r.ok)return null;
     const d=await r.json();const rows=d.values||[];
     const pN=s=>parseFloat((s||'').replace(/,/g,'').replace(/[^\d.-]/g,''))||0;
     const cp=pN(rows[0]?.[1]),fp=pN(rows[1]?.[1]),dec=(rows[2]?.[1]||'').trim();
-    const con=pN(rows[0]?.[4]),fair=pN(rows[1]?.[4]),opt=pN(rows[2]?.[4]);
+    const con=pN(rows[0]?.[5]),fair=pN(rows[1]?.[5]),opt=pN(rows[2]?.[5]);
     if(!con&&!fair&&!opt)return null;
     const mos=cp>0?((fp-cp)/cp*100):null;
     let vt='mid';
