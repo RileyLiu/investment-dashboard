@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.4</title>
+<title>投資儀錶板 v4.6.5</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.4</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.5</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -1833,7 +1833,25 @@ function renderWatchlist(){
       else{const d=dcfCache[s.ticker];if(d&&d.isETF&&d.w52low&&d.w52high&&d.currentPrice){pos52=Math.max(0,Math.min(100,((d.currentPrice-d.w52low)/(d.w52high-d.w52low))*100));mosC=pos52<30?'var(--green)':pos52<70?'var(--yellow)':'var(--red)';mosD=`52週 ${pos52.toFixed(0)}% 位置`;}else{mosC='var(--text-muted)';mosD='—';}}
     }else{
       const d=dcfCache[s.ticker];
-      if(d&&d.mos!=null){mosC=d.mos>=20?'var(--green)':d.mos>=0?'var(--yellow)':'var(--red)';mosD=(d.mos>=0?'+':'')+d.mos.toFixed(0)+'%';}
+      if(d&&d.mos!=null){
+        mosC=d.mos>=20?'var(--green)':d.mos>=0?'var(--yellow)':'var(--red)';
+        mosD=(d.mos>=0?'+':'')+d.mos.toFixed(0)+'%';
+        // 說明小字
+        const mosAbs=Math.abs(d.mos).toFixed(0);
+        if(d.mos>=30)mosD+=`<div style="font-family:var(--font-mono);font-size:9px;color:var(--green);margin-top:2px">深度折扣 ${mosAbs}%</div>`;
+        else if(d.mos>=0)mosD+=`<div style="font-family:var(--font-mono);font-size:9px;color:var(--yellow);margin-top:2px">距合理價折扣 ${mosAbs}%</div>`;
+        else mosD+=`<div style="font-family:var(--font-mono);font-size:9px;color:var(--red);margin-top:2px">現價高估 ${mosAbs}%</div>`;
+        // DCF位置%
+        if(d.conservative!=null&&d.optimistic!=null&&d.optimistic>d.conservative){
+          const cp2=getLivePrice(s.ticker)||d.currentPrice||0;
+          const low2=d.conservative*0.9,high2=d.optimistic*1.05,range2=high2-low2;
+          const dcfPct=range2>0?Math.max(0,Math.min(100,((cp2-low2)/range2)*100)):null;
+          if(dcfPct!=null){
+            const pc=dcfPct<30?'var(--green)':dcfPct<70?'var(--yellow)':'var(--red)';
+            mosD+=`<div style="font-family:var(--font-mono);font-size:9px;color:${pc};margin-top:2px">DCF ${dcfPct.toFixed(0)}% 位置</div>`;
+          }
+        }
+      }
       else{mosC=s.mos.startsWith('+')?'var(--green)':s.mos==='—'?'var(--text-muted)':'var(--red)';mosD=s.mos;}
     }
     // v4.1.3：TQQQ/SPY 特殊估值欄
