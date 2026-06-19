@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.6</title>
+<title>投資儀錶板 v4.6.7</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.6</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.7</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -425,7 +425,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </div>
 <!-- 配置健診 PAGE -->
 <div class="page" id="page-health" style="padding-bottom:32px">
-  <div class="section-header" style="margin-bottom:16px"><span class="section-label">配置健診</span><div class="section-line"></div><button class="btn-nav" style="font-size:9px" onclick="runHealthPlan()">⬡ 本月行動計畫</button></div>
+  <div class="section-header" style="margin-bottom:16px"><span class="section-label">配置健診</span><div class="section-line"></div></div>
   <div class="health-grid" id="health-grid">
     <div class="health-card"><div class="health-card-title">集中度</div><div class="health-signal"><div class="signal-dot" id="sig-conc"></div><div class="signal-value" id="val-conc">—</div></div><div class="signal-desc" id="desc-conc">前3大持股佔比</div></div>
     <div class="health-card"><div class="health-card-title">地區分布</div><div class="health-signal"><div class="signal-dot" id="sig-region"></div><div class="signal-value" id="val-region">—</div></div><div class="signal-desc" id="desc-region">US / TW 比例</div></div>
@@ -473,20 +473,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <!-- 估值健康 -->
   <div class="section-header" style="margin-top:8px"><span class="section-label">估值健康</span><div class="section-line"></div></div>
   <div id="valuation-health" style="margin-bottom:20px"><div style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px">同步持股後顯示</div></div>
-  <!-- 行動計畫 -->
-  <div class="section-header"><span class="section-label">本月行動計畫</span><div class="section-line"></div></div>
-  <div id="health-ai-status" style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:12px">尚未生成</div>
-  <div id="action-log-list"></div>
+
 </div>
 <!-- RISK PAGE -->
 <div class="page" id="page-risk" style="padding:16px 20px;max-width:1400px;margin:0 auto;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
     <div class="section-header" style="margin-bottom:0;flex:1"><span class="section-label">風險總覽</span><div class="section-line"></div></div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;margin-left:16px;">
-      <button class="risk-ai-btn" id="risk-ai-btn" onclick="runRiskAnalysis()">⬡ AI 風險審查</button>
-      <div class="risk-cd-bar" style="width:160px"><div class="risk-cd-fill" id="risk-cd-fill" style="width:0%"></div></div>
-      <div class="risk-ai-status" id="risk-ai-status">尚未分析</div>
-    </div>
+
   </div>
   <!-- 宏觀環境指標欄 -->
   <div id="macro-bar" style="display:none;margin-bottom:16px;">
@@ -977,6 +970,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.6.7',date:'2026-06-19',notes:'✦ 移除「AI 風險審查」按鈕（風險總覽右上角）<br>✦ 移除「本月行動計畫」區塊（配置健診頁）<br>✦ FRED API Key 更新'},
   {v:'4.6.6',date:'2026-06-19',notes:'✦ 宏觀指標第二排擴為 3 格：VIX / Trimmed Mean PCE / AAII<br>✦ Trimmed Mean PCE：FRED PCETRIM12M159SFRBDAL，燈號分 5 段（通縮風險/受控區/溫和偏高/過熱/失控）<br>✦ Tooltip 含歷史事件錨點（2016油價/2018貿易戰/2020COVID/2022烏俄/2022峰值）及 Fed 操作含義'},
   {v:'4.6.2',date:'2026-06-01',notes:'✦ 投入金額統一以台幣（NT$）顯示，USD 持股自動乘以 Sheets 匯率（usdTwd）換算'},
   {v:'4.6.1',date:'2026-06-01',notes:'✦ 持股列表左側邊框依類型上色：現金停泊（綠）/ ETF+波段（紫）/ 個股（藍），搭配同色調極淡底色，一眼辨識持倉結構<br>✦ 持股列表新增「投入金額」欄位：股數 × 成本均價，顯示每筆部位實際資金投入規模'},
@@ -2125,7 +2119,7 @@ async function saveActionLogToSheets(actions){
 // === 宏觀數據 (Yahoo Finance) ===
 async function fetchMacroData(){
   try{
-    const fredKey=ls('fred_api_key')||'267ae52fdec3515c8a54bcfdeeafe51e';
+    const fredKey=ls('fred_api_key')||'a86cd3654d2c28071002743e1ee675cc';
     const [irxR,tnxR,fvxR]=await Promise.all([
       fetch(`${PROXY}/quote/${encodeURIComponent('^IRX')}`),
       fetch(`${PROXY}/quote/${encodeURIComponent('^TNX')}`),
@@ -2233,7 +2227,7 @@ async function fetchFredSeries(seriesId,fredKey,limit,startDate){
 async function initValCycle(){
   // v4.5.2：SP500即時倍率校準（2026-05 companiesmarketcap驗證：$75.097T / SP500≈7337 = 10.235B/pt）
   const BUFFETT_MULTIPLIER=10.235;
-  const fredKey='267ae52fdec3515c8a54bcfdeeafe51e';
+  const fredKey='a86cd3654d2c28071002743e1ee675cc';
   document.getElementById('vc-loading').style.display='block';
   try{
     const[will,gdp,cliUS,cliWorld,spyR]=await Promise.all([
