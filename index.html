@@ -2125,7 +2125,7 @@ async function saveActionLogToSheets(actions){
 // === 宏觀數據 (Yahoo Finance) ===
 async function fetchMacroData(){
   try{
-    const fredKey=getApiKey('fred');
+    const fredKey=ls('fred_api_key')||'267ae52fdec3515c8a54bcfdeeafe51e';
     const [irxR,tnxR,fvxR]=await Promise.all([
       fetch(`${PROXY}/quote/${encodeURIComponent('^IRX')}`),
       fetch(`${PROXY}/quote/${encodeURIComponent('^TNX')}`),
