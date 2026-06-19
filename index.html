@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.5</title>
+<title>投資儀錶板 v4.6.6</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.5</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.6</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -554,8 +554,8 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       </div>
 
     </div>
-    <!-- 第二排：VIX + AAII -->
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+    <!-- 第二排：VIX + Trimmed Mean PCE + AAII -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
 
       <!-- VIX -->
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
@@ -584,6 +584,40 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           <div class="tt-row"><span class="tt-label">2020疫情VIX89→建倉</span><span class="tt-val" style="color:var(--green)">1年後 +42.96%</span></div>
           <div class="tt-divider"></div>
           <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VIX 30+ 且基本面未變 → 你的子彈就是為此刻準備的</div>
+        </div>
+      </div>
+
+      <!-- Trimmed Mean PCE -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Trimmed Mean PCE</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="pce-trimmed">—</div>
+          <div style="font-family:var(--font-mono);font-size:11px;" id="pce-trimmed-badge">—</div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">達拉斯聯儲 · 月更</div>
+        <div class="macro-tooltip">
+          <div class="tt-title">Trimmed Mean PCE · 修剪均值通膨</div>
+          <div class="tt-row"><span class="tt-label">發布機構</span><span class="tt-val">達拉斯聯儲 (Dallas Fed)</span></div>
+          <div class="tt-row"><span class="tt-label">計算方式</span><span class="tt-val">剔除頭尾各 25% 極端值後的核心 PCE</span></div>
+          <div class="tt-row"><span class="tt-label">優勢</span><span class="tt-val">濾除能源/食物等一次性噪音</span></div>
+          <div class="tt-row"><span class="tt-label">Fed 偏好</span><span class="tt-val" style="color:var(--accent)">Waller 等官員偏好此指標</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">位階對照</div>
+          <div class="tt-row"><span class="tt-label">&lt; 1.5%（通縮風險）</span><span class="tt-val" style="color:var(--red)">寬鬆壓力，警惕衰退</span></div>
+          <div class="tt-row"><span class="tt-label">1.5–2.5%（受控區）</span><span class="tt-val" style="color:var(--green)">降息空間存在，股市友善</span></div>
+          <div class="tt-row"><span class="tt-label">2.5–3.5%（溫和偏高）</span><span class="tt-val" style="color:var(--yellow)">Fed 觀望，升降息都不急</span></div>
+          <div class="tt-row"><span class="tt-label">3.5–4.5%（過熱）</span><span class="tt-val" style="color:var(--red)">升息/維持高利率，成長股承壓</span></div>
+          <div class="tt-row"><span class="tt-label">&gt; 4.5%（失控）</span><span class="tt-val" style="color:var(--red)">緊急升息模式，2022 重演</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">歷史事件錨點</div>
+          <div class="tt-row"><span class="tt-label">2016 油價崩跌</span><span class="tt-val">1.5–1.7%（傳統PCE誤判通縮）</span></div>
+          <div class="tt-row"><span class="tt-label">2018 中美貿易戰</span><span class="tt-val">2.1–2.2%（底層通膨溫和）</span></div>
+          <div class="tt-row"><span class="tt-label">2020 COVID 衝擊</span><span class="tt-val">1.8–2.0%（暫時，非真實通縮）</span></div>
+          <div class="tt-row"><span class="tt-label">2022/02 烏俄開戰</span><span class="tt-val" style="color:var(--red)">3.5% → 持續升高</span></div>
+          <div class="tt-row"><span class="tt-label">2022/09 歷史峰值</span><span class="tt-val" style="color:var(--red)">4.7%（Fed 暴力升息）</span></div>
+          <div class="tt-row"><span class="tt-label">2026/04 現況</span><span class="tt-val" id="pce-tt-current" style="color:var(--green)">—</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">FRED: PCETRIM12M159SFRBDAL · 月更，延遲約 3 週</div>
         </div>
       </div>
 
@@ -902,10 +936,11 @@ const CD_MINUTES=30;
 
 // === FRED SERIES 定義（集中管理，防止 observation_start 遺漏）===
 const FRED_SERIES={
-  buffett: {id:'NCBEILQ027S',         limit:100, start:'2004-01-01'},
-  gdp:     {id:'GDP',                  limit:100, start:'2004-01-01'},
-  usCLI:   {id:'USALOLITOAASTSAM',     limit:300, start:'2004-01-01'},
-  globalCLI:{id:'G20LOLITONOSTSAM',    limit:300, start:'2004-01-01'},
+  buffett:    {id:'NCBEILQ027S',          limit:100, start:'2004-01-01'},
+  gdp:        {id:'GDP',                   limit:100, start:'2004-01-01'},
+  usCLI:      {id:'USALOLITOAASTSAM',      limit:300, start:'2004-01-01'},
+  globalCLI:  {id:'G20LOLITONOSTSAM',      limit:300, start:'2004-01-01'},
+  trimmedPCE: {id:'PCETRIM12M159SFRBDAL',  limit:12,  start:'2024-01-01'},
 };
 
 // === FUNCTION ORDER INDEX ===
@@ -942,6 +977,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.6.6',date:'2026-06-19',notes:'✦ 宏觀指標第二排擴為 3 格：VIX / Trimmed Mean PCE / AAII<br>✦ Trimmed Mean PCE：FRED PCETRIM12M159SFRBDAL，燈號分 5 段（通縮風險/受控區/溫和偏高/過熱/失控）<br>✦ Tooltip 含歷史事件錨點（2016油價/2018貿易戰/2020COVID/2022烏俄/2022峰值）及 Fed 操作含義'},
   {v:'4.6.2',date:'2026-06-01',notes:'✦ 投入金額統一以台幣（NT$）顯示，USD 持股自動乘以 Sheets 匯率（usdTwd）換算'},
   {v:'4.6.1',date:'2026-06-01',notes:'✦ 持股列表左側邊框依類型上色：現金停泊（綠）/ ETF+波段（紫）/ 個股（藍），搭配同色調極淡底色，一眼辨識持倉結構<br>✦ 持股列表新增「投入金額」欄位：股數 × 成本均價，顯示每筆部位實際資金投入規模'},
   {v:'4.6.0',date:'2026-06-01',notes:'✦ FRED_SERIES 集中管理常數：四個 series（NCBEILQ027S / GDP / USALOLITOAASTSAM / G20LOLITONOSTSAM）的 id / limit / start 統一定義，防止 observation_start 遺漏<br>✦ Changelog 改為 data-driven：JS array render 取代靜態 HTML，根本消除 div nesting bug 風險<br>✦ 新增函數順序索引表（13 個分類），協助維護 async hoisting 順序'},
@@ -2089,6 +2125,7 @@ async function saveActionLogToSheets(actions){
 // === 宏觀數據 (Yahoo Finance) ===
 async function fetchMacroData(){
   try{
+    const fredKey=getApiKey('fred');
     const [irxR,tnxR,fvxR]=await Promise.all([
       fetch(`${PROXY}/quote/${encodeURIComponent('^IRX')}`),
       fetch(`${PROXY}/quote/${encodeURIComponent('^TNX')}`),
@@ -2097,9 +2134,20 @@ async function fetchMacroData(){
     const [irxD,tnxD,fvxD]=await Promise.all([irxR.json(),tnxR.json(),fvxR.json()]);
     const irx=irxD.price||null, tnx=tnxD.price||null, fvx=fvxD.price||null;
     const t10y2y=(tnx&&fvx)?parseFloat((tnx-fvx).toFixed(3)):null;
-    const vix=indexData.vix?.price||null; // 直接用已抓的 VIX
-    return {irx,tnx,fvx,t10y2y,vix};
-  }catch(e){return {irx:null,tnx:null,fvx:null,t10y2y:null,vix:null};}
+    const vix=indexData.vix?.price||null;
+    // Trimmed Mean PCE via FRED
+    let trimmedPCE=null;
+    if(fredKey){
+      try{
+        const pceData=await fetchFredSeries(FRED_SERIES.trimmedPCE.id,fredKey,FRED_SERIES.trimmedPCE.limit,FRED_SERIES.trimmedPCE.start);
+        if(pceData&&pceData.length>0){
+          const last=pceData[pceData.length-1];
+          trimmedPCE=parseFloat(last.value);
+        }
+      }catch(e){console.warn('[PCE] FRED fetch failed:',e);}
+    }
+    return {irx,tnx,fvx,t10y2y,vix,trimmedPCE};
+  }catch(e){return {irx:null,tnx:null,fvx:null,t10y2y:null,vix:null,trimmedPCE:null};}
 }
 
 function renderMacroBar(fd){
@@ -2115,6 +2163,23 @@ function renderMacroBar(fd){
   if(tnxEl){tnxEl.textContent=fmt(fd.tnx);tnxEl.style.color=fd.tnx!=null?(fd.tnx>5?'var(--red)':fd.tnx<3?'var(--green)':'var(--yellow)'):'var(--text-muted)';}
   if(t10El){t10El.textContent=fmt(fd.t10y2y,3);t10El.style.color=fd.t10y2y!=null?(fd.t10y2y<0?'var(--red)':'var(--green)'):'var(--text-muted)';}
   if(vixEl){vixEl.textContent=fmtVix(fd.vix);vixEl.style.color=fd.vix!=null?(fd.vix>=30?'var(--red)':fd.vix>=20?'var(--yellow)':'var(--green)'):'var(--text-muted)';}
+  // Trimmed Mean PCE
+  const pceEl=document.getElementById('pce-trimmed');
+  const pceBadgeEl=document.getElementById('pce-trimmed-badge');
+  const pceTtCurrent=document.getElementById('pce-tt-current');
+  if(pceEl&&fd.trimmedPCE!=null){
+    const pce=fd.trimmedPCE;
+    let pceColor,pceLabel;
+    if(pce<1.5){pceColor='var(--red)';pceLabel='通縮風險';}
+    else if(pce<2.5){pceColor='var(--green)';pceLabel='受控區';}
+    else if(pce<3.5){pceColor='var(--yellow)';pceLabel='溫和偏高';}
+    else if(pce<4.5){pceColor='var(--red)';pceLabel='過熱';}
+    else{pceColor='var(--red)';pceLabel='失控';}
+    pceEl.textContent=pce.toFixed(1)+'%';
+    pceEl.style.color=pceColor;
+    if(pceBadgeEl){pceBadgeEl.textContent=pceLabel;pceBadgeEl.style.color=pceColor;}
+    if(pceTtCurrent){pceTtCurrent.textContent=pce.toFixed(1)+'%（'+pceLabel+'）';pceTtCurrent.style.color=pceColor;}
+  }
   bar.style.display='block';
 }
 function renderAAIIBar(aaiiData){
