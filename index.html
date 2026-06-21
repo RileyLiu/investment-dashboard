@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.7</title>
+<title>投資儀錶板 v4.6.8</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.7</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.8</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -970,6 +970,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.6.8',date:'2026-06-21',notes:'✦ Trimmed Mean PCE 改由 GAS Weekly_Snapshot 抓取寫入設定!B19，前端 Sheets sync 讀取，完全繞開 FRED API<br>✦ renderPCEBar() 獨立函式，與 renderAAIIBar() 同架構<br>✦ 移除 fetchMacroData 內的 FRED PCE 呼叫（死碼清理）'},
   {v:'4.6.7',date:'2026-06-19',notes:'✦ 移除「AI 風險審查」按鈕（風險總覽右上角）<br>✦ 移除「本月行動計畫」區塊（配置健診頁）<br>✦ FRED API Key 更新'},
   {v:'4.6.6',date:'2026-06-19',notes:'✦ 宏觀指標第二排擴為 3 格：VIX / Trimmed Mean PCE / AAII<br>✦ Trimmed Mean PCE：FRED PCETRIM12M159SFRBDAL，燈號分 5 段（通縮風險/受控區/溫和偏高/過熱/失控）<br>✦ Tooltip 含歷史事件錨點（2016油價/2018貿易戰/2020COVID/2022烏俄/2022峰值）及 Fed 操作含義'},
   {v:'4.6.2',date:'2026-06-01',notes:'✦ 投入金額統一以台幣（NT$）顯示，USD 持股自動乘以 Sheets 匯率（usdTwd）換算'},
@@ -1518,6 +1519,16 @@ async function syncSheets(){
       renderAAIIBar(aaiiData);
     }
   }catch(e){console.warn('[AAII] 讀取失敗:',e);}
+  // 讀取 Trimmed Mean PCE（設定!B19）
+  try{
+    const pr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B19')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const pj=await pr.json();
+    const pv=pj.values||[];
+    if(pv.length>=1){
+      const pce=parseFloat(pv[0]?.[0]);
+      if(!isNaN(pce)) renderPCEBar(pce);
+    }
+  }catch(e){console.warn('[PCE] 讀取失敗:',e);}
 }
 
 // === ALLOC CARDS (v3.8.0修正：tto = totalCash - reserveCash) ===
@@ -2129,19 +2140,9 @@ async function fetchMacroData(){
     const irx=irxD.price||null, tnx=tnxD.price||null, fvx=fvxD.price||null;
     const t10y2y=(tnx&&fvx)?parseFloat((tnx-fvx).toFixed(3)):null;
     const vix=indexData.vix?.price||null;
-    // Trimmed Mean PCE via FRED
-    let trimmedPCE=null;
-    if(fredKey){
-      try{
-        const pceData=await fetchFredSeries(FRED_SERIES.trimmedPCE.id,fredKey,FRED_SERIES.trimmedPCE.limit,FRED_SERIES.trimmedPCE.start);
-        if(pceData&&pceData.length>0){
-          const last=pceData[pceData.length-1];
-          trimmedPCE=parseFloat(last.value);
-        }
-      }catch(e){console.warn('[PCE] FRED fetch failed:',e);}
-    }
-    return {irx,tnx,fvx,t10y2y,vix,trimmedPCE};
-  }catch(e){return {irx:null,tnx:null,fvx:null,t10y2y:null,vix:null,trimmedPCE:null};}
+    // Trimmed Mean PCE 改由 GAS Weekly_Snapshot 寫入 設定!B19，Sheets sync 時讀取
+    return {irx,tnx,fvx,t10y2y,vix};
+  }catch(e){return {irx:null,tnx:null,fvx:null,t10y2y:null,vix:null};}
 }
 
 function renderMacroBar(fd){
@@ -2157,24 +2158,24 @@ function renderMacroBar(fd){
   if(tnxEl){tnxEl.textContent=fmt(fd.tnx);tnxEl.style.color=fd.tnx!=null?(fd.tnx>5?'var(--red)':fd.tnx<3?'var(--green)':'var(--yellow)'):'var(--text-muted)';}
   if(t10El){t10El.textContent=fmt(fd.t10y2y,3);t10El.style.color=fd.t10y2y!=null?(fd.t10y2y<0?'var(--red)':'var(--green)'):'var(--text-muted)';}
   if(vixEl){vixEl.textContent=fmtVix(fd.vix);vixEl.style.color=fd.vix!=null?(fd.vix>=30?'var(--red)':fd.vix>=20?'var(--yellow)':'var(--green)'):'var(--text-muted)';}
-  // Trimmed Mean PCE
+  // Trimmed Mean PCE 由 Sheets sync 的 renderPCEBar() 負責，此處不處理
+  bar.style.display='block';
+}
+function renderPCEBar(pce){
   const pceEl=document.getElementById('pce-trimmed');
   const pceBadgeEl=document.getElementById('pce-trimmed-badge');
   const pceTtCurrent=document.getElementById('pce-tt-current');
-  if(pceEl&&fd.trimmedPCE!=null){
-    const pce=fd.trimmedPCE;
-    let pceColor,pceLabel;
-    if(pce<1.5){pceColor='var(--red)';pceLabel='通縮風險';}
-    else if(pce<2.5){pceColor='var(--green)';pceLabel='受控區';}
-    else if(pce<3.5){pceColor='var(--yellow)';pceLabel='溫和偏高';}
-    else if(pce<4.5){pceColor='var(--red)';pceLabel='過熱';}
-    else{pceColor='var(--red)';pceLabel='失控';}
-    pceEl.textContent=pce.toFixed(1)+'%';
-    pceEl.style.color=pceColor;
-    if(pceBadgeEl){pceBadgeEl.textContent=pceLabel;pceBadgeEl.style.color=pceColor;}
-    if(pceTtCurrent){pceTtCurrent.textContent=pce.toFixed(1)+'%（'+pceLabel+'）';pceTtCurrent.style.color=pceColor;}
-  }
-  bar.style.display='block';
+  if(!pceEl||pce==null)return;
+  let pceColor,pceLabel;
+  if(pce<1.5){pceColor='var(--red)';pceLabel='通縮風險';}
+  else if(pce<2.5){pceColor='var(--green)';pceLabel='受控區';}
+  else if(pce<3.5){pceColor='var(--yellow)';pceLabel='溫和偏高';}
+  else if(pce<4.5){pceColor='var(--red)';pceLabel='過熱';}
+  else{pceColor='var(--red)';pceLabel='失控';}
+  pceEl.textContent=pce.toFixed(1)+'%';
+  pceEl.style.color=pceColor;
+  if(pceBadgeEl){pceBadgeEl.textContent=pceLabel;pceBadgeEl.style.color=pceColor;}
+  if(pceTtCurrent){pceTtCurrent.textContent=pce.toFixed(1)+'%（'+pceLabel+'）';pceTtCurrent.style.color=pceColor;}
 }
 function renderAAIIBar(aaiiData){
   // aaiiData: {bearish, avg4w, spread, date}
