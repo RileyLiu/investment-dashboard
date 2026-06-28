@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.6.8</title>
+<title>投資儀錶板 v4.7.0</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.6.8</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.7.0</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -919,10 +919,8 @@ const CASH_ROWS=['中信銀','DH投','NNB','Richart','日美韓幣持有'];
 const ALLOC_ROWS={growth:'成長型股票',etf:'持有ETF'};
 const WATCHLIST_EXCLUDE=['IX0001','TWSE','SPX','NDX','DJI','VIX'];
 // 指數相關持股分類
-const SOX_TICKERS=['SMH','2330','SNPS','CDNS','MU','AMD','NVDA','AVGO','QCOM'];
-const SPX_TICKERS=['LLY','UNH']; // NYSE 個股（SPX 獨有）
-const NYSE_TICKERS=['LLY','UNH']; // 同上，用於排除 NDX 重疊
-const NDX_TICKERS=['MSFT','GOOG','GOOGL','COST','AAPL','META','AMZN','TSLA','QQQ','SNPS','CDNS','SOFI','PLTR'];
+const SOX_TICKERS=['SMH','2330','SNPS','CDNS','MU','AMD','NVDA','AVGO','QCOM','AMAT','ASML','MRVL','COHR']; // 半導體跨交易所，維持 ticker 白名單
+// v4.7.0：SPX/NDX 改由 fullCode prefix 動態判斷，不再用靜態白名單
 const TREEMAP_COLORS=['#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#facc15','#60a5fa','#4ade80','#f87171','#c084fc'];
 const STATIC_INDUSTRY_MAP={'SMH':'半導體','2330':'半導體','MU':'半導體','AMD':'半導體','NVDA':'半導體','MSFT':'科技雲端','GOOG':'科技雲端','SNPS':'科技雲端','CDNS':'科技雲端','COST':'消費零售','5871':'金融租賃','LLY':'生技醫療','UNH':'生技醫療','SOFI':'金融科技','QQQ':'ETF-科技','006208':'ETF-科技','JEPI':'ETF-防禦收益','XLU':'ETF-防禦收益','PHO':'ETF-主題','COPX':'ETF-主題','VTI':'ETF-全市場','PLTR':'企業軟體AI','VST':'個股-電力','FCX':'個股-銅礦','GLD':'ETF-黃金','SGOV':'ETF-現金停泊'};
 const CD_MINUTES=30;
@@ -970,6 +968,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.7.0',date:'2026-06-28',notes:'✦ 市場溫度計 SPX/NDX 持倉分類改為動態：依 Sheets fullCode 欄 prefix（NYSE:/NASDAQ:/NYSEARCA:）自動歸類，新建倉無需改 code<br>✦ SOX 半導體白名單補齊 AMAT/ASML/MRVL/COHR<br>✦ parseHoldings 新增 fullCode 欄位存入 holdingsData'},
   {v:'4.6.8',date:'2026-06-21',notes:'✦ Trimmed Mean PCE 改由 GAS Weekly_Snapshot 抓取寫入設定!B19，前端 Sheets sync 讀取，完全繞開 FRED API<br>✦ renderPCEBar() 獨立函式，與 renderAAIIBar() 同架構<br>✦ 移除 fetchMacroData 內的 FRED PCE 呼叫（死碼清理）'},
   {v:'4.6.7',date:'2026-06-19',notes:'✦ 移除「AI 風險審查」按鈕（風險總覽右上角）<br>✦ 移除「本月行動計畫」區塊（配置健診頁）<br>✦ FRED API Key 更新'},
   {v:'4.6.6',date:'2026-06-19',notes:'✦ 宏觀指標第二排擴為 3 格：VIX / Trimmed Mean PCE / AAII<br>✦ Trimmed Mean PCE：FRED PCETRIM12M159SFRBDAL，燈號分 5 段（通縮風險/受控區/溫和偏高/過熱/失控）<br>✦ Tooltip 含歷史事件錨點（2016油價/2018貿易戰/2020COVID/2022烏俄/2022峰值）及 Fed 操作含義'},
@@ -1167,21 +1166,22 @@ function updateIndexHovers(){
     if(pctEl){const pct=total>0?(val/total*100):0;pctEl.textContent=pct.toFixed(1)+'%';pctEl.style.color=pct>35?'var(--red)':pct>25?'var(--yellow)':'var(--green)';}
   }
 
-  // SPX: NYSE 個股（LLY、UNH）
-  const spxH=holdingsData.filter(h=>SPX_TICKERS.includes(h.ticker.toUpperCase()));
+  // v4.7.0 動態分類：依 fullCode prefix 判斷交易所歸屬
+  // SPX = NYSE: + NYSEARCA:（自動涵蓋所有 NYSE/NYSE Arca 新持倉）
+  const spxH=holdingsData.filter(h=>h.fullCode.startsWith('NYSE:'));
   const spxTWD=spxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
   const spxList=document.getElementById('spx-holdings-list');
-  if(spxList)spxList.innerHTML=spxH.length?renderHoldingRows(spxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無 NYSE 個股持倉</div>';
+  if(spxList)spxList.innerHTML=spxH.length?renderHoldingRows(spxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無 NYSE 持倉</div>';
   renderExposure('spx-exposure-amt','spx-exposure-pct',spxTWD,totalTWD);
 
-  // NDX: NASDAQ 個股（MSFT、GOOG、COST、SOFI、PLTR、QQQ）
-  const ndxH=holdingsData.filter(h=>NDX_TICKERS.includes(h.ticker.toUpperCase()));
+  // NDX = NASDAQ: + NYSEARCA:（自動涵蓋所有 Nasdaq/Arca 新持倉）
+  const ndxH=holdingsData.filter(h=>h.fullCode.startsWith('NASDAQ:')||h.fullCode.startsWith('NYSEARCA:'));
   const ndxTWD=ndxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
   const ndxList=document.getElementById('ndx-holdings-list');
   if(ndxList)ndxList.innerHTML=ndxH.length?renderHoldingRows(ndxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無 NASDAQ 持倉</div>';
   renderExposure('ndx-exposure-amt','ndx-exposure-pct',ndxTWD,totalTWD);
 
-  // SOX: 半導體相關（2330、SMH）
+  // SOX: 半導體相關（跨交易所，維持 ticker 白名單）
   const soxH=holdingsData.filter(h=>SOX_TICKERS.includes(h.ticker.toUpperCase()));
   const soxTWD=soxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
   const soxList=document.getElementById('sox-holdings-list');
@@ -1430,7 +1430,8 @@ function parseHoldings(rows){
     const cost=parseFloat((row[COLS.cost]||'').replace(/,/g,''));
     const price=parseFloat((row[COLS.price]||'').replace(/,/g,''));
     if(!shares||shares<=0||!cost||cost<=0)continue;
-    const name=(row[COLS.name]||row[COLS.fullCode]||ticker).trim().split('\n')[0];
+    const fullCode=(row[COLS.fullCode]||'').trim();
+    const name=(row[COLS.name]||fullCode||ticker).trim().split('\n')[0];
     const type=ticker==='TQQQ'?'wave':CASH_TICKERS.includes(ticker)?'cash':ETF_TICKERS.includes(ticker)?'etf':'growth';
     const currency=TW_TICKERS.includes(ticker)?'TWD':'USD';
     const ma200pct=parseFloat((row[COLS.ma200pct]||'').replace(/%/g,'').replace(/,/g,''))||null;
@@ -1443,7 +1444,7 @@ function parseHoldings(rows){
     const pe=parseFloat((row[COLS.pe]||'').replace(/,/g,''))||null;
     const peL=parseFloat((row[COLS.peL]||'').replace(/,/g,''))||null;
     const peH=parseFloat((row[COLS.peH]||'').replace(/,/g,''))||null;
-    out.push({ticker,name,shares,cost,price:price||cost,type,currency,ma200pct,ma50pct,trend,kd,w52low,w52high,pe,peL,peH});
+    out.push({ticker,fullCode,name,shares,cost,price:price||cost,type,currency,ma200pct,ma50pct,trend,kd,w52low,w52high,pe,peL,peH});
   }
   return out;
 }
