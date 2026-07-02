@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資儀錶板 v4.7.0</title>
+<title>投資儀錶板</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -302,7 +302,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 </head>
 <body>
 <nav>
-  <div class="nav-brand">PORTFOLIO_OS <span style="font-size:9px;opacity:0.5;margin-left:4px">v4.7.0</span></div>
+  <div class="nav-brand">PORTFOLIO_OS <span id="nav-version" style="font-size:9px;opacity:0.5;margin-left:4px"></span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
@@ -959,6 +959,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
+const VERSION='v4.8.0';
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={};
 let indexData={};
@@ -968,6 +969,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.8.0',date:'2026-07-02',notes:'\u2726 \u65b0\u589e\u8ad6\u6587\u5065\u5eb7\u5ea6\u5100\u8868\uff1a\u89e3\u6790\u8ad6\u6587\u5eab C\u6b04\u884c\u9996\u7b26\u865f\uff08\u2705/\u26a0\ufe0f/\ud83d\udea8\uff09\uff0c\u6301\u80a1\u5361\u7247\u986f\u793a\u5065\u5eb7\u5ea6\u8a08\u6578\uff0c\u6ed1\u9f20\u61f8\u505c\u770b\u689d\u4ef6\u660e\u7d30<br>\u2726 \u4efb\u4e00 \ud83d\udea8 \u5df2\u89f8\u767c\u2192\u5361\u7247\u7d05\u6846\u8b66\u793a\uff1b\u7121\u7b26\u865f\u884c\u2192\u4e0d\u986f\u793a\uff08\u820a\u683c\u5f0f\u76f8\u5bb9\uff09<br>\u2726 \u7248\u672c\u865f\u6539 const VERSION \u55ae\u9ede\u7ba1\u7406\uff0ctitle/nav \u52d5\u614b\u5f15\u7528'},
   {v:'4.7.0',date:'2026-06-28',notes:'✦ 市場溫度計 SPX/NDX 持倉分類改為動態：依 Sheets fullCode 欄 prefix（NYSE:/NASDAQ:/NYSEARCA:）自動歸類，新建倉無需改 code<br>✦ SOX 半導體白名單補齊 AMAT/ASML/MRVL/COHR<br>✦ parseHoldings 新增 fullCode 欄位存入 holdingsData'},
   {v:'4.6.8',date:'2026-06-21',notes:'✦ Trimmed Mean PCE 改由 GAS Weekly_Snapshot 抓取寫入設定!B19，前端 Sheets sync 讀取，完全繞開 FRED API<br>✦ renderPCEBar() 獨立函式，與 renderAAIIBar() 同架構<br>✦ 移除 fetchMacroData 內的 FRED PCE 呼叫（死碼清理）'},
   {v:'4.6.7',date:'2026-06-19',notes:'✦ 移除「AI 風險審查」按鈕（風險總覽右上角）<br>✦ 移除「本月行動計畫」區塊（配置健診頁）<br>✦ FRED API Key 更新'},
@@ -1052,6 +1054,7 @@ function getDCFSheetName(t){if(sheetTabNames.includes(t))return t;return sheetTa
 
 // === INIT ===
 function init(){
+  document.title='投資儀錶板 '+VERSION;const _nv=document.getElementById('nav-version');if(_nv)_nv.textContent=VERSION;
   const isPublic=new URLSearchParams(window.location.search).get('view')==='public';
   if(!isPublic){
     document.getElementById('tab-holdings').style.display='block';
@@ -1726,16 +1729,17 @@ function renderHoldings(){
     const _fc=_dl!=null?(_dl<=0?'var(--red)':_dl<=30?'var(--yellow)':'var(--text-muted)'):'';
     const fHTML=lc?('<span style="font-family:var(--font-mono);font-size:9px;color:'+_fc+'">'+((_dl<=0)?('逾期 '+Math.abs(_dl)+' 天'):(_dl+' 天後信仰檢核'))+'</span>'):'<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span>';
     const ebHTML=getEarningsBadgeHTML(h.ticker);
-    const _tstat=(thesisCache[h.ticker]||{}).status||null;
+    const _tc=thesisCache[h.ticker]||{};const _tstat=_tc.status||null;const _th=_tc.health||null;const _thHTML=thesisHealthBadgeHTML(_th);
     const _statMap={yes:{lbl:'論文成立',c:'var(--green)',bg:'var(--green-dim)'},partial:{lbl:'持觀察',c:'var(--yellow)',bg:'var(--yellow-dim)'},no:{lbl:'動態',c:'var(--red)',bg:'var(--red-dim)'}};
     const _sm2=_tstat?_statMap[_tstat]:null;
     const thesisTagHTML=_sm2?`<span style="font-family:var(--font-mono);font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;background:${_sm2.bg};color:${_sm2.c};border:1px solid ${_sm2.c}40;margin-left:6px">${_sm2.lbl}</span>`:'';
-    const _borderCol=h.type==='cash'?'rgba(52,211,153,0.5)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.5)':'rgba(56,189,248,0.5)';
-    const _bgTint=h.type==='cash'?'rgba(52,211,153,0.04)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.04)':'rgba(56,189,248,0.04)';
+    let _borderCol=h.type==='cash'?'rgba(52,211,153,0.5)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.5)':'rgba(56,189,248,0.5)';
+    let _bgTint=h.type==='cash'?'rgba(52,211,153,0.04)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.04)':'rgba(56,189,248,0.04)';
+    if(_th&&_th.fail>0){_borderCol='rgba(248,113,113,0.85)';_bgTint='rgba(248,113,113,0.07)';}
     const invested=h.shares*h.cost*(h.currency==='USD'?usdTwd:1);
     const investedFmt='NT$'+Math.round(invested).toLocaleString();
     return `<div class="holding-entry" style="border-left:3px solid ${_borderCol};background:var(--bg-card);background-image:linear-gradient(to right,${_bgTint},transparent 120px);" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
-      <div><div style="display:flex;align-items:center;gap:4px"><span class="holding-ticker">${h.ticker}</span>${ebHTML?'<span style="vertical-align:middle">'+ebHTML+'</span>':''} ${thesisTagHTML}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
+      <div><div style="display:flex;align-items:center;gap:4px"><span class="holding-ticker">${h.ticker}</span>${ebHTML?'<span style="vertical-align:middle">'+ebHTML+'</span>':''} ${thesisTagHTML}${_thHTML}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
       <div class="holding-metrics">
         <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
         <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
@@ -1974,7 +1978,7 @@ async function loadThesisFromSheets(){
   try{
     const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('論文庫!A2:D200')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();thesisCache={};
-    for(const row of(d.values||[])){const t=(row[0]||'').trim();if(!t)continue;const sm={'論文成立':'yes','持觀察':'partial','動態':'no'};const rawStat=(row[3]||'').trim();thesisCache[t]={thesis:row[1]||'',sellTrigger:row[2]||'',status:sm[rawStat]||null};}
+    for(const row of(d.values||[])){const t=(row[0]||'').trim();if(!t)continue;const sm={'論文成立':'yes','持觀察':'partial','動態':'no'};const rawStat=(row[3]||'').trim();const _st=row[2]||'';thesisCache[t]={thesis:row[1]||'',sellTrigger:_st,status:sm[rawStat]||null,health:parseThesisHealth(_st)};}
   }catch(e){}
 }
 function openThesisModal(ticker,name){
@@ -1987,9 +1991,35 @@ function setThesisStatus(v){thesisStatus=v;['yes','partial','no'].forEach(x=>{co
 function saveThesis(){
   if(!currentThesisTicker)return;
   const tt=el('thesis-input').value,st=el('sell-trigger-input').value;
-  thesisCache[currentThesisTicker]={thesis:tt,sellTrigger:st,status:thesisStatus};
+  thesisCache[currentThesisTicker]={thesis:tt,sellTrigger:st,status:thesisStatus,health:parseThesisHealth(st)};
   closeModal('thesis-modal');renderHoldings();
   if(googleToken)saveThesisToSheets(currentThesisTicker,tt,st,thesisStatus);
+}
+
+// === v4.8.0 論文健康度：parse 賣出觸發 C欄符號行 ===
+// 規則：只計數行首為 ✅/⚠️/🚨 的行，其他行（標題/說明）忽略；無任何符號行 → 回傳 null（fallback 不顯示）
+function parseThesisHealth(text){
+  if(!text)return null;
+  const lines=text.split(/\r?\n/);
+  let ok=0,warn=0,fail=0;const items=[];
+  for(const ln of lines){
+    const s=ln.trim();
+    if(s.startsWith('\u2705')){ok++;items.push(s);}
+    else if(s.startsWith('\u26a0')){warn++;items.push(s);}
+    else if(s.startsWith('\ud83d\udea8')){fail++;items.push(s);}
+  }
+  if(ok+warn+fail===0)return null;
+  return {ok,warn,fail,items};
+}
+function thesisHealthBadgeHTML(h){
+  if(!h)return '';
+  const parts=[];
+  if(h.ok)parts.push('<span style="color:var(--green)">'+h.ok+'\u2705</span>');
+  if(h.warn)parts.push('<span style="color:var(--yellow)">'+h.warn+'\u26a0\ufe0f</span>');
+  if(h.fail)parts.push('<span style="color:var(--red)">'+h.fail+'\ud83d\udea8</span>');
+  const tip=h.items.join('\n').replace(/"/g,'&quot;');
+  const bcol=h.fail?'var(--red)':h.warn?'var(--yellow)':'var(--green)';
+  return '<span title="'+tip+'" style="font-family:var(--font-mono);font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;border:1px solid '+bcol+'40;background:transparent;margin-left:4px;cursor:help;white-space:nowrap">'+parts.join(' ')+'</span>';
 }
 async function saveThesisToSheets(ticker,thesis,st,status){
   try{
