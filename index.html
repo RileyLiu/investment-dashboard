@@ -217,6 +217,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .macro-cell{transition:border-color 0.2s;}
 .macro-cell:hover{border-color:var(--border-bright)!important;}
 .macro-tooltip{position:absolute;top:calc(100% + 8px);left:0;z-index:600;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:260px;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
+.recovery-tooltip{position:fixed;z-index:900;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:260px;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
 .macro-cell:hover .macro-tooltip{display:block;animation:fadeIn 0.15s ease;}
 .sync-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;margin-bottom:20px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
 .sync-banner.synced{border-color:var(--green-dim);color:var(--green);}
@@ -973,7 +974,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.10.1';
+const VERSION='v4.10.2';
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={},pullbackCache={};
 let indexData={};
@@ -983,7 +984,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
-  {v:'4.10.1',date:'2026-07-17',notes:'✦ 觀察清單新增「回檔收復比」：讀取 Sheets「波段回檔」分頁（GAS 每日計算波段高低點），公式 = (現價-波段低點)/(波段高點-波段低點)<br>✦ 收復比分級：<38.2% 弱勢反彈（紅）／38.2~61.8% 觀察區（黃）／≥61.8% 強勢回升（綠），採費波那契關卡<br>✦ 無有效回檔資料（近一年跌幅未達12%）時不顯示該欄位<br>✦ 標籤加 title hover 提示，說明公式與分級門檻'},
+  {v:'4.10.2',date:'2026-07-17',notes:'✦ 觀察清單新增「回檔收復比」：讀取 Sheets「波段回檔」分頁（GAS 每日計算波段高低點），公式 = (現價-波段低點)/(波段高點-波段低點)<br>✦ 收復比分級：<38.2% 弱勢反彈（紅）／38.2~61.8% 觀察區（黃）／≥61.8% 強勢回升（綠）／100% 完全收復，採費波那契關卡<br>✦ 無有效回檔資料（近一年跌幅未達12%）時不顯示該欄位<br>✦ 新增 AAII 同款浮動說明框（JS動態定位，跳脫卡片 overflow:hidden 裁切），hover 顯示波段高低點/現價/區間解讀'},
   {v:'4.9.0',date:'2026-07-02',notes:'\u2726 \u65b0\u589e\u6230\u8853\u5009\u6a21\u7d44\uff1a\u89c0\u5bdf\u6e05\u55ae\u9802\u90e8\u647a\u758a\u689d\uff0c\u8b80 Sheets\u300c\u6230\u8853\u5009\u300d\u5206\u9801\uff08\u7b2c3\u5217\u8d77\uff09<br>\u2726 \u4e0a\u9650=\u6301\u80a1\u8cc7\u8a0a!B7\u00d75%\u5373\u6642\u6d6e\u52d5\uff0c>95%\u9ec3\u5b57 >100%\u7d05\u5b57<br>\u2726 \u505c\u640d\u2500\u73fe\u50f9\u2500\u76ee\u6a19\u4f4d\u7f6e\u689d\u3001\u5230\u671f\u5012\u6578\u3001\u5df2\u51fa\u5834\u52dd\u7387\u7d71\u8a08<br>\u2726 \u7d00\u5f8b\u6b04\uff08\u505c\u640d/\u76ee\u6a19/\u5230\u671f/\u7406\u7531\uff09\u4efb\u4e00\u7a7a\u767d\u2192\ud83d\udeab\u4e0d\u986f\u793a\u640d\u76ca<br>\u2726 \u7570\u5e38\u81ea\u52d5\u8b8a\u8272\uff1a\u903e\u671f/\u8ddd\u505c\u640d<3%/\u7d00\u5f8b\u4e0d\u5b8c\u6574\u2192\u6458\u8981\u689d\u7d05\u5e95\u8b66\u793a'},
   {v:'4.8.0',date:'2026-07-02',notes:'\u2726 \u65b0\u589e\u8ad6\u6587\u5065\u5eb7\u5ea6\u5100\u8868\uff1a\u89e3\u6790\u8ad6\u6587\u5eab C\u6b04\u884c\u9996\u7b26\u865f\uff08\u2705/\u26a0\ufe0f/\ud83d\udea8\uff09\uff0c\u6301\u80a1\u5361\u7247\u986f\u793a\u5065\u5eb7\u5ea6\u8a08\u6578\uff0c\u6ed1\u9f20\u61f8\u505c\u770b\u689d\u4ef6\u660e\u7d30<br>\u2726 \u4efb\u4e00 \ud83d\udea8 \u5df2\u89f8\u767c\u2192\u5361\u7247\u7d05\u6846\u8b66\u793a\uff1b\u7121\u7b26\u865f\u884c\u2192\u4e0d\u986f\u793a\uff08\u820a\u683c\u5f0f\u76f8\u5bb9\uff09<br>\u2726 \u7248\u672c\u865f\u6539 const VERSION \u55ae\u9ede\u7ba1\u7406\uff0ctitle/nav \u52d5\u614b\u5f15\u7528'},
   {v:'4.7.0',date:'2026-06-28',notes:'✦ 市場溫度計 SPX/NDX 持倉分類改為動態：依 Sheets fullCode 欄 prefix（NYSE:/NASDAQ:/NYSEARCA:）自動歸類，新建倉無需改 code<br>✦ SOX 半導體白名單補齊 AMAT/ASML/MRVL/COHR<br>✦ parseHoldings 新增 fullCode 欄位存入 holdingsData'},
@@ -1401,15 +1402,52 @@ function getRecoveryRatio(ticker){
   if(!cp)return null;
   return Math.max(0,Math.min(100,((cp-pb.low)/(pb.high-pb.low))*100));
 }
+// v4.10.2：AAII 同款浮動說明框，JS 動態定位（跳脫 .stock-card 的 overflow:hidden 裁切）
+function showRecoveryTooltip(evt,ticker){
+  const pb=pullbackCache[ticker];
+  const pct=getRecoveryRatio(ticker);
+  if(!pb||pct==null)return;
+  const cp=getLivePrice(ticker)||0;
+  const tt=document.getElementById('recovery-tooltip');
+  if(!tt)return;
+  const zones=[
+    {range:'< 38.2%',label:'弱勢反彈',desc:'上攻力道薄弱，容易再次破底',active:pct<38.2,color:'var(--red)'},
+    {range:'38.2 ~ 61.8%',label:'觀察區（黃金分割）',desc:'多空拉鋸關卡，觀察是否站穩',active:pct>=38.2&&pct<61.8,color:'var(--yellow)'},
+    {range:'≥ 61.8%',label:'強勢回升',desc:'跌幅大致收復，趨勢可能轉多',active:pct>=61.8&&pct<100,color:'var(--green)'},
+    {range:'= 100%',label:'完全收復',desc:'股價已回到波段前高',active:pct>=100,color:'var(--accent)'},
+  ];
+  const zoneRows=zones.map(z=>`<div class="tt-row"${z.active?' style="background:rgba(255,255,255,0.07);border-radius:4px;margin:0 -6px;padding:4px 6px"':''}><span class="tt-label" style="color:${z.active?z.color:'var(--text-muted)'}">${z.range}${z.active?' ◀ 目前':''}</span><span class="tt-val" style="color:${z.active?z.color:'var(--text-muted)'};font-size:10px">${z.label}</span></div>`).join('');
+  const curColor=pct<38.2?'var(--red)':pct<61.8?'var(--yellow)':'var(--green)';
+  tt.innerHTML=`<div class="tt-title">${ticker} 回檔收復比 · 判斷邏輯</div>
+    <div class="tt-row"><span class="tt-label">目前收復比</span><span class="tt-val" style="color:${curColor};font-weight:700">${pct.toFixed(1)}%</span></div>
+    <div class="tt-row"><span class="tt-label">波段最高點</span><span class="tt-val">${pb.high.toLocaleString()}</span></div>
+    <div class="tt-row"><span class="tt-label">波段最低點</span><span class="tt-val">${pb.low.toLocaleString()}</span></div>
+    <div class="tt-row"><span class="tt-label">現價</span><span class="tt-val">${cp.toLocaleString()}</span></div>
+    <div class="tt-divider"></div>
+    <div class="tt-title">區間解讀</div>
+    ${zoneRows}
+    <div class="tt-divider"></div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">公式：(現價-波段低點)÷(波段高點-波段低點)<br>波段高低點由 GAS 每日計算：近1年最高收盤價 → 其後最低收盤價（需跌幅≥12%才成立）</div>`;
+  const rect=evt.currentTarget.getBoundingClientRect();
+  tt.style.display='block';
+  let left=rect.left;
+  const maxLeft=window.innerWidth-330;
+  if(left>maxLeft)left=Math.max(8,maxLeft);
+  let top=rect.bottom+8;
+  tt.style.left=left+'px';
+  tt.style.top=top+'px';
+}
+function hideRecoveryTooltip(){
+  const tt=document.getElementById('recovery-tooltip');
+  if(tt)tt.style.display='none';
+}
 // 觀察清單卡片用：回檔收復比顯示區塊（無資料則回傳空字串，不佔版面）
-// v4.10.1：標籤加 title 原生 hover 提示（卡片本身 overflow:hidden，無法用自訂浮動 tooltip，改用 title 屬性最安全）
 function renderRecoveryHTML(ticker){
   const pct=getRecoveryRatio(ticker);
   if(pct==null)return'';
   const c=pct<38.2?'var(--red)':pct<61.8?'var(--yellow)':'var(--green)';
   const label=pct<38.2?'弱勢反彈':pct<61.8?'觀察區':pct>=100?'完全收復':'強勢回升';
-  const tip='收復比 = (現價-波段低點)/(波段高點-波段低點)×100%\n<38.2% 弱勢反彈（容易再破底）\n38.2~61.8% 觀察區（黃金分割關卡）\n≥61.8% 強勢回升（跌幅大致收復）\n100% 完全收復（回到前波高點）';
-  return`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span title="${tip}" style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;cursor:help;border-bottom:1px dotted var(--text-muted)">回檔收復比</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${c}">${pct.toFixed(0)}% <span style="color:var(--text-muted);font-weight:400">${label}</span></span></div>`;
+  return`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span onmouseenter="showRecoveryTooltip(event,'${ticker}')" onmouseleave="hideRecoveryTooltip()" style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;cursor:help;border-bottom:1px dotted var(--text-muted)">回檔收復比</span><span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:${c}">${pct.toFixed(0)}% <span style="color:var(--text-muted);font-weight:400">${label}</span></span></div>`;
 }
 async function fetchAllDCF(){
   if(!googleToken)return;
@@ -3235,5 +3273,6 @@ window.mcRunSim=function(){
 document.addEventListener('DOMContentLoaded',function(){mcRenderStages();});
 })();
 </script>
+<div class="recovery-tooltip" id="recovery-tooltip"></div>
 </body>
 </html>
