@@ -889,7 +889,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="modal-header"><div><div class="modal-ticker" id="thesis-ticker"></div><div class="modal-name">買入論文</div></div><button class="modal-close" onclick="closeModal('thesis-modal')">✕</button></div>
     <div class="modal-body">
       <div class="thesis-box"><div class="thesis-label">買入核心論點</div><textarea class="thesis-input" id="thesis-input" placeholder="為什麼買這支？護城河、成長邏輯、估值優勢..."></textarea></div>
-      <div class="thesis-box"><div class="thesis-label">論點是否仍成立？</div><div style="display:flex;gap:8px;margin-top:4px"><button class="ability-badge ability-know" id="ts-yes" onclick="setThesisStatus('yes')">✓ 成立</button><button class="ability-badge ability-partial" id="ts-partial" onclick="setThesisStatus('partial')">△ 部分</button><button class="ability-badge" id="ts-no" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim)" onclick="setThesisStatus('no')">✗ 不成立</button></div></div>
+      <div class="thesis-box"><div class="thesis-label">論點是否仍成立？</div><div style="display:flex;gap:8px;margin-top:4px"><button class="ability-badge ability-know" id="ts-yes" onclick="setThesisStatus('yes')">✓ 論文成立</button><button class="ability-badge ability-partial" id="ts-partial" onclick="setThesisStatus('partial')">△ 持觀察</button><button class="ability-badge" id="ts-adjust" style="background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-dim)" onclick="setThesisStatus('adjust')">◐ 動態調整</button><button class="ability-badge" id="ts-no" style="background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim)" onclick="setThesisStatus('no')">✗ 論文失效</button></div></div>
       <div class="thesis-box"><div class="thesis-label">賣出觸發條件</div><textarea class="thesis-input" id="sell-trigger-input" placeholder="哪些情況會讓你賣出？護城河消失、估值過高..."></textarea></div>
       <button class="btn-save" onclick="saveThesis()">儲存買入論文</button>
       <button class="btn-save" style="background:var(--bg-elevated);color:var(--yellow);border:1px solid var(--yellow);margin-top:6px" onclick="markFaithCheck(currentThesisTicker)">✓ 標記今日信仰檢核</button>
@@ -974,7 +974,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.10.3';
+const VERSION='v4.12.0';
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={},pullbackCache={};
 let indexData={};
@@ -984,6 +984,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.12.0',date:'2026-10-14',notes:'✦ 觀察清單個股分析完成後自動回寫「論文庫」：同代號就更新（B:D，不動A/E）、沒有就新增；更新前舊論文備份到該股預測分頁「季度複查記錄」，無分頁可備份時先跳確認<br>✦ 自動建立預測分頁：複製 RKLB 範本，年份表全面改為公式（營收＝上年×(1+成長率)、FCF＝營收×Margin、折現因子＝1/(1+WACC)^n、現值），新增基期年度/營收格；K2:K4 依 H1 估值定錨（PE Band＝EPS×PE；DCF＝合理股價×係數）；決策標準與合理股價公式沿用原版<br>✦ 建模資料由 AI 搜尋查證並附來源，查不到或未過合理性檢查的儲存格標黃待覆核；成長率/Margin/WACC 標註 AI估算<br>✦ 論文狀態對齊 THESIS_LINT 四態（論文成立/持觀察/動態調整/論文失效），修正寫入端與讀取端用詞不一致的 bug（舊值 成立/部分/動態 相容）；「論文失效」不自動設定<br>✦ 持倉個股只寫論文庫、ETF/TQQQ 略過；寫入失敗改為顯示錯誤，不再靜默吞掉'},
   {v:'4.10.3',date:'2026-08-08',notes:'✦ TW_TICKERS 補上 00632R（元大台灣50反1）、00685L（群益臺灣加權正2），修正誤判為 USD 導致價格/匯率/投入金額顯示錯誤<br>✦ STATIC_INDUSTRY_MAP 新增 SKHY（記憶體）、AMKR（半導體封測）、GLW（光通訊）、IBM（科技雲端）、SOXX（ETF-科技），修正產業分布 Treemap 全歸「其他」的問題'},
   {v:'4.10.2',date:'2026-07-17',notes:'✦ 觀察清單新增「回檔收復比」：讀取 Sheets「波段回檔」分頁（GAS 每日計算波段高低點），公式 = (現價-波段低點)/(波段高點-波段低點)<br>✦ 收復比分級：<38.2% 弱勢反彈（紅）／38.2~61.8% 觀察區（黃）／≥61.8% 強勢回升（綠）／100% 完全收復，採費波那契關卡<br>✦ 無有效回檔資料（近一年跌幅未達12%）時不顯示該欄位<br>✦ 新增 AAII 同款浮動說明框（JS動態定位，跳脫卡片 overflow:hidden 裁切），hover 顯示波段高低點/現價/區間解讀'},
   {v:'4.9.0',date:'2026-07-02',notes:'\u2726 \u65b0\u589e\u6230\u8853\u5009\u6a21\u7d44\uff1a\u89c0\u5bdf\u6e05\u55ae\u9802\u90e8\u647a\u758a\u689d\uff0c\u8b80 Sheets\u300c\u6230\u8853\u5009\u300d\u5206\u9801\uff08\u7b2c3\u5217\u8d77\uff09<br>\u2726 \u4e0a\u9650=\u6301\u80a1\u8cc7\u8a0a!B7\u00d75%\u5373\u6642\u6d6e\u52d5\uff0c>95%\u9ec3\u5b57 >100%\u7d05\u5b57<br>\u2726 \u505c\u640d\u2500\u73fe\u50f9\u2500\u76ee\u6a19\u4f4d\u7f6e\u689d\u3001\u5230\u671f\u5012\u6578\u3001\u5df2\u51fa\u5834\u52dd\u7387\u7d71\u8a08<br>\u2726 \u7d00\u5f8b\u6b04\uff08\u505c\u640d/\u76ee\u6a19/\u5230\u671f/\u7406\u7531\uff09\u4efb\u4e00\u7a7a\u767d\u2192\ud83d\udeab\u4e0d\u986f\u793a\u640d\u76ca<br>\u2726 \u7570\u5e38\u81ea\u52d5\u8b8a\u8272\uff1a\u903e\u671f/\u8ddd\u505c\u640d<3%/\u7d00\u5f8b\u4e0d\u5b8c\u6574\u2192\u6458\u8981\u689d\u7d05\u5e95\u8b66\u793a'},
@@ -1822,7 +1823,7 @@ function renderHoldings(){
     const fHTML=lc?('<span style="font-family:var(--font-mono);font-size:9px;color:'+_fc+'">'+((_dl<=0)?('逾期 '+Math.abs(_dl)+' 天'):(_dl+' 天後信仰檢核'))+'</span>'):'<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span>';
     const ebHTML=getEarningsBadgeHTML(h.ticker);
     const _tc=thesisCache[h.ticker]||{};const _tstat=_tc.status||null;const _th=_tc.health||null;const _thHTML=thesisHealthBadgeHTML(_th);
-    const _statMap={yes:{lbl:'論文成立',c:'var(--green)',bg:'var(--green-dim)'},partial:{lbl:'持觀察',c:'var(--yellow)',bg:'var(--yellow-dim)'},no:{lbl:'動態',c:'var(--red)',bg:'var(--red-dim)'}};
+    const _statMap={yes:{lbl:'論文成立',c:'var(--green)',bg:'var(--green-dim)'},partial:{lbl:'持觀察',c:'var(--yellow)',bg:'var(--yellow-dim)'},no:{lbl:'論文失效',c:'var(--red)',bg:'var(--red-dim)'},adjust:{lbl:'動態調整',c:'var(--accent)',bg:'var(--accent-dim)'}};
     const _sm2=_tstat?_statMap[_tstat]:null;
     const thesisTagHTML=_sm2?`<span style="font-family:var(--font-mono);font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;background:${_sm2.bg};color:${_sm2.c};border:1px solid ${_sm2.c}40;margin-left:6px">${_sm2.lbl}</span>`:'';
     let _borderCol=h.type==='cash'?'rgba(52,211,153,0.5)':h.type==='etf'||h.type==='wave'?'rgba(167,139,250,0.5)':'rgba(56,189,248,0.5)';
@@ -2022,13 +2023,242 @@ function getCacheInfo(key){try{const d=JSON.parse(ls(key)||'{}');if(!d.ts)return
 function getCache(key){try{const d=JSON.parse(ls(key)||'{}');if(!d.ts||Date.now()-d.ts>24*60*60*1000){ls(key,null);return null;}return d;}catch{return null;}}
 function setCache(key,content){ls(key,JSON.stringify({content,ts:Date.now()}));}
 
+// === v4.12.0 分析後自動回寫：論文庫 upsert + 預測分頁（複製 RKLB 範本）===
+// 論文狀態四態（對齊 THESIS_LINT）：寫入用 THESIS_LABEL；讀取用 THESIS_READ_MAP（相容舊值 成立/部分/動態）
+const THESIS_LABEL={yes:'論文成立',partial:'持觀察',adjust:'動態調整',no:'論文失效'};
+const THESIS_READ_MAP={'論文成立':'yes','成立':'yes','持觀察':'partial','待觀察':'partial','部分':'partial','動態調整':'adjust','動態':'adjust','論文失效':'no','不成立':'no'};
+const FORECAST_TEMPLATE_TAB='RKLB';
+const autoWriteBusy={};
+
+async function sheetsApi(path,method,body){
+  const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}${path}`,{method:method||'GET',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error((d.error&&d.error.message)||('Sheets API '+r.status));
+  return d;
+}
+function awToday(){const d=new Date();return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');}
+function awEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');}
+function awTab(ticker){return "'"+ticker.replace(/'/g,"''")+"'";}
+function awShowManualBtn(ticker,stock){
+  if(!stock||stock.type==='etf'||stock.type==='wave')return;
+  const b=el('modal-body');if(!b)return;
+  b.querySelectorAll('#auto-write-box').forEach(n=>n.remove());
+  b.insertAdjacentHTML('beforeend','<div class="analysis-section" id="auto-write-box"><button class="refresh-btn" onclick="autoWriteAfterAnalysis(\''+ticker+'\')">📝 寫入論文庫／建立預測分頁</button></div>');
+}
+async function awReadThesisRows(){
+  const d=await sheetsApi('/values/'+encodeURIComponent('論文庫!A:D'));
+  return d.values||[];
+}
+function awFindRow(rows,ticker){
+  for(let i=1;i<rows.length;i++){const a=(rows[i][0]||'').trim();if(a===ticker||a.includes('('+ticker+')'))return i;}
+  return -1;
+}
+// 有同代號 → 只更新 B:D（不動 A、E）；沒有 → 新增一列 A:D
+async function awWriteThesis(rows,idx,ticker,thesis,sell,label){
+  const put=(range,vals)=>sheetsApi('/values/'+encodeURIComponent(range)+'?valueInputOption=USER_ENTERED','PUT',{values:vals});
+  if(idx>=0){const r=idx+1;await put(`論文庫!B${r}:D${r}`,[[thesis,sell,label]]);return r;}
+  const r=rows.length+1;await put(`論文庫!A${r}:D${r}`,[[ticker,thesis,sell,label]]);return r;
+}
+async function awReadTabCol(ticker){
+  const d=await sheetsApi('/values/'+encodeURIComponent(awTab(ticker)+'!A:A'));
+  return d.values||[];
+}
+function awDaysTxt(col,today){
+  let last=null;
+  for(let i=21;i<col.length;i++){const v=(col[i]&&col[i][0]||'').toString().trim();if(/^\d{4}[\/-]\d{2}[\/-]\d{2}$/.test(v))last=v;}
+  if(!last)return '首次複查';
+  const a=new Date(last.replace(/\//g,'-')),b=new Date(today.replace(/\//g,'-'));
+  const n=Math.round((b-a)/86400000);
+  return isNaN(n)?'首次複查':'距上次分析 '+n+' 天';
+}
+async function awAppendReview(ticker,col,rowsToAdd){
+  const nr=col.length+1;
+  await sheetsApi('/values/'+encodeURIComponent(`${awTab(ticker)}!A${nr}:D${nr+rowsToAdd.length-1}`)+'?valueInputOption=USER_ENTERED','PUT',{values:rowsToAdd});
+}
+async function awQuote(ticker){
+  try{const r=await fetch(`${PROXY}/quote/${encodeURIComponent(ticker)}`);const q=await r.json();return q&&q.price?q.price:null;}catch(e){return null;}
+}
+
+// 建模資料查詢：事實數字須查證（查不到填 null）；成長率/Margin/WACC 為判斷
+async function fetchThesisModel(ticker,stock,existing,needModel){
+  const today=awToday();
+  const exCtx=existing?`\n【既有論文（請在此基礎上更新：保留原有結構與 ✅/⚠️/🚨 條目，只修正過時資料與補充必要條件，不要整份重寫）】\n買入論文：${existing.thesis}\n賣出觸發：${existing.sell}\n`:'';
+  const modelSpec=needModel?`,"model":{"anchor":"PE Band 或 DCF","anchorReason":"一句話","wacc":0.0,"g":0.0,"baseYear":0,"baseRevenue":null,"shares":null,"netCash":null,"growth":[11個數字],"margin":[11個數字],"eps":null,"mult":[0,0,0],"sources":[{"item":"baseRevenue","url":"","date":""}],"notes":"分析備註，2-3句"}`:'';
+  const modelRules=needModel?`
+6. model 內的事實數字（baseYear、baseRevenue、shares、netCash）必須來自你搜尋到的最新財報；查不到就填 null，禁止憑記憶或推測。單位：baseRevenue＝最近一個已完成財年營收（億美元）；shares＝流通股數（億股）；netCash＝現金及短期投資減總負債（億美元，淨負債為負數）。sources 逐項列出來源網址與日期。
+7. growth／margin 是你的判斷，各 11 個小數（例：0.12 代表 12%），從 baseYear+1 起連續 11 年；growth 為營收年增率、margin 為 FCF Margin；長期成長需逐年收斂；g（永續成長率）不得超過 0.035；wacc 依個股風險判斷（小數）。
+8. anchor：有穩定獲利者用「PE Band」（eps 填未來一年預估 EPS，mult 填 [保守PE,合理PE,樂觀PE]）；虧損或早期高成長股用「DCF」（eps 填 null，mult 固定填 [0.8,1.0,1.3]）。`:'';
+  const prompt=`你是價值投資分析師（Buffett+Munger）。請搜尋 ${ticker}（${(stock&&stock.name)||''}）最新財報與公告，整理成寫入 Google 試算表的結構化資料。今天是 ${today}。${exCtx}
+規則：
+1. 只輸出 JSON，不要其他文字，繁體中文。
+2. thesis：買入論文，第一行以「【${today} 更新：一句話摘要】」開頭，之後是護城河、成長邏輯、估值與安全邊際（建倉需 ≥20~30% 折扣）。
+3. sellTrigger：賣出／失效觸發條件，3~7 行，每行必須以 ✅、⚠️ 或 🚨 開頭（✅=目前未觸發、⚠️=接近或需留意、🚨=已觸發），並附具體門檻數字與目前數值。
+4. status：yes（論文成立）／partial（有 1 條 invalidation signal，持觀察）／adjust（核心不變但參數需重新校準）／no（買入邏輯根本動搖）。
+5. review：moat、valuation、risk 各 1-2 句。${modelRules}
+輸出格式：{"thesis":"...","sellTrigger":"...","status":"yes","review":{"moat":"...","valuation":"...","risk":"..."}${modelSpec}}`;
+  const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4096,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
+  const data=await r.json();if(data.error)throw new Error(data.error.message);
+  const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+  const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('建模資料解析失敗，請重試');
+  const out=JSON.parse(m[0]);
+  if(!out.thesis||!out.sellTrigger)throw new Error('建模資料缺少論文內容');
+  return out;
+}
+
+// 複製範本分頁並寫入輸入格與公式；已存在同名分頁則不動
+async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
+  const meta=await sheetsApi('?fields=sheets.properties(sheetId,title,index)');
+  const sheets=(meta.sheets||[]).map(s=>s.properties);
+  if(sheets.some(s=>s.title===ticker))return{existed:true,flags:[]};
+  const tpl=sheets.find(s=>s.title===FORECAST_TEMPLATE_TAB);
+  if(!tpl)throw new Error('找不到範本分頁 '+FORECAST_TEMPLATE_TAB);
+  const num=x=>(typeof x==='number'&&isFinite(x))?x:null;
+  const okArr=a=>Array.isArray(a)&&a.length===11&&a.every(x=>typeof x==='number'&&isFinite(x));
+  if(!okArr(model.growth)||!okArr(model.margin))throw new Error('預測假設（成長率／FCF Margin）格式不正確，未建立分頁');
+  const wacc=num(model.wacc),gt=num(model.g);
+  if(wacc==null||gt==null||gt>=wacc||gt>0.035)throw new Error('WACC／永續成長率不合理，未建立分頁');
+  const baseRev=num(model.baseRevenue),shares=num(model.shares),netCash=num(model.netCash);
+  const by=Number.isInteger(model.baseYear)?model.baseYear:null;
+  const flags=[];
+  if(baseRev==null||baseRev<=0)flags.push('H5');
+  if(shares==null||shares<=0)flags.push('C4');
+  if(netCash==null)flags.push('C5');
+  if(by==null)flags.push('G5');
+  if(quotePrice&&shares>0&&baseRev>0){
+    const mc=quotePrice*shares,ps=mc/baseRev;
+    if(ps<0.1||ps>200){flags.push('H5');flags.push('C4');}
+    if(netCash!=null&&Math.abs(netCash)>mc)flags.push('C5');
+  }
+  const uniq=[...new Set(flags)];
+  const isDCF=/DCF/i.test(model.anchor||'');
+  const anchorTxt=isDCF?'DCF':'PE Band';
+  const mult=(Array.isArray(model.mult)&&model.mult.length===3&&model.mult.every(x=>typeof x==='number'&&x>0))?model.mult:(isDCF?[0.8,1.0,1.3]:[10,14,18]);
+  const eps=isDCF?'':(num(model.eps)==null?'':model.eps);
+  const baseYear=by||(new Date().getFullYear()-1);
+  const T=awTab(ticker)+'!';
+  const kf=r=>`=IF(ISNUMBER(SEARCH("DCF",$H$1)),$G$3*J${r},$K$1*J${r})`;
+  const head=[
+    ['','A (項目)','B (數值/公式)','C (說明)','編輯時間','股票代號',ticker,'估值定錨：'+anchorTxt,'','預估EPS',eps],
+    [1,'WACC (折現率)',wacc,'依負債結構與產業（AI估算）',awToday(),'現價','=GOOGLEFINANCE("'+ticker+'","price")',isDCF?'J欄＝DCF係數':'J欄＝PE倍數','保守估計',mult[0],kf(2)],
+    [2,'永續成長率 (g)',gt,'長期GDP錨點（AI估算）','','合理股價','=((SUM(G7:G17)+((E17*(1+C3))/(C2-C3))*F17)+C5)/C4','','合理預估',mult[1],kf(3)],
+    [3,'流通股數 (億股)',shares==null?'':shares,'','','決策標準','=IF(G2<K2,"🔥 強力購入",IF(G2<K3*0.95,"💎 建議買入",IF(G2>K3*1.2,"🚨 建議分批賣出","✅ 穩定持有")))','','樂觀溢價',mult[2],kf(4)],
+    [4,'淨現金 (億美元)',netCash==null?'':netCash,'','','基期年度/營收(億美元)',baseYear,baseRev==null?'':baseRev,'','','']
+  ];
+  const yrs=[['年分','營收成長率','營收預估(億美元)','FCF MARGIN','FCF預估','折現因子','FCF現值']];
+  for(let i=0;i<11;i++){
+    const r=7+i;
+    yrs.push([
+      i===0?'=$G$5+1':`=A${r-1}+1`,
+      model.growth[i],
+      i===0?`=$H$5*(1+B${r})`:`=C${r-1}*(1+B${r})`,
+      model.margin[i],
+      `=C${r}*D${r}`,
+      `=1/(1+$C$2)^(A${r}-$G$5)`,
+      `=E${r}*F${r}`
+    ]);
+  }
+  const srcTxt=(Array.isArray(model.sources)?model.sources:[]).map(s=>`${s.item||''}: ${s.url||''} (${s.date||''})`).join('；');
+  const note='分析備註：'+(model.notes||'')+'（估值定錨：'+anchorTxt+'｜'+(model.anchorReason||'')+'）資料來源（AI查證，請抽查）：'+(srcTxt||'無')+'。AI估算：WACC、永續成長率、營收成長率、FCF Margin、EPS／倍數。'+(uniq.length?'⚠️ 黃底儲存格（'+uniq.join('、')+'）為查無資料或未通過合理性檢查，請覆核後再採信估值。':'');
+  const dup=await sheetsApi(':batchUpdate','POST',{requests:[{duplicateSheet:{sourceSheetId:tpl.sheetId,newSheetName:ticker,insertSheetIndex:tpl.index+1}}]});
+  const sid=dup.replies[0].duplicateSheet.properties.sheetId;
+  try{
+    await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:K60']});
+    await sheetsApi('/values:batchUpdate','POST',{valueInputOption:'USER_ENTERED',data:[
+      {range:T+'A1:K5',values:head},
+      {range:T+'A6:G17',values:yrs},
+      {range:T+'A19',values:[[note]]},
+      {range:T+'A21',values:[['【季度複查記錄】']]},
+      {range:T+'A22:D22',values:[reviewRow]}
+    ]});
+    const rg=(r0,r1,c0,c1)=>({sheetId:sid,startRowIndex:r0,endRowIndex:r1,startColumnIndex:c0,endColumnIndex:c1});
+    const nf=(range,type,pattern)=>({repeatCell:{range,cell:{userEnteredFormat:{numberFormat:{type,pattern}}},fields:'userEnteredFormat.numberFormat'}});
+    const reqs=[
+      nf(rg(6,17,0,1),'NUMBER','0'),nf(rg(6,17,1,2),'PERCENT','0.0%'),nf(rg(6,17,2,3),'NUMBER','0.0'),
+      nf(rg(6,17,3,4),'PERCENT','0.0%'),nf(rg(6,17,4,5),'NUMBER','0.0'),nf(rg(6,17,5,6),'PERCENT','0.00%'),nf(rg(6,17,6,7),'NUMBER','0.0'),
+      nf(rg(1,3,2,3),'PERCENT','0.0%'),nf(rg(3,4,2,3),'NUMBER','0.00'),nf(rg(4,5,2,3),'NUMBER','0.0'),
+      nf(rg(4,5,6,7),'NUMBER','0'),nf(rg(4,5,7,8),'NUMBER','0.0'),nf(rg(1,4,10,11),'NUMBER','0.00')
+    ];
+    const cellIdx={H5:[4,7],C4:[3,2],C5:[4,2],G5:[4,6]};
+    uniq.forEach(k=>{const p=cellIdx[k];if(p)reqs.push({repeatCell:{range:rg(p[0],p[0]+1,p[1],p[1]+1),cell:{userEnteredFormat:{backgroundColor:{red:1,green:0.95,blue:0.6}}},fields:'userEnteredFormat.backgroundColor'}});});
+    await sheetsApi(':batchUpdate','POST',{requests:reqs});
+  }catch(e){
+    try{await sheetsApi(':batchUpdate','POST',{requests:[{deleteSheet:{sheetId:sid}}]});}catch(_){}
+    throw new Error('寫入預測分頁失敗，已移除未完成的分頁：'+e.message);
+  }
+  sheetTabNames.push(ticker);
+  try{const d=await fetchDCFSheet(ticker);if(d){dcfCache[ticker]=d;renderWatchlist();}}catch(_){}
+  return{existed:false,flags:uniq};
+}
+
+// 主流程：分析完成後 → 論文庫 upsert（含備份）＋ 預測分頁
+async function autoWriteAfterAnalysis(ticker,stock){
+  stock=stock||WATCHLIST.find(x=>x.ticker===ticker)||{};
+  if(autoWriteBusy[ticker])return;
+  const b=el('modal-body');
+  if(b&&currentTicker===ticker){b.querySelectorAll('#auto-write-box').forEach(n=>n.remove());b.insertAdjacentHTML('beforeend','<div class="analysis-section" id="auto-write-box"></div>');}
+  const log=[];
+  const step=m=>{log.push(m);const box=document.getElementById('auto-write-box');if(box)box.innerHTML='<div class="analysis-section-title">📝 自動回寫</div><div class="analysis-text">'+log.map(awEsc).join('<br>')+'</div>';};
+  if(stock.type==='etf'||stock.type==='wave'){step('ETF／波段標的：不寫論文庫、不建預測分頁（略過）');return;}
+  if(!googleToken){step('尚未登入 Google，未寫入。登入後可重新分析，或在開啟快取分析時按「寫入論文庫」。');return;}
+  autoWriteBusy[ticker]=true;
+  try{
+    const isHeld=holdingsData.some(h=>h.ticker===ticker);
+    const isUS=/^[A-Z][A-Z.\-]*$/.test(ticker);
+    let tabExists=sheetTabNames.includes(ticker);
+    const existedBefore=tabExists;
+    const needModel=!isHeld&&isUS&&!tabExists;
+    step('讀取論文庫…');
+    const rows=await awReadThesisRows();
+    const idx=awFindRow(rows,ticker);
+    const old=idx>=0?{thesis:rows[idx][1]||'',sell:rows[idx][2]||'',status:rows[idx][3]||''}:null;
+    step(old?'論文庫已有此股：以既有論文為基礎更新':'論文庫尚無此股：將新增');
+    step('查證財報並整理論文'+(needModel?'與建模資料':'')+'（約 30–90 秒）…');
+    const out=await fetchThesisModel(ticker,stock,old,needModel);
+    let sk=old?(['yes','partial','adjust','no'].includes(out.status)?out.status:'partial'):'yes';
+    if(sk==='no'){sk='partial';step('⚠️ AI 判斷論文可能失效，但「論文失效」須由你手動確認，已暫設為「持觀察」');}
+    const label=THESIS_LABEL[sk];
+    const today=awToday();
+    const rv=out.review||{};
+    const reviewTxt='• 護城河：'+(rv.moat||'')+'\n• 估值：'+(rv.valuation||'')+'\n• 風險：'+(rv.risk||'');
+    let createdNow=false;
+    if(needModel){
+      try{
+        const price=await awQuote(ticker);
+        const res=await awCreateForecastTab(ticker,out.model||{},price,[today,'首次建立',label,reviewTxt]);
+        tabExists=true;
+        if(res.existed)step('預測分頁已存在：未覆蓋');
+        else{createdNow=true;step('✅ 已建立預測分頁 '+ticker+'（複製 '+FORECAST_TEMPLATE_TAB+'，估值定錨依 AI 判斷）'+(res.flags.length?'；⚠️ 黃底儲存格待覆核：'+res.flags.join('、'):''));}
+      }catch(e){step('❌ 預測分頁未建立：'+e.message);}
+    }else if(isHeld)step('持倉個股：只寫論文庫，不建預測分頁');
+    else if(!isUS)step('非美股：略過預測分頁');
+    else if(existedBefore)step('預測分頁已存在：不覆蓋輸入格，僅追加複查記錄');
+    const hasOld=!!(old&&(old.thesis||old.sell));
+    if(tabExists){
+      const col=await awReadTabCol(ticker);
+      const add=[];
+      if(!createdNow)add.push([today,awDaysTxt(col,today),label,reviewTxt]);
+      if(hasOld)add.push([today,'論文備份（更新前）',old.status||'','【舊買入論文】'+old.thesis+'\n【舊賣出觸發】'+old.sell]);
+      if(add.length){await awAppendReview(ticker,col,add);step('✅ 已寫入「季度複查記錄」'+(hasOld?'（含更新前論文備份）':''));}
+    }else if(hasOld){
+      if(!confirm(ticker+' 在論文庫已有論文，且沒有預測分頁可備份舊版。\n仍要覆蓋嗎？（Google 試算表的「版本記錄」仍可還原）')){step('已取消：論文庫未更動');return;}
+    }
+    const row=await awWriteThesis(rows,idx,ticker,out.thesis,out.sellTrigger,label);
+    thesisCache[ticker]={thesis:out.thesis,sellTrigger:out.sellTrigger,status:sk,health:parseThesisHealth(out.sellTrigger)};
+    if(typeof renderHoldings==='function')try{renderHoldings();}catch(_){}
+    step('✅ 論文庫已'+(old?'更新':'新增')+'（第 '+row+' 列，狀態：'+label+'）');
+    showToast('論文庫已'+(old?'更新':'新增')+'：'+ticker);
+  }catch(e){
+    step('❌ 回寫失敗：'+e.message);showToast('回寫失敗：'+e.message);
+  }finally{autoWriteBusy[ticker]=false;}
+}
+
 // === ANALYSIS ===
 function openAnalysis(ticker){
   currentTicker=ticker;const s=WATCHLIST.find(x=>x.ticker===ticker);
   el('modal-ticker').textContent=ticker;el('modal-name').textContent=s.name;
   el('analysis-modal').classList.add('open');
   const ck='analysis_'+ticker,cached=getCache(ck);
-  if(cached){el('modal-cache-badge').textContent='快取：'+getCacheInfo(ck);el('modal-cache-badge').style.display='inline';renderAnalysis(cached.content);}
+  if(cached){el('modal-cache-badge').textContent='快取：'+getCacheInfo(ck);el('modal-cache-badge').style.display='inline';renderAnalysis(cached.content);awShowManualBtn(ticker,s);}
   else{el('modal-cache-badge').style.display='none';runAnalysis(ticker,s);}
 }
 function refreshAnalysis(){if(!currentTicker)return;ls('analysis_'+currentTicker,null);el('modal-cache-badge').style.display='none';runAnalysis(currentTicker,WATCHLIST.find(x=>x.ticker===currentTicker));}
@@ -2053,6 +2283,7 @@ async function runAnalysis(ticker,stock){
     setCache('analysis_'+ticker,parsed);
     el('modal-cache-badge').textContent='剛剛更新';el('modal-cache-badge').style.display='inline';
     renderAnalysis(parsed);
+    if(pk==='value')autoWriteAfterAnalysis(ticker,stock);
   }catch(err){body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--red);font-family:var(--font-mono);font-size:12px">分析失敗：${err.message}<br><br><button class="refresh-btn" onclick="refreshAnalysis()">↻ 重試</button></div>`;}
 }
 function renderAnalysis(data){
@@ -2070,7 +2301,7 @@ async function loadThesisFromSheets(){
   try{
     const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('論文庫!A2:D200')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();thesisCache={};
-    for(const row of(d.values||[])){const t=(row[0]||'').trim();if(!t)continue;const sm={'論文成立':'yes','持觀察':'partial','動態':'no'};const rawStat=(row[3]||'').trim();const _st=row[2]||'';thesisCache[t]={thesis:row[1]||'',sellTrigger:_st,status:sm[rawStat]||null,health:parseThesisHealth(_st)};}
+    for(const row of(d.values||[])){const t=(row[0]||'').trim();if(!t)continue;const sm=THESIS_READ_MAP;const rawStat=(row[3]||'').trim();const _st=row[2]||'';thesisCache[t]={thesis:row[1]||'',sellTrigger:_st,status:sm[rawStat]||null,health:parseThesisHealth(_st)};}
   }catch(e){}
 }
 function openThesisModal(ticker,name){
@@ -2079,7 +2310,7 @@ function openThesisModal(ticker,name){
   el('thesis-input').value=d.thesis||'';el('sell-trigger-input').value=d.sellTrigger||'';
   setThesisStatus(d.status||'yes');el('thesis-modal').classList.add('open');
 }
-function setThesisStatus(v){thesisStatus=v;['yes','partial','no'].forEach(x=>{const e=el('ts-'+x);if(e)e.style.opacity=x===v?'1':'0.35';});}
+function setThesisStatus(v){thesisStatus=v;['yes','partial','adjust','no'].forEach(x=>{const e=el('ts-'+x);if(e)e.style.opacity=x===v?'1':'0.35';});}
 function saveThesis(){
   if(!currentThesisTicker)return;
   const tt=el('thesis-input').value,st=el('sell-trigger-input').value;
@@ -2236,13 +2467,9 @@ function toggleTactical(){tacticalOpen=!tacticalOpen;renderTacticalBar();}
 
 async function saveThesisToSheets(ticker,thesis,st,status){
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('論文庫!A:A')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
-    const d=await r.json();const rows=d.values||[];
-    let tr=-1;for(let i=1;i<rows.length;i++)if((rows[i][0]||'').trim()===ticker){tr=i+1;break;}
-    const stxt=status==='yes'?'成立':status==='partial'?'部分':'不成立';
-    const wr=tr>0?encodeURIComponent(`論文庫!A${tr}:D${tr}`):encodeURIComponent(`論文庫!A${rows.length+1}:D${rows.length+1}`);
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${wr}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[ticker,thesis,st,stxt]]})});
-  }catch(e){}
+    const rows=await awReadThesisRows();const idx=awFindRow(rows,ticker);
+    await awWriteThesis(rows,idx,ticker,thesis,st,THESIS_LABEL[status]||THESIS_LABEL.partial);
+  }catch(e){console.error('saveThesisToSheets',e);showToast('寫入論文庫失敗：'+e.message);}
 }
 async function syncAllThesisToSheets(){await loadThesisFromSheets();}
 function markFaithCheck(ticker){const d=JSON.parse(localStorage.getItem('faithCheck')||'{}');d[ticker]=new Date().toISOString();localStorage.setItem('faithCheck',JSON.stringify(d));renderHoldings();closeModal('thesis-modal');}
@@ -2805,7 +3032,7 @@ async function runRiskAnalysis(){
   if(indexData.ndx)macroCtx+=`NDX:${indexData.ndx.price.toLocaleString()} `;
   if(indexData.sox)macroCtx+=`SOX:${indexData.sox.price.toLocaleString()} `;
   // 論文摘要
-  const thesisSummary=Object.entries(thesisCache).slice(0,5).map(([t,d])=>`${t}:${d.status==='yes'?'論點成立':d.status==='partial'?'部分成立':'不成立'}`).join(',');
+  const thesisSummary=Object.entries(thesisCache).slice(0,5).map(([t,d])=>`${t}:${THESIS_LABEL[d.status]||'未設定'}`).join(',');
   const prompt=`你是宏觀對沖基金的風險長(CRO)，同時信奉Charlie Munger多元思維模型。你的工作是找組合系統性弱點、盲點、負向Lollapalooza。
 
 持倉：${tickerList}
