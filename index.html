@@ -974,7 +974,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.13.0';
+const VERSION='v4.13.1';
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={},pullbackCache={};
 let indexData={};
@@ -984,6 +984,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.13.1',date:'2026-10-29',notes:'✦ 資安：新增 esc() 並套用於 AI 分析結果、錯誤訊息、名稱與代號的 innerHTML 插值（AI 分析會讀取網頁內容，輸出不可直接當 HTML）<br>✦ 穩定性：所有 Sheets 呼叫統一走 gFetch()，401 時靜默重新授權並重試一次，失敗才提示重新連結<br>✦ Anthropic API Key 不再寫入 localStorage，只放記憶體（AI 請求本來就由 Worker 的金鑰處理），並清除舊的本機快取<br>✦ FRED API Key 移出程式碼，改讀 Sheets 設定!B7（請先 rotate 舊金鑰並把新的放進 B7）<br>✦ 修正：資產快照分頁沒有表頭，原本讀 A2:E 會漏掉 A1 最新一筆，改讀 A1:E<br>✦ 空 catch 改為記錄到 console；200MA 偏離度加入合理範圍檢查，排除 -998% 這類錯誤值'},
   {v:'4.13.0',date:'2026-10-29',notes:'✦ 信仰檢核日期從瀏覽器 localStorage 搬到 Google Sheets「論文庫」F欄（表頭：上次信仰檢核），所有裝置讀到同一份最新狀態<br>✦ 一次性遷移：F欄為空且本機有舊紀錄時自動補寫（不刪本機資料）；儲存論文/自動回寫論文庫時保留 F欄日期<br>✦ 無論文列的代號標記檢核時提示先建立論文'},
   {v:'4.12.0',date:'2026-10-14',notes:'✦ 觀察清單個股分析完成後自動回寫「論文庫」：同代號就更新（B:D，不動A/E）、沒有就新增；更新前舊論文備份到該股預測分頁「季度複查記錄」，無分頁可備份時先跳確認<br>✦ 自動建立預測分頁：複製 RKLB 範本，年份表全面改為公式（營收＝上年×(1+成長率)、FCF＝營收×Margin、折現因子＝1/(1+WACC)^n、現值），新增基期年度/營收格；K2:K4 依 H1 估值定錨（PE Band＝EPS×PE；DCF＝合理股價×係數）；決策標準與合理股價公式沿用原版<br>✦ 建模資料由 AI 搜尋查證並附來源，查不到或未過合理性檢查的儲存格標黃待覆核；成長率/Margin/WACC 標註 AI估算<br>✦ 論文狀態對齊 THESIS_LINT 四態（論文成立/持觀察/動態調整/論文失效），修正寫入端與讀取端用詞不一致的 bug（舊值 成立/部分/動態 相容）；「論文失效」不自動設定<br>✦ 持倉個股只寫論文庫、ETF/TQQQ 略過；寫入失敗改為顯示錯誤，不再靜默吞掉'},
   {v:'4.10.3',date:'2026-08-08',notes:'✦ TW_TICKERS 補上 00632R（元大台灣50反1）、00685L（群益臺灣加權正2），修正誤判為 USD 導致價格/匯率/投入金額顯示錯誤<br>✦ STATIC_INDUSTRY_MAP 新增 SKHY（記憶體）、AMKR（半導體封測）、GLW（光通訊）、IBM（科技雲端）、SOXX（ETF-科技），修正產業分布 Treemap 全歸「其他」的問題'},
@@ -1034,7 +1035,7 @@ async function fetchEarningsCalendar(){
   if(!googleToken)return;
   try{
     const range=encodeURIComponent('財報日曆!A2:D50');
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const j=await r.json();
     const rows=j.values||[];
     earningsData={};
@@ -1068,8 +1069,68 @@ function getEarningsBadgeHTML(ticker){
 }
 
 const ls=(k,v)=>v===undefined?localStorage.getItem(k):(v===null?localStorage.removeItem(k):localStorage.setItem(k,v));
-const getApiKey=()=>ls('anthropic_api_key')||'';
+// v4.13.1：Anthropic key 只放記憶體（AI 請求由 Worker 的 env 金鑰處理，前端不需要持久化）
+let _apiKeyMem='';
+const getApiKey=()=>_apiKeyMem;
 const getSheetId=()=>ls('sheet_id')||DEFAULT_SHEET_ID;
+// v4.13.1：HTML escape（凡是外部文字——AI 輸出、Yahoo 名稱、Sheets 文字——插入 innerHTML 前必須經過）
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function _logErr(ctx,e){try{console.warn('[v4.13.1] '+ctx,(e&&e.message)||e);}catch(_x){}}
+// v4.13.1：Google 呼叫統一入口——401 時靜默重新授權並重試一次，失敗才提示重新連結
+let _reauthPromise=null;
+function reauthGoogleSilently(){
+  if(_reauthPromise)return _reauthPromise;
+  const p=new Promise(resolve=>{
+    let done=false;
+    const fin=ok=>{if(done)return;done=true;clearTimeout(timer);resolve(ok);};
+    const timer=setTimeout(()=>fin(false),8000);
+    try{
+      if(!window.google||!google.accounts||!google.accounts.oauth2){fin(false);return;}
+      google.accounts.oauth2.initTokenClient({
+        client_id:GOOGLE_CLIENT_ID,scope:SCOPES,
+        callback:resp=>{
+          if(!resp||resp.error||!resp.access_token){fin(false);return;}
+          googleToken=resp.access_token;
+          ls('google_token',googleToken);
+          ls('google_token_exp',(Date.now()+(resp.expires_in-60)*1000).toString());
+          updateStatusBar();updateGoogleBtn();fin(true);
+        },
+        error_callback:()=>fin(false)
+      }).requestAccessToken({prompt:'none'});
+    }catch(e){_logErr('reauth',e);fin(false);}
+  });
+  _reauthPromise=p;
+  p.then(()=>{if(_reauthPromise===p)_reauthPromise=null;});
+  return p;
+}
+async function gFetch(url,opts){
+  opts=opts||{};
+  if(!googleToken)return new Response('{"error":{"message":"not authorized"}}',{status:401,headers:{'Content-Type':'application/json'}});
+  const sent=googleToken;
+  const mk=()=>fetch(url,{...opts,headers:{...(opts.headers||{}),Authorization:'Bearer '+googleToken}});
+  let r=await mk();
+  if(r.status===401){
+    if(googleToken===sent){googleToken=null;ls('google_token',null);ls('google_token_exp',null);}
+    const ok=googleToken?true:await reauthGoogleSilently();
+    if(ok&&googleToken)r=await mk();
+    else{updateStatusBar();updateGoogleBtn();showToast('Google 授權已過期，請重新連結');}
+  }
+  return r;
+}
+// v4.13.1：FRED key 不再寫在程式碼裡，改讀 Sheets 設定!B7（只讀這一格）
+let _fredKeyMem='';
+async function getFredKey(){
+  if(_fredKeyMem)return _fredKeyMem;
+  if(!googleToken)return '';
+  try{
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B7')}`);
+    if(!r.ok)return '';
+    const d=await r.json();
+    const k=((d.values&&d.values[0]&&d.values[0][0])||'').toString().trim();
+    if(/^[A-Za-z0-9]{20,64}$/.test(k))_fredKeyMem=k;
+    return _fredKeyMem;
+  }catch(e){_logErr('getFredKey',e);return '';}
+}
 function getDCFSheetName(t){if(sheetTabNames.includes(t))return t;return sheetTabNames.find(n=>n.includes(t))||null;}
 
 // === INIT ===
@@ -1082,7 +1143,7 @@ function init(){
     document.getElementById('tab-risk').style.display='block';
     document.getElementById('tab-monte').style.display='block';
   }
-  loadGoogleToken();renderWatchlist();updateStatusBar();
+  loadGoogleToken();ls('anthropic_api_key',null);renderWatchlist();updateStatusBar(); // v4.13.1：清除舊版留在本機的 key 快取
   fetchAllIndexData();
   fetchETFQuotes();
   if(googleToken){
@@ -1125,7 +1186,7 @@ async function fetchIndexQuote(id,symbol){
       indexData[id]={price:q.price,change:q.change||0,changePct:q.changePct||0,low52:q.low52||q.price*0.7,high52:q.high52||q.price*1.3};
       renderIndexCell(id,indexData[id],false);
     }
-  }catch(e){}
+  }catch(e){_logErr('L1128',e);}
 }
 
 function renderIndexCell(id,data,isVix){
@@ -1179,7 +1240,7 @@ function updateIndexHovers(){
       const p=h.cost>0?((h.price-h.cost)/h.cost*100):0;
       const pc=p>=0?'var(--red)':'var(--green)';
       const priceStr=(h.currency==='USD'?'$':'NT$')+h.price.toLocaleString();
-      return '<div class="tt-holding-row"><span class="tt-ticker">'+h.ticker+'</span><span class="tt-price">'+priceStr+'</span><span class="tt-pct" style="color:'+pc+'">'+(p>=0?'+':'')+p.toFixed(1)+'%</span></div>';
+      return '<div class="tt-holding-row"><span class="tt-ticker">'+esc(h.ticker)+'</span><span class="tt-price">'+priceStr+'</span><span class="tt-pct" style="color:'+pc+'">'+(p>=0?'+':'')+p.toFixed(1)+'%</span></div>';
     }).join('');
   }
   function renderExposure(amtId,pctId,val,total){
@@ -1227,7 +1288,7 @@ async function fetchETFQuotes(){
         const r=await fetch(`${PROXY}/quote/${s.ticker}`);
         const q=await r.json();
         if(q.price&&q.low52&&q.high52) dcfCache[s.ticker]={currentPrice:q.price,w52low:q.low52,w52high:q.high52,isETF:true};
-      }catch(e){}
+      }catch(e){_logErr('L1230',e);}
     }
   }
   renderWatchlist();
@@ -1269,7 +1330,7 @@ function saveSettings(){
   const pat=document.getElementById('input-github-pat').value.trim();
   const repo=document.getElementById('input-github-repo').value.trim();
   const branch=document.getElementById('input-github-branch').value.trim();
-  k?ls('anthropic_api_key',k):ls('anthropic_api_key',null);
+  _apiKeyMem=k;
   s?ls('sheet_id',s):ls('sheet_id',null);
   if(pat)ls('github_pat',pat);if(repo)ls('github_repo',repo);if(branch)ls('github_branch',branch);
   updateStatusBar();closeModal('settings-modal');
@@ -1314,18 +1375,18 @@ async function fetchSettingsApiKey(){
   if(!googleToken)return;
   try{
     const range=encodeURIComponent('設定!B4');
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     if(!r.ok)return;
     const d=await r.json();
     const key=(d.values&&d.values[0]&&d.values[0][0])||'';
     if(key&&key.startsWith('sk-')){
-      ls('anthropic_api_key',key);
+      _apiKeyMem=key;
       // 若設定 modal 已開啟，也同步更新欄位
       const inp=document.getElementById('input-apikey');
       if(inp&&!inp.value)inp.value=key;
       updateStatusBar();
     }
-  }catch(e){}
+  }catch(e){_logErr('L1328',e);}
 }
 
 function startGoogleAuth(){
@@ -1351,7 +1412,7 @@ async function fetchSheetRows(){
   if(!googleToken)return null;
   const range=encodeURIComponent(`${SHEET_NAME}!A1:V150`);
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     if(r.status===401){googleToken=null;ls('google_token',null);ls('google_token_exp',null);updateStatusBar();return null;}
     const d=await r.json();return d.values||[];
   }catch(e){return null;}
@@ -1359,7 +1420,7 @@ async function fetchSheetRows(){
 async function fetchSheetTabNames(){
   if(!googleToken)return[];
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}?fields=sheets.properties.title`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}?fields=sheets.properties.title`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();return(d.sheets||[]).map(s=>s.properties.title);
   }catch(e){return[];}
 }
@@ -1367,7 +1428,7 @@ async function fetchDCFSheet(sheetName){
   if(!googleToken)return null;
   const range=encodeURIComponent(`${sheetName}!F2:K5`);
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     if(!r.ok)return null;
     const d=await r.json();const rows=d.values||[];
     const pN=s=>parseFloat((s||'').replace(/,/g,'').replace(/[^\d.-]/g,''))||0;
@@ -1385,7 +1446,7 @@ async function fetchPullbackData(){
   if(!googleToken)return;
   try{
     const range=encodeURIComponent('波段回檔!A2:D');
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     if(!r.ok)return;
     const d=await r.json();const rows=d.values||[];
     pullbackCache={};
@@ -1395,7 +1456,7 @@ async function fetchPullbackData(){
       const lo=parseFloat((row[2]||'').toString().replace(/,/g,''));
       if(t&&!isNaN(hi)&&!isNaN(lo)&&hi>lo)pullbackCache[t]={high:hi,low:lo};
     });
-  }catch(e){}
+  }catch(e){_logErr('L1398',e);}
 }
 // 收復比 0~100（null＝無有效波段回檔資料）
 function getRecoveryRatio(ticker){
@@ -1421,7 +1482,7 @@ function showRecoveryTooltip(evt,ticker){
   ];
   const zoneRows=zones.map(z=>`<div class="tt-row"${z.active?' style="background:rgba(255,255,255,0.07);border-radius:4px;margin:0 -6px;padding:4px 6px"':''}><span class="tt-label" style="color:${z.active?z.color:'var(--text-muted)'}">${z.range}${z.active?' ◀ 目前':''}</span><span class="tt-val" style="color:${z.active?z.color:'var(--text-muted)'};font-size:10px">${z.label}</span></div>`).join('');
   const curColor=pct<38.2?'var(--red)':pct<61.8?'var(--yellow)':'var(--green)';
-  tt.innerHTML=`<div class="tt-title">${ticker} 回檔收復比 · 判斷邏輯</div>
+  tt.innerHTML=`<div class="tt-title">${esc(ticker)} 回檔收復比 · 判斷邏輯</div>
     <div class="tt-row"><span class="tt-label">目前收復比</span><span class="tt-val" style="color:${curColor};font-weight:700">${pct.toFixed(1)}%</span></div>
     <div class="tt-row"><span class="tt-label">波段最高點</span><span class="tt-val">${pb.high.toLocaleString()}</span></div>
     <div class="tt-row"><span class="tt-label">波段最低點</span><span class="tt-val">${pb.low.toLocaleString()}</span></div>
@@ -1458,7 +1519,7 @@ async function fetchAllDCF(){
   sheetTabNames=await fetchSheetTabNames();
   for(const s of WATCHLIST){
     if(s.type==='etf'||s.type==='wave'){
-      try{const r=await fetch(`${PROXY}/quote/${s.ticker}`);const q=await r.json();if(q.price&&q.low52&&q.high52)dcfCache[s.ticker]={currentPrice:q.price,w52low:q.low52,w52high:q.high52,isETF:true};}catch(e){}
+      try{const r=await fetch(`${PROXY}/quote/${s.ticker}`);const q=await r.json();if(q.price&&q.low52&&q.high52)dcfCache[s.ticker]={currentPrice:q.price,w52low:q.low52,w52high:q.high52,isETF:true};}catch(e){_logErr('L1461',e);}
     }else{
       const sn=getDCFSheetName(s.ticker);
       if(sn&&sheetTabNames.includes(sn)){const d=await fetchDCFSheet(sn);if(d)dcfCache[s.ticker]=d;}
@@ -1530,7 +1591,7 @@ function parseHoldings(rows){
     const name=(row[COLS.name]||fullCode||ticker).trim().split('\n')[0];
     const type=ticker==='TQQQ'?'wave':CASH_TICKERS.includes(ticker)?'cash':ETF_TICKERS.includes(ticker)?'etf':'growth';
     const currency=TW_TICKERS.includes(ticker)?'TWD':'USD';
-    const ma200pct=parseFloat((row[COLS.ma200pct]||'').replace(/%/g,'').replace(/,/g,''))||null;
+    const ma200pct=(v=>(v!=null&&v>-100&&v<1000)?v:null)(parseFloat((row[COLS.ma200pct]||'').replace(/%/g,'').replace(/,/g,''))||null);
     const ma50raw=parseFloat((row[COLS.ma50pct]||'').replace(/,/g,''))||null;
     const ma50pct=(ma50raw&&price)?parseFloat(((price-ma50raw)/ma50raw*100).toFixed(2)):null;
     const trend=(row[COLS.trend]||'').trim()||null;
@@ -1577,9 +1638,9 @@ async function syncSheets(){
   const rows=await fetchSheetRows();
   if(!rows){banner.innerHTML=`<div class="sync-banner error">⚠ 同步失敗，請重新授權 <button class="btn-nav" style="margin-left:auto;font-size:9px" onclick="openSettings()">重新授權</button></div>`;return;}
   try{
-    const pr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B1`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const pr=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/%E8%A8%AD%E5%AE%9A!B1`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const pj=await pr.json();const pv=pj.values?.[0]?.[0]?.trim();if(pv)githubPAT=pv;
-  }catch(e){}
+  }catch(e){_logErr('L1582',e);}
   holdingsData=parseHoldings(rows);
   const meta=parseMeta(rows);
   lastMeta=meta;
@@ -1598,14 +1659,14 @@ async function syncSheets(){
   ls('last_snapshot_week',null); // deprecated, guard now in Sheets B11
   await writeAssetSnapshot();
   await syncAllThesisToSheets();
-  try{renderHoldings();}catch(e){}
+  try{renderHoldings();}catch(e){_logErr('L1601',e);}
   await loadTacticalFromSheets();
   renderGrowthChart();
   renderHealthPage(meta);
   fetchFIREProgress();
   // 讀取 AAII 情緒數據（設定!B15:B18）
   try{
-    const ar=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B15:B18')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const ar=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B15:B18')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const aj=await ar.json();
     const av=aj.values||[];
     if(av.length>=4){
@@ -1620,7 +1681,7 @@ async function syncSheets(){
   }catch(e){console.warn('[AAII] 讀取失敗:',e);}
   // 讀取 Trimmed Mean PCE（設定!B19）
   try{
-    const pr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B19')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const pr=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B19')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const pj=await pr.json();
     const pv=pj.values||[];
     if(pv.length>=1){
@@ -1673,7 +1734,7 @@ async function writeAssetSnapshot(){
   const dateStr=now.toISOString().split('T')[0];
   try{
     // 讀 設定!B11 確認今天是否已寫過（跨裝置 guard）
-    const guardRes=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B11')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const guardRes=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B11')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const guardData=await guardRes.json();
     const lastDate=(guardData.values?.[0]?.[0]||'').trim();
     if(lastDate===dateStr){console.log('[快照] 今日已寫入，跳過');return;}
@@ -1683,13 +1744,13 @@ async function writeAssetSnapshot(){
     const totalMW=(totalTWD/10000).toFixed(1);
     const vixVal=indexData.vix?.price?.toFixed(2)||'';
     // 寫入資產快照
-    const cr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A:A')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const cr=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A:A')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const cd=await cr.json();const nr=(cd.values||[]).length+1;
-    const wr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent(`資產快照!A${nr}:E${nr}`)}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateStr,totalMW,usdPnl.toFixed(0),twPnl.toFixed(0),vixVal]]})});
+    const wr=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent(`資產快照!A${nr}:E${nr}`)}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateStr,totalMW,usdPnl.toFixed(0),twPnl.toFixed(0),vixVal]]})});
     const wd=await wr.json();
     if(wd.updatedCells){
       // 寫成功後更新 設定!B11 guard
-      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B11')}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateStr]]})});
+      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B11')}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[dateStr]]})});
       snapshotWritten=true;
       console.log('[快照] 已寫入：',dateStr,totalMW+'萬');
     }
@@ -1698,7 +1759,7 @@ async function writeAssetSnapshot(){
 async function fetchAssetSnapshots(){
   if(!googleToken)return[];
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A2:E')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('資產快照!A1:E')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();
     const all=(d.values||[]).map(r=>({date:r[0]||'',total:parseFloat(r[1])||0,usdPnl:parseFloat(r[2])||0,twPnl:parseFloat(r[3])||0,vix:parseFloat(r[4])||null})).filter(r=>r.date&&r.total>0);
     const byDate=new Map();for(const row of all)byDate.set(row.date,row);
@@ -1709,8 +1770,8 @@ async function fetchFIREProgress(){
   if(!googleToken)return;
   try{
     const[rc21,rc29]=await Promise.all([
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!C21')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!C29')}`,{headers:{Authorization:`Bearer ${googleToken}`}})
+      gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!C21')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
+      gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!C29')}`,{headers:{Authorization:`Bearer ${googleToken}`}})
     ]);
     const[dc21,dc29]=await Promise.all([rc21.json(),rc29.json()]);
     const c21=parseFloat(((dc21.values||[[]])[0]||[])[0]?.toString().replace(/,/g,'')||'0');
@@ -1732,8 +1793,8 @@ async function fetchWealthTargets(){
   if(!googleToken)return[];
   try{
     const[r12,r18]=await Promise.all([
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!B15:F15')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!B21:F21')}`,{headers:{Authorization:`Bearer ${googleToken}`}})
+      gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!B15:F15')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
+      gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('財富規劃!B21:F21')}`,{headers:{Authorization:`Bearer ${googleToken}`}})
     ]);
     const[d12,d18]=await Promise.all([r12.json(),r18.json()]);
     const yrs=(d12.values||[[]])[0]||[],tgs=(d18.values||[[]])[0]||[];
@@ -1750,7 +1811,7 @@ async function loadHoldings(){
       document.getElementById('sync-status').innerHTML=`<div class="sync-banner synced">✓ 快取資料（${ago}分鐘前）&nbsp;<span style="cursor:pointer;text-decoration:underline;opacity:0.7" onclick="syncSheets()">重新同步</span></div>`;
       return;
     }
-  }catch{}
+  }catch(e){_logErr('L1753',e);}
   if(googleToken)await syncSheets();
   else{document.getElementById('sync-status').innerHTML=`<div class="sync-banner error">⚠ 請先連結 Google 帳號 <button class="btn-nav" style="margin-left:auto;font-size:9px" onclick="openSettings()">開啟設定</button></div>`;renderHoldings();}
 }
@@ -1782,7 +1843,7 @@ function computeAndRenderPnL(){
   // forexPnl：從最新 meta cache 讀取
   try{const mc=JSON.parse(ls('holdings_cache')||'{}');const fp=mc.meta&&mc.meta.forexPnl!=null?mc.meta.forexPnl:null;
     if(fp!=null&&document.getElementById('total-pnl-forex')){document.getElementById('total-pnl-forex').style.color=col(fp);document.getElementById('total-pnl-forex').textContent=fmt(fp,'TWD');const fsub=document.getElementById('total-pnl-forex-sub');if(fsub)fsub.textContent='USD/TWD 匯兌損益';}
-  }catch(e){}
+  }catch(e){_logErr('L1785',e);}
   document.getElementById('charts-row').style.display='grid';
   renderCharts(gVal,eVal,cVal,sVals,lastMeta);
 }
@@ -1801,13 +1862,13 @@ function renderCharts(gVal,eVal,cVal,sVals,meta){
 
 function renderRiskMonitor(){
   if(!holdingsData.length)return;
-  const mRow=(h,pct,lbl)=>{const s=pct>0?'+':'';const c=pct>20?'var(--red)':pct>10?'var(--yellow)':pct<-10?'var(--green)':'var(--text-muted)';return `<div class="risk-item"><div class="risk-dot" style="background:${c}"></div><span style="color:var(--text-secondary)">${lbl} <span style="color:${c};font-weight:600">${s}${pct.toFixed(1)}%</span></span></div>`;};
+  const mRow=(h,pct,lbl)=>{const s=pct>0?'+':'';const c=pct>20?'var(--red)':pct>10?'var(--yellow)':pct<-10?'var(--green)':'var(--text-muted)';return `<div class="risk-item"><div class="risk-dot" style="background:${c}"></div><span style="color:var(--text-secondary)">${esc(lbl)} <span style="color:${c};font-weight:600">${s}${pct.toFixed(1)}%</span></span></div>`;};
   const m200=[...holdingsData].filter(h=>h.ma200pct!=null).sort((a,b)=>b.ma200pct-a.ma200pct);
   el('risk-ma200').innerHTML=m200.length?m200.map(h=>mRow(h,h.ma200pct,TW_NAMES[h.ticker]||h.ticker)).join(''):`<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
   const m50=[...holdingsData].filter(h=>h.ma50pct!=null).sort((a,b)=>b.ma50pct-a.ma50pct);
   el('risk-ma50').innerHTML=m50.length?m50.map(h=>mRow(h,h.ma50pct,TW_NAMES[h.ticker]||h.ticker)).join(''):`<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
   const tList=holdingsData.filter(h=>h.trend||h.kd);
-  el('risk-trend').innerHTML=tList.length?tList.map(h=>{const tc=h.trend?.includes('強勢')?'var(--green)':h.trend?.includes('弱勢')||h.trend?.includes('空頭')?'var(--red)':'var(--yellow)';const kc=h.kd?.includes('轉強')||h.kd?.includes('多頭')?'var(--green)':h.kd?.includes('弱')||h.kd?.includes('空')||h.kd?.includes('轉弱')?'var(--red)':'var(--yellow)';return `<div class="risk-item" style="justify-content:space-between"><span style="color:var(--text-secondary);font-weight:600;min-width:60px">${TW_NAMES[h.ticker]||h.ticker}</span>${h.trend?`<span style="font-size:11px;color:${tc};flex:1;text-align:center">${h.trend}</span>`:'<span style="flex:1"></span>'} ${h.kd?`<span style="font-size:11px;color:${kc};flex:1;text-align:right">${h.kd}</span>`:''}</div>`;}).join(''):`<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
+  el('risk-trend').innerHTML=tList.length?tList.map(h=>{const tc=h.trend?.includes('強勢')?'var(--green)':h.trend?.includes('弱勢')||h.trend?.includes('空頭')?'var(--red)':'var(--yellow)';const kc=h.kd?.includes('轉強')||h.kd?.includes('多頭')?'var(--green)':h.kd?.includes('弱')||h.kd?.includes('空')||h.kd?.includes('轉弱')?'var(--red)':'var(--yellow)';return `<div class="risk-item" style="justify-content:space-between"><span style="color:var(--text-secondary);font-weight:600;min-width:60px">${esc(TW_NAMES[h.ticker]||h.ticker)}</span>${h.trend?`<span style="font-size:11px;color:${tc};flex:1;text-align:center">${esc(h.trend)}</span>`:'<span style="flex:1"></span>'} ${h.kd?`<span style="font-size:11px;color:${kc};flex:1;text-align:right">${esc(h.kd)}</span>`:''}</div>`;}).join(''):`<div class="risk-item"><span style="color:var(--text-muted)">無資料</span></div>`;
 }
 
 function renderHoldings(){
@@ -1834,7 +1895,7 @@ function renderHoldings(){
     const invested=h.shares*h.cost*(h.currency==='USD'?usdTwd:1);
     const investedFmt='NT$'+Math.round(invested).toLocaleString();
     return `<div class="holding-entry" style="border-left:3px solid ${_borderCol};background:var(--bg-card);background-image:linear-gradient(to right,${_bgTint},transparent 120px);" onclick="openThesisModal('${h.ticker}','${h.name.replace(/'/g,"\\'")}')">
-      <div><div style="display:flex;align-items:center;gap:4px"><span class="holding-ticker">${h.ticker}</span>${ebHTML?'<span style="vertical-align:middle">'+ebHTML+'</span>':''} ${thesisTagHTML}${_thHTML}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
+      <div><div style="display:flex;align-items:center;gap:4px"><span class="holding-ticker">${esc(h.ticker)}</span>${ebHTML?'<span style="vertical-align:middle">'+ebHTML+'</span>':''} ${thesisTagHTML}${_thHTML}</div><div class="holding-name">${h.name}</div><div style="margin-top:4px">${fHTML}</div></div>
       <div class="holding-metrics">
         <div style="width:90px;flex-shrink:0"><div class="h-metric-label">持有股數</div><div class="h-metric-value">${h.shares%1===0?h.shares:h.shares.toFixed(3)}</div></div>
         <div style="width:110px;flex-shrink:0"><div class="h-metric-label">成本均價</div><div class="h-metric-value">${curr}${h.cost.toLocaleString()}</div></div>
@@ -2008,7 +2069,7 @@ function renderWatchlist(){
     }
     const ci=getCacheInfo('analysis_'+s.ticker);
     return`<div class="stock-card" style="cursor:default">
-      <div class="stock-header"><div><div class="stock-ticker">${s.ticker}</div><div class="stock-name">${s.name}</div></div><span class="type-badge ${tc}">${tt}</span></div>
+      <div class="stock-header"><div><div class="stock-ticker">${esc(s.ticker)}</div><div class="stock-name">${esc(s.name)}</div></div><span class="type-badge ${tc}">${tt}</span></div>
       <div class="stock-metrics"><div><div class="metric-label">安全邊際</div><div class="metric-value" style="color:${mosC}">${mosD}</div></div>${valHTML}</div>
       ${renderDCFBand(s.ticker)}
       ${renderRecoveryHTML(s.ticker)}
@@ -2033,7 +2094,7 @@ const FORECAST_TEMPLATE_TAB='RKLB';
 const autoWriteBusy={};
 
 async function sheetsApi(path,method,body){
-  const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}${path}`,{method:method||'GET',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}${path}`,{method:method||'GET',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
   const d=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error((d.error&&d.error.message)||('Sheets API '+r.status));
   return d;
@@ -2184,11 +2245,11 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
     uniq.forEach(k=>{const p=cellIdx[k];if(p)reqs.push({repeatCell:{range:rg(p[0],p[0]+1,p[1],p[1]+1),cell:{userEnteredFormat:{backgroundColor:{red:1,green:0.95,blue:0.6}}},fields:'userEnteredFormat.backgroundColor'}});});
     await sheetsApi(':batchUpdate','POST',{requests:reqs});
   }catch(e){
-    try{await sheetsApi(':batchUpdate','POST',{requests:[{deleteSheet:{sheetId:sid}}]});}catch(_){}
+    try{await sheetsApi(':batchUpdate','POST',{requests:[{deleteSheet:{sheetId:sid}}]});}catch(_){_logErr('L2187',_);}
     throw new Error('寫入預測分頁失敗，已移除未完成的分頁：'+e.message);
   }
   sheetTabNames.push(ticker);
-  try{const d=await fetchDCFSheet(ticker);if(d){dcfCache[ticker]=d;renderWatchlist();}}catch(_){}
+  try{const d=await fetchDCFSheet(ticker);if(d){dcfCache[ticker]=d;renderWatchlist();}}catch(_){_logErr('L2191',_);}
   return{existed:false,flags:uniq};
 }
 
@@ -2246,7 +2307,7 @@ async function autoWriteAfterAnalysis(ticker,stock){
     }
     const row=await awWriteThesis(rows,idx,ticker,out.thesis,out.sellTrigger,label);
     thesisCache[ticker]=Object.assign({},thesisCache[ticker],{thesis:out.thesis,sellTrigger:out.sellTrigger,status:sk,health:parseThesisHealth(out.sellTrigger)});
-    if(typeof renderHoldings==='function')try{renderHoldings();}catch(_){}
+    if(typeof renderHoldings==='function')try{renderHoldings();}catch(_){_logErr('L2249',_);}
     step('✅ 論文庫已'+(old?'更新':'新增')+'（第 '+row+' 列，狀態：'+label+'）');
     showToast('論文庫已'+(old?'更新':'新增')+'：'+ticker);
   }catch(e){
@@ -2267,7 +2328,7 @@ function refreshAnalysis(){if(!currentTicker)return;ls('analysis_'+currentTicker
 async function runAnalysis(ticker,stock){
   const apiKey=getApiKey();const body=el('modal-body');
   if(!apiKey){body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--font-mono);font-size:12px">請先在設定中填入 Anthropic API Key<br><br><button class="btn-nav" onclick="openSettings()">⚙ 開啟設定</button></div>`;return;}
-  body.innerHTML=`<div class="analysis-loading"><div class="loading-spinner"></div><div class="loading-text">正在分析 ${ticker}...</div></div>`;
+  body.innerHTML=`<div class="analysis-loading"><div class="loading-spinner"></div><div class="loading-text">正在分析 ${esc(ticker)}...</div></div>`;
   const dcf=dcfCache[ticker];
   const dcfCtx=dcf?`當前DCF資料：保守價$${dcf.conservative}、合理價$${dcf.fair}、樂觀價$${dcf.optimistic}、現價$${dcf.currentPrice}。`:'';
   const prompts={
@@ -2286,11 +2347,11 @@ async function runAnalysis(ticker,stock){
     el('modal-cache-badge').textContent='剛剛更新';el('modal-cache-badge').style.display='inline';
     renderAnalysis(parsed);
     if(pk==='value')autoWriteAfterAnalysis(ticker,stock);
-  }catch(err){body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--red);font-family:var(--font-mono);font-size:12px">分析失敗：${err.message}<br><br><button class="refresh-btn" onclick="refreshAnalysis()">↻ 重試</button></div>`;}
+  }catch(err){body.innerHTML=`<div style="text-align:center;padding:40px;color:var(--red);font-family:var(--font-mono);font-size:12px">分析失敗：${esc(err.message)}<br><br><button class="refresh-btn" onclick="refreshAnalysis()">↻ 重試</button></div>`;}
 }
 function renderAnalysis(data){
   const body=el('modal-body');if(!data?.sections){body.innerHTML='<div style="color:var(--red);padding:20px;font-family:var(--font-mono)">資料格式錯誤</div>';return;}
-  body.innerHTML=data.sections.map(s=>`<div class="analysis-section"><div class="analysis-section-title">${s.title}</div><div class="analysis-text">${s.content.replace(/\n/g,'<br>')}</div></div>`).join('');
+  body.innerHTML=data.sections.map(s=>`<div class="analysis-section"><div class="analysis-section-title">${esc(s.title)}</div><div class="analysis-text">${esc(s.content).replace(/\n/g,'<br>')}</div></div>`).join('');
 }
 
 // === MODAL ===
@@ -2301,12 +2362,12 @@ function closeModal(id){el(id).classList.remove('open');}
 async function loadThesisFromSheets(){
   if(!googleToken)return;
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('論文庫!A2:F200')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('論文庫!A2:F200')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();thesisCache={};
     let _ri=1;
     for(const row of(d.values||[])){_ri++;const t=(row[0]||'').trim();if(!t)continue;const sm=THESIS_READ_MAP;const rawStat=(row[3]||'').trim();const _st=row[2]||'';thesisCache[t]={thesis:row[1]||'',sellTrigger:_st,status:sm[rawStat]||null,health:parseThesisHealth(_st),faith:(row[5]||'').toString().trim(),_row:_ri};}
     await migrateFaithCheckToSheets();
-  }catch(e){}
+  }catch(e){_logErr('L2309',e);}
 }
 function openThesisModal(ticker,name){
   currentThesisTicker=ticker;el('thesis-ticker').textContent=`${ticker} — ${name}`;
@@ -2358,8 +2419,8 @@ async function loadTacticalFromSheets(){
   if(!googleToken)return;
   try{
     const [tr,br]=await Promise.all([
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('戰術倉!A3:K100')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent("持股資訊!B7")}`,{headers:{Authorization:`Bearer ${googleToken}`}})
+      gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('戰術倉!A3:K100')}`,{headers:{Authorization:`Bearer ${googleToken}`}}),
+      gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent("持股資訊!B7")}`,{headers:{Authorization:`Bearer ${googleToken}`}})
     ]);
     const td=await tr.json(),bd=await br.json();
     const b7=parseFloat(((bd.values||[[]])[0][0]||'0').toString().replace(/[^0-9.\-]/g,''))||0;
@@ -2377,7 +2438,7 @@ async function loadTacticalFromSheets(){
     // 只抓「持有中」現價
     const live=tacticalData.filter(r=>r.status==='持有中');
     await Promise.all(live.map(async r=>{
-      try{const q=await(await fetch(`${PROXY}/quote/${encodeURIComponent(r.ticker)}`)).json();if(q&&q.price)r.price=q.price;}catch(e){}
+      try{const q=await(await fetch(`${PROXY}/quote/${encodeURIComponent(r.ticker)}`)).json();if(q&&q.price)r.price=q.price;}catch(e){_logErr('L2380',e);}
     }));
     renderTacticalBar();
   }catch(e){console.warn('戰術倉載入失敗',e);}
@@ -2638,17 +2699,16 @@ async function saveActionLogToSheets(actions){
   try{
     const now=new Date().toISOString().split('T')[0];
     const rows=actions.map(a=>[now,a.priority,a.type,a.action,a.reason,'待執行']);
-    const rangeCheck=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('行動紀錄!A:A')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const rangeCheck=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('行動紀錄!A:A')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const cd=await rangeCheck.json();const nr=(cd.values||[]).length+1;
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent(`行動紀錄!A${nr}:F${nr+rows.length-1}`)}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:rows})});
-  }catch(e){}
+    await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent(`行動紀錄!A${nr}:F${nr+rows.length-1}`)}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:rows})});
+  }catch(e){_logErr('L2644',e);}
 }
 
 // === 風險總覽 ===
 // === 宏觀數據 (Yahoo Finance) ===
 async function fetchMacroData(){
   try{
-    const fredKey=ls('fred_api_key')||'a86cd3654d2c28071002743e1ee675cc';
     const [irxR,tnxR,fvxR]=await Promise.all([
       fetch(`${PROXY}/quote/${encodeURIComponent('^IRX')}`),
       fetch(`${PROXY}/quote/${encodeURIComponent('^TNX')}`),
@@ -2746,7 +2806,8 @@ async function fetchFredSeries(seriesId,fredKey,limit,startDate){
 async function initValCycle(){
   // v4.5.2：SP500即時倍率校準（2026-05 companiesmarketcap驗證：$75.097T / SP500≈7337 = 10.235B/pt）
   const BUFFETT_MULTIPLIER=10.235;
-  const fredKey='a86cd3654d2c28071002743e1ee675cc';
+  const fredKey=await getFredKey();
+  if(!fredKey){showToast('FRED API Key 未設定或讀取失敗（設定!B7），估值週期無法載入');const _l=document.getElementById('vc-loading');if(_l)_l.style.display='none';return;}
   document.getElementById('vc-loading').style.display='block';
   try{
     const[will,gdp,cliUS,cliWorld,spyR]=await Promise.all([
@@ -2997,9 +3058,9 @@ function renderTreemap(){
       const pnl=(h.price-h.cost)/h.cost*100;
       const pc=pnl>=0?'var(--red)':'var(--green)';
       const wt=totalPortfolio>0?(val/totalPortfolio*100):0;
-      return `<div class="treemap-tt-row"><span class="treemap-tt-ticker">${h.ticker}</span><span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);flex:1;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${TW_NAMES[h.ticker]||h.name}</span><span class="treemap-tt-pnl" style="color:${pc}">${pnl>=0?'+':''}${pnl.toFixed(1)}%</span><span class="treemap-tt-wt">${wt.toFixed(1)}%</span></div>`;
+      return `<div class="treemap-tt-row"><span class="treemap-tt-ticker">${esc(h.ticker)}</span><span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);flex:1;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(TW_NAMES[h.ticker]||h.name)}</span><span class="treemap-tt-pnl" style="color:${pc}">${pnl>=0?'+':''}${pnl.toFixed(1)}%</span><span class="treemap-tt-wt">${wt.toFixed(1)}%</span></div>`;
     }).join('');
-    ttEl.innerHTML=`<div class="treemap-tt-title" style="color:${cell.color}">${cell.name}&nbsp;<span style="font-weight:400;color:var(--text-muted)">${cell.pct.toFixed(1)}%</span></div><div style="display:flex;justify-content:flex-end;gap:12px;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)"><span style="min-width:52px;text-align:right">損益%</span><span style="min-width:40px;text-align:right">佔比</span></div>${rows}`;
+    ttEl.innerHTML=`<div class="treemap-tt-title" style="color:${cell.color}">${esc(cell.name)}&nbsp;<span style="font-weight:400;color:var(--text-muted)">${cell.pct.toFixed(1)}%</span></div><div style="display:flex;justify-content:flex-end;gap:12px;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)"><span style="min-width:52px;text-align:right">損益%</span><span style="min-width:40px;text-align:right">佔比</span></div>${rows}`;
     ttEl.style.display='block';
     // 用 cell 的 offsetLeft/offsetTop（相對於 container）定位，避免滾動偏移問題
     const cW=parseInt(divEl.style.width)||60;
@@ -3025,18 +3086,18 @@ function renderTreemap(){
     const cw=Math.max(cell.w-3,10),ch=Math.max(cell.h-3,10);
     div.style.cssText=`left:${cell.x}px;top:${cell.y}px;width:${cw}px;height:${ch}px;background:${cell.color}20;border-color:${cell.color}50;`;
     const sm=cw<60||ch<50,ty=cw<35||ch<30;
-    if(!ty)div.innerHTML=`<div style="font-family:var(--font-mono);font-size:${sm?10:13}px;font-weight:700;color:${cell.color};text-align:center;padding:0 6px;line-height:1.3">${cell.name}</div><div style="font-family:var(--font-mono);font-size:${sm?9:12}px;color:${cell.color}cc;margin-top:2px">${cell.pct.toFixed(1)}%</div>${!sm?`<div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px;text-align:center;padding:0 4px">${cell.tickers.join(' · ')}</div>`:''}`;
+    if(!ty)div.innerHTML=`<div style="font-family:var(--font-mono);font-size:${sm?10:13}px;font-weight:700;color:${cell.color};text-align:center;padding:0 6px;line-height:1.3">${esc(cell.name)}</div><div style="font-family:var(--font-mono);font-size:${sm?9:12}px;color:${cell.color}cc;margin-top:2px">${cell.pct.toFixed(1)}%</div>${!sm?`<div style="font-family:var(--font-mono);font-size:9px;color:${cell.color}88;margin-top:3px;text-align:center;padding:0 4px">${cell.tickers.join(' · ')}</div>`:''}`;
     div.addEventListener('click',function(e){e.stopPropagation();if(activeCell===div){hideTreemapTT();return;}showTreemapTT(cell,div);});
     container.appendChild(div);
   });
-  legend.innerHTML=sorted.map(c=>`<div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)"><div style="width:8px;height:8px;border-radius:2px;background:${c.color};flex-shrink:0"></div>${c.name} ${c.pct.toFixed(1)}%</div>`).join('');
+  legend.innerHTML=sorted.map(c=>`<div style="display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)"><div style="width:8px;height:8px;border-radius:2px;background:${c.color};flex-shrink:0"></div>${esc(c.name)} ${c.pct.toFixed(1)}%</div>`).join('');
 }
 
 async function checkRiskCd(){
   const btn=el('risk-ai-btn'),status=el('risk-ai-status'),fill=el('risk-cd-fill');
   if(!googleToken||!getSheetId()){if(status)status.textContent='請先連結 Google Sheets';return;}
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B6')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B6')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();const lastRaw=d.values&&d.values[0]&&d.values[0][0];
     if(!lastRaw){if(status)status.textContent='尚未分析';if(btn)btn.disabled=false;return;}
     const last=new Date(lastRaw),elapsed=(Date.now()-last)/60000,remaining=CD_MINUTES-elapsed;
@@ -3059,7 +3120,7 @@ function startCdTimer(rem,last){
 }
 async function writeRiskCdTime(iso){
   if(!googleToken||!getSheetId())return;
-  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B6')}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[iso]]})});
+  await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B6')}?valueInputOption=USER_ENTERED`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:[[iso]]})});
 }
 
 async function runRiskAnalysis(){
@@ -3113,7 +3174,7 @@ async function runRiskAnalysis(){
     const resultEl=el('risk-analysis-result');
     if(resultEl&&riskAiData.sections){
       resultEl.style.display='block';
-      resultEl.innerHTML=riskAiData.sections.map(s=>`<div class="analysis-section"><div class="analysis-section-title">${s.title}</div><div class="analysis-text">${s.content.replace(/\n/g,'<br>')}</div></div>`).join('');
+      resultEl.innerHTML=riskAiData.sections.map(s=>`<div class="analysis-section"><div class="analysis-section-title">${esc(s.title)}</div><div class="analysis-text">${esc(s.content).replace(/\n/g,'<br>')}</div></div>`).join('');
     }
     startCdTimer(CD_MINUTES,new Date());
     if(btn)btn.textContent='⬡ AI 風險審查';
