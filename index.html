@@ -974,7 +974,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.12.0';
+const VERSION='v4.13.0';
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={},pullbackCache={};
 let indexData={};
@@ -984,6 +984,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.13.0',date:'2026-10-29',notes:'✦ 信仰檢核日期從瀏覽器 localStorage 搬到 Google Sheets「論文庫」F欄（表頭：上次信仰檢核），所有裝置讀到同一份最新狀態<br>✦ 一次性遷移：F欄為空且本機有舊紀錄時自動補寫（不刪本機資料）；儲存論文/自動回寫論文庫時保留 F欄日期<br>✦ 無論文列的代號標記檢核時提示先建立論文'},
   {v:'4.12.0',date:'2026-10-14',notes:'✦ 觀察清單個股分析完成後自動回寫「論文庫」：同代號就更新（B:D，不動A/E）、沒有就新增；更新前舊論文備份到該股預測分頁「季度複查記錄」，無分頁可備份時先跳確認<br>✦ 自動建立預測分頁：複製 RKLB 範本，年份表全面改為公式（營收＝上年×(1+成長率)、FCF＝營收×Margin、折現因子＝1/(1+WACC)^n、現值），新增基期年度/營收格；K2:K4 依 H1 估值定錨（PE Band＝EPS×PE；DCF＝合理股價×係數）；決策標準與合理股價公式沿用原版<br>✦ 建模資料由 AI 搜尋查證並附來源，查不到或未過合理性檢查的儲存格標黃待覆核；成長率/Margin/WACC 標註 AI估算<br>✦ 論文狀態對齊 THESIS_LINT 四態（論文成立/持觀察/動態調整/論文失效），修正寫入端與讀取端用詞不一致的 bug（舊值 成立/部分/動態 相容）；「論文失效」不自動設定<br>✦ 持倉個股只寫論文庫、ETF/TQQQ 略過；寫入失敗改為顯示錯誤，不再靜默吞掉'},
   {v:'4.10.3',date:'2026-08-08',notes:'✦ TW_TICKERS 補上 00632R（元大台灣50反1）、00685L（群益臺灣加權正2），修正誤判為 USD 導致價格/匯率/投入金額顯示錯誤<br>✦ STATIC_INDUSTRY_MAP 新增 SKHY（記憶體）、AMKR（半導體封測）、GLW（光通訊）、IBM（科技雲端）、SOXX（ETF-科技），修正產業分布 Treemap 全歸「其他」的問題'},
   {v:'4.10.2',date:'2026-07-17',notes:'✦ 觀察清單新增「回檔收復比」：讀取 Sheets「波段回檔」分頁（GAS 每日計算波段高低點），公式 = (現價-波段低點)/(波段高點-波段低點)<br>✦ 收復比分級：<38.2% 弱勢反彈（紅）／38.2~61.8% 觀察區（黃）／≥61.8% 強勢回升（綠）／100% 完全收復，採費波那契關卡<br>✦ 無有效回檔資料（近一年跌幅未達12%）時不顯示該欄位<br>✦ 新增 AAII 同款浮動說明框（JS動態定位，跳脫卡片 overflow:hidden 裁切），hover 顯示波段高低點/現價/區間解讀'},
@@ -1597,6 +1598,7 @@ async function syncSheets(){
   ls('last_snapshot_week',null); // deprecated, guard now in Sheets B11
   await writeAssetSnapshot();
   await syncAllThesisToSheets();
+  try{renderHoldings();}catch(e){}
   await loadTacticalFromSheets();
   renderGrowthChart();
   renderHealthPage(meta);
@@ -1817,8 +1819,8 @@ function renderHoldings(){
     const pnl=(h.price-h.cost)*h.shares,pct=h.cost>0?((h.price-h.cost)/h.cost*100).toFixed(1):0;
     const col=pnl>=0?'var(--red)':'var(--green)',sign=pnl>=0?'+':'',curr=h.currency==='TWD'?'NT$':'US$';
     const techHTML=renderTechIndicators(h);
-    const fd=JSON.parse(localStorage.getItem('faithCheck')||'{}'),lc=fd[h.ticker];
-    const _dl=lc?(180-Math.floor((Date.now()-new Date(lc).getTime())/86400000)):null;
+    const lc=faithParse((thesisCache[h.ticker]||{}).faith);
+    const _dl=lc?(180-Math.floor((Date.now()-lc.getTime())/86400000)):null;
     const _fc=_dl!=null?(_dl<=0?'var(--red)':_dl<=30?'var(--yellow)':'var(--text-muted)'):'';
     const fHTML=lc?('<span style="font-family:var(--font-mono);font-size:9px;color:'+_fc+'">'+((_dl<=0)?('逾期 '+Math.abs(_dl)+' 天'):(_dl+' 天後信仰檢核'))+'</span>'):'<span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">未設定檢核</span>';
     const ebHTML=getEarningsBadgeHTML(h.ticker);
@@ -2243,7 +2245,7 @@ async function autoWriteAfterAnalysis(ticker,stock){
       if(!confirm(ticker+' 在論文庫已有論文，且沒有預測分頁可備份舊版。\n仍要覆蓋嗎？（Google 試算表的「版本記錄」仍可還原）')){step('已取消：論文庫未更動');return;}
     }
     const row=await awWriteThesis(rows,idx,ticker,out.thesis,out.sellTrigger,label);
-    thesisCache[ticker]={thesis:out.thesis,sellTrigger:out.sellTrigger,status:sk,health:parseThesisHealth(out.sellTrigger)};
+    thesisCache[ticker]=Object.assign({},thesisCache[ticker],{thesis:out.thesis,sellTrigger:out.sellTrigger,status:sk,health:parseThesisHealth(out.sellTrigger)});
     if(typeof renderHoldings==='function')try{renderHoldings();}catch(_){}
     step('✅ 論文庫已'+(old?'更新':'新增')+'（第 '+row+' 列，狀態：'+label+'）');
     showToast('論文庫已'+(old?'更新':'新增')+'：'+ticker);
@@ -2299,9 +2301,11 @@ function closeModal(id){el(id).classList.remove('open');}
 async function loadThesisFromSheets(){
   if(!googleToken)return;
   try{
-    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('論文庫!A2:D200')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('論文庫!A2:F200')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     const d=await r.json();thesisCache={};
-    for(const row of(d.values||[])){const t=(row[0]||'').trim();if(!t)continue;const sm=THESIS_READ_MAP;const rawStat=(row[3]||'').trim();const _st=row[2]||'';thesisCache[t]={thesis:row[1]||'',sellTrigger:_st,status:sm[rawStat]||null,health:parseThesisHealth(_st)};}
+    let _ri=1;
+    for(const row of(d.values||[])){_ri++;const t=(row[0]||'').trim();if(!t)continue;const sm=THESIS_READ_MAP;const rawStat=(row[3]||'').trim();const _st=row[2]||'';thesisCache[t]={thesis:row[1]||'',sellTrigger:_st,status:sm[rawStat]||null,health:parseThesisHealth(_st),faith:(row[5]||'').toString().trim(),_row:_ri};}
+    await migrateFaithCheckToSheets();
   }catch(e){}
 }
 function openThesisModal(ticker,name){
@@ -2314,7 +2318,7 @@ function setThesisStatus(v){thesisStatus=v;['yes','partial','adjust','no'].forEa
 function saveThesis(){
   if(!currentThesisTicker)return;
   const tt=el('thesis-input').value,st=el('sell-trigger-input').value;
-  thesisCache[currentThesisTicker]={thesis:tt,sellTrigger:st,status:thesisStatus,health:parseThesisHealth(st)};
+  thesisCache[currentThesisTicker]=Object.assign({},thesisCache[currentThesisTicker],{thesis:tt,sellTrigger:st,status:thesisStatus,health:parseThesisHealth(st)});
   closeModal('thesis-modal');renderHoldings();
   if(googleToken)saveThesisToSheets(currentThesisTicker,tt,st,thesisStatus);
 }
@@ -2472,7 +2476,50 @@ async function saveThesisToSheets(ticker,thesis,st,status){
   }catch(e){console.error('saveThesisToSheets',e);showToast('寫入論文庫失敗：'+e.message);}
 }
 async function syncAllThesisToSheets(){await loadThesisFromSheets();}
-function markFaithCheck(ticker){const d=JSON.parse(localStorage.getItem('faithCheck')||'{}');d[ticker]=new Date().toISOString();localStorage.setItem('faithCheck',JSON.stringify(d));renderHoldings();closeModal('thesis-modal');}
+// === v4.13.0 信仰檢核日期：存 論文庫!F（text, YYYY/MM/DD），表頭 F1「上次信仰檢核」 ===
+function faithParse(s){
+  if(!s)return null;
+  const m=String(s).trim().match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  const d=new Date(s);return isNaN(d.getTime())?null:d;
+}
+let _faithHeaderOk=false;
+async function ensureFaithHeader(){
+  if(_faithHeaderOk)return;
+  const d=await sheetsApi('/values/'+encodeURIComponent('論文庫!F1'));
+  const v=(d.values&&d.values[0]&&d.values[0][0]||'').toString().trim();
+  if(!v)await sheetsApi('/values/'+encodeURIComponent('論文庫!F1')+'?valueInputOption=RAW','PUT',{values:[['上次信仰檢核']]});
+  _faithHeaderOk=true;
+}
+async function markFaithCheck(ticker){
+  if(!googleToken){showToast('請先連結 Google Sheets');return;}
+  try{
+    const rows=await awReadThesisRows();const idx=awFindRow(rows,ticker);
+    if(idx<0){showToast('論文庫沒有 '+ticker+'，請先建立論文再標記檢核');return;}
+    await ensureFaithHeader();
+    const today=awToday(),r=idx+1;
+    await sheetsApi('/values/'+encodeURIComponent('論文庫!F'+r)+'?valueInputOption=RAW','PUT',{values:[[today]]});
+    thesisCache[ticker]=Object.assign({},thesisCache[ticker],{faith:today,_row:r});
+    renderHoldings();closeModal('thesis-modal');showToast('已標記 '+ticker+' 信仰檢核：'+today);
+  }catch(e){console.error('markFaithCheck',e);showToast('寫入信仰檢核失敗：'+e.message);}
+}
+// 一次性遷移：F欄空 + 本機有舊紀錄 → 補寫一次（不刪本機）
+async function migrateFaithCheckToSheets(){
+  let local={};try{local=JSON.parse(localStorage.getItem('faithCheck')||'{}');}catch(e){}
+  const data=[];
+  for(const t of Object.keys(local)){
+    const c=thesisCache[t];if(!c||c.faith||!c._row)continue;
+    const d=faithParse(local[t]);if(!d)continue;
+    const s=d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
+    data.push({range:'論文庫!F'+c._row,values:[[s]]});c.faith=s;
+  }
+  if(!data.length)return;
+  try{
+    await ensureFaithHeader();
+    await sheetsApi('/values:batchUpdate','POST',{valueInputOption:'RAW',data});
+    showToast('已將 '+data.length+' 筆信仰檢核日期遷移到 Google Sheets');
+  }catch(e){console.error('migrateFaithCheck',e);data.forEach(x=>{});}
+}
 
 // === 配置健診 PAGE ===
 function renderHealthPage(meta){
