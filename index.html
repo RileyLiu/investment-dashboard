@@ -36,6 +36,12 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .alloc-label{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
 .alloc-value{font-family:var(--font-mono);font-size:24px;font-weight:600;margin-bottom:4px;}
 .alloc-sub{font-size:12px;color:var(--text-muted);font-family:var(--font-mono);}
+/* v4.16.0 配置進度卡 hover 浮動視窗 */
+.alloc-card.has-tip{position:relative;cursor:default;transition:border-color 0.2s;}
+.alloc-card.has-tip:hover{border-color:var(--border-bright);}
+.alloc-tip{position:absolute;top:calc(100% + 8px);left:0;z-index:600;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;width:300px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
+.alloc-card.has-tip.tip-right .alloc-tip{left:auto;right:0;}
+.alloc-card.has-tip:hover .alloc-tip{display:block;animation:fadeIn 0.15s ease;}
 .total-pnl-card{background:var(--bg-card);border:1px solid var(--border-bright);border-radius:8px;padding:18px 24px;margin-bottom:20px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
 .total-pnl-label{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
 .total-pnl-value{font-family:var(--font-mono);font-size:28px;font-weight:600;}
@@ -265,7 +271,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   .nav-right{gap:6px;}.status-pill{display:none;}.btn-nav{padding:5px 10px;font-size:10px;}
   main{padding:12px;}
   .index-bar{grid-template-columns:1fr 1fr!important;gap:8px;}
-  .index-tooltip{display:none!important;}
+  .index-tooltip,.alloc-tip{display:none!important;}
   .alloc-value{font-size:20px;}
   .total-pnl-card{flex-direction:column;gap:14px;padding:14px;}
   .total-pnl-value{font-size:22px!important;}
@@ -377,8 +383,8 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="section-header"><span class="section-label">配置進度</span><div class="section-line"></div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
     <div class="alloc-card"><div class="alloc-label">可部署子彈</div><div class="alloc-value text-green" id="alloc-cash-val">—</div><div class="alloc-sub" id="alloc-cash-sub">載入中...</div><div class="progress-bar"><div class="progress-fill" id="alloc-cash-bar" style="width:0%;background:var(--green)"></div></div></div>
-    <div class="alloc-card"><div class="alloc-label">成長型股票</div><div class="alloc-value text-accent" id="alloc-growth-pct">—</div><div class="alloc-sub" id="alloc-growth-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-growth-bar" style="width:0%;background:var(--accent)"></div></div></div>
-    <div class="alloc-card"><div class="alloc-label">持有ETF</div><div class="alloc-value text-purple" id="alloc-etf-pct">—</div><div class="alloc-sub" id="alloc-etf-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-etf-bar" style="width:0%;background:var(--purple)"></div></div></div>
+    <div class="alloc-card has-tip"><div class="alloc-label">成長型股票</div><div class="alloc-value text-accent" id="alloc-growth-pct">—</div><div class="alloc-sub" id="alloc-growth-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-growth-bar" style="width:0%;background:var(--accent)"></div></div><div class="alloc-tip" id="alloc-growth-tip"></div></div>
+    <div class="alloc-card has-tip tip-right"><div class="alloc-label">持有ETF</div><div class="alloc-value text-purple" id="alloc-etf-pct">—</div><div class="alloc-sub" id="alloc-etf-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-etf-bar" style="width:0%;background:var(--purple)"></div></div><div class="alloc-tip" id="alloc-etf-tip"></div></div>
   </div>
   <div class="section-header"><span class="section-label">觀察清單</span><div class="section-line"></div></div>
   <div id="watchlist-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
@@ -991,7 +997,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.15.0';
+const VERSION='v4.16.0';
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={},pullbackCache={};
 let indexData={};
@@ -1001,6 +1007,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.16.0',date:'2026-11-04',notes:'✦ 配置進度「成長型股票」「持有ETF」兩張卡新增 hover 浮動視窗：已配置金額（成本口徑）／目標金額／還差／達成率<br>✦ 浮動視窗內附持股圓餅圖（依成本，排除現金；超過 6 檔時其餘併為「其他」），切片金額依 Sheets 達成率校準<br>✦ 已配置金額 = 目標金額 × 達成率，與卡片數字一致；手機版與指數列相同，不顯示浮動視窗'},
   {v:'4.15.0',date:'2026-11-04',notes:'✦ 移除戰術倉模組：觀察清單頂部摺疊條、展開明細、同步時讀取 Sheets「戰術倉」分頁與持股資訊!B7 上限計算，一併刪除<br>✦ 戰術倉原本就不計入配置健診，移除後健診與持股清單不受影響<br>✦ Sheets「戰術倉」分頁保留未刪（僅前端不再讀取）；歷史版本 v4.9.0 紀錄保留'},
   {v:'4.14.0',date:'2026-11-04',notes:'✦ 風險總覽宏觀列第二排擴為 4 格，新增 VXN 納指恐慌指數（^VXN，走 Worker /quote）：<25 平靜／25–35 警戒／≥35 恐慌<br>✦ 新增 VXN/VIX 比值：≥1.5（歷史約前 12%）標示「科技股壓力集中」，僅顯示不推播<br>✦ 門檻依 FRED VXNCLS/VIXCLS 2001–2026 日資料校準；VXN 無獨立回測，僅作警示，進場判斷仍依 VIX 策略過濾器<br>✦ 配套 GAS：VIX_Alert v1.1.0 加入 VXN Discord 警示（≥35 推播／<30 解除）並修正夏冬令盤中判斷'},
   {v:'4.13.1',date:'2026-10-29',notes:'✦ 資安：新增 esc() 並套用於 AI 分析結果、錯誤訊息、名稱與代號的 innerHTML 插值（AI 分析會讀取網頁內容，輸出不可直接當 HTML）<br>✦ 穩定性：所有 Sheets 呼叫統一走 gFetch()，401 時靜默重新授權並重試一次，失敗才提示重新連結<br>✦ Anthropic API Key 不再寫入 localStorage，只放記憶體（AI 請求本來就由 Worker 的金鑰處理），並清除舊的本機快取<br>✦ FRED API Key 移出程式碼，改讀 Sheets 設定!B7（請先 rotate 舊金鑰並把新的放進 B7）<br>✦ 修正：資產快照分頁沒有表頭，原本讀 A2:E 會漏掉 A1 最新一筆，改讀 A1:E<br>✦ 空 catch 改為記錄到 console；200MA 偏離度加入合理範圍檢查，排除 -998% 這類錯誤值'},
@@ -1709,6 +1716,33 @@ async function syncSheets(){
   }catch(e){console.warn('[PCE] 讀取失敗:',e);}
 }
 
+// === v4.16.0 配置進度卡 hover：已配置金額 + 持股圓餅圖（成本口徑，排除現金）===
+const ALLOC_PIE_COLORS=['#38bdf8','#a78bfa','#34d399','#fbbf24','#f87171','#818cf8'];
+function renderAllocTip(boxId,rows,invested,target,gap,pct){
+  const box=document.getElementById(boxId);if(!box)return;
+  const wan=n=>'NT$'+(n/10000).toFixed(1)+'萬';
+  const sum=rows.reduce((s,r)=>s+r.val,0);
+  let items=[...rows].sort((a,b)=>b.val-a.val);
+  if(items.length>6){const rest=items.slice(6).reduce((s,r)=>s+r.val,0);items=items.slice(0,6);items.push({name:'其他',val:rest,other:true});}
+  const k=sum>0?invested/sum:0; // 切片金額依達成率校準，避免匯率差異造成與卡片不一致
+  const R=40,C=2*Math.PI*R;let off=0;
+  const arcs=sum>0?items.map((it,i)=>{
+    it.frac=it.val/sum;it.col=it.other?'#3d5875':ALLOC_PIE_COLORS[i%ALLOC_PIE_COLORS.length];
+    const len=it.frac*C;
+    const s='<circle cx="50" cy="50" r="'+R+'" fill="none" stroke="'+it.col+'" stroke-width="18" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 50 50)"/>';
+    off+=len;return s;}).join(''):'';
+  const legend=sum>0?items.map(it=>'<div class="tt-row"><span class="tt-label"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+it.col+';margin-right:6px"></span>'+esc(it.name)+'</span><span class="tt-val">'+(it.frac*100).toFixed(1)+'% · '+wan(it.val*k)+'</span></div>').join(''):'';
+  box.innerHTML='<div class="tt-title">已配置（成本口徑）</div>'
+    +'<div class="tt-row"><span class="tt-label">已配置金額</span><span class="tt-val">'+wan(invested)+'</span></div>'
+    +'<div class="tt-row"><span class="tt-label">目標金額</span><span class="tt-val">'+wan(target)+'</span></div>'
+    +'<div class="tt-row"><span class="tt-label">還差</span><span class="tt-val">'+wan(gap)+'</span></div>'
+    +'<div class="tt-row"><span class="tt-label">達成率</span><span class="tt-val">'+pct.toFixed(1)+'%</span></div>'
+    +'<div class="tt-divider"></div><div class="tt-title">持股分布（依成本）</div>'
+    +(sum>0?'<div style="display:flex;justify-content:center;margin:6px 0 8px"><svg viewBox="0 0 100 100" width="120" height="120">'+arcs+'</svg></div>'+legend
+      :'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無持股</div>')
+    +'<div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:8px;line-height:1.5">切片金額依 Sheets 達成率校準，匯率差異以佔比為準</div>';
+}
+
 // === ALLOC CARDS (v3.8.0修正：tto = totalCash - reserveCash) ===
 function updateAllocCards(meta){
   if(!meta)return;
@@ -1735,6 +1769,15 @@ function updateAllocCards(meta){
   document.getElementById('alloc-etf-pct').textContent=eActualPct.toFixed(1)+'%';
   document.getElementById('alloc-etf-sub').textContent=`目標達成率 · 還差 ${fmt(eGap)}`;
   document.getElementById('alloc-etf-bar').style.width=Math.min(100,eActualPct)+'%';
+  // v4.16.0 hover 浮動視窗：已配置金額 = 目標金額 × 達成率（與卡片一致），圓餅排除現金
+  {
+    const cost=h=>h.cost*h.shares*(h.currency==='USD'?usdTwd:1);
+    const gRows=holdingsData.filter(h=>h.type==='growth').map(h=>({name:TW_NAMES[h.ticker]||h.ticker,val:cost(h)}));
+    const eRows=holdingsData.filter(h=>h.type==='etf'||h.type==='wave').map(h=>({name:TW_NAMES[h.ticker]||h.ticker,val:cost(h)}));
+    const sumOf=rs=>rs.reduce((s,r)=>s+r.val,0);
+    renderAllocTip('alloc-growth-tip',gRows,gTarget>0?gTarget*gActualPct/100:sumOf(gRows),gTarget,gGap,gActualPct);
+    renderAllocTip('alloc-etf-tip',eRows,eTarget>0?eTarget*eActualPct/100:sumOf(eRows),eTarget,eGap,eActualPct);
+  }
   const d萬=(deployable/10000).toFixed(0),p萬=((meta.pureCash||0)/10000).toFixed(0),r萬=(reserveCash/10000).toFixed(0);
   document.getElementById('alloc-cash-val').textContent='NT$'+d萬+'萬';
   document.getElementById('alloc-cash-sub').textContent=`現金 NT$${p萬}萬 · 保留 NT$${r萬}萬`;
