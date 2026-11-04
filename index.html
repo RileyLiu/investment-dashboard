@@ -562,8 +562,8 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       </div>
 
     </div>
-    <!-- 第二排：VIX + Trimmed Mean PCE + AAII -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+    <!-- 第二排：VIX + VXN + Trimmed Mean PCE + AAII -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
 
       <!-- VIX -->
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
@@ -592,6 +592,37 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           <div class="tt-row"><span class="tt-label">2020疫情VIX89→建倉</span><span class="tt-val" style="color:var(--green)">1年後 +42.96%</span></div>
           <div class="tt-divider"></div>
           <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VIX 30+ 且基本面未變 → 你的子彈就是為此刻準備的</div>
+        </div>
+      </div>
+
+      <!-- VXN -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">VXN 納指恐慌指數</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vxn">—</div>
+          <div style="font-family:var(--font-mono);font-size:11px;" id="vxn-badge">—</div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;" id="vxn-ratio">^VXN · VXN/VIX —</div>
+        <div class="macro-tooltip">
+          <div class="tt-title">VXN 納斯達克100波動率</div>
+          <div class="tt-row"><span class="tt-label">意義</span><span class="tt-val">NDX 隱含波動率（30天）</span></div>
+          <div class="tt-row"><span class="tt-label">對照 VIX</span><span class="tt-val">科技股集中時更貼近曝險</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">區間解讀</div>
+          <div class="tt-row"><span class="tt-label">&lt; 25（平靜）</span><span class="tt-val" style="color:var(--green)">科技股情緒穩定</span></div>
+          <div class="tt-row"><span class="tt-label">25–35（警戒）</span><span class="tt-val" style="color:var(--yellow)">控制倉位，留意槓桿部位</span></div>
+          <div class="tt-row"><span class="tt-label">&ge; 35（恐慌）</span><span class="tt-val" style="color:var(--red)">極端情緒，Discord 推播</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">VXN / VIX 比值</div>
+          <div class="tt-row"><span class="tt-label">歷史中位數</span><span class="tt-val">1.21</span></div>
+          <div class="tt-row"><span class="tt-label">90 百分位</span><span class="tt-val">1.52</span></div>
+          <div class="tt-row"><span class="tt-label">&ge; 1.5</span><span class="tt-val" style="color:var(--red)">科技股壓力集中</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">歷史分布（2001–2026 日資料）</div>
+          <div class="tt-row"><span class="tt-label">中位數 / 平均</span><span class="tt-val">21.2 / 24.6</span></div>
+          <div class="tt-row"><span class="tt-label">75 / 90 百分位</span><span class="tt-val">28.1 / 40.4</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VXN 僅作警示，無獨立回測；進場仍依 VIX 策略過濾器（Fed 升息？信用利差擴大？）</div>
         </div>
       </div>
 
@@ -974,7 +1005,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.13.1';
+const VERSION='v4.14.0';
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={},pullbackCache={};
 let indexData={};
@@ -984,6 +1015,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.14.0',date:'2026-11-04',notes:'✦ 風險總覽宏觀列第二排擴為 4 格，新增 VXN 納指恐慌指數（^VXN，走 Worker /quote）：<25 平靜／25–35 警戒／≥35 恐慌<br>✦ 新增 VXN/VIX 比值：≥1.5（歷史約前 12%）標示「科技股壓力集中」，僅顯示不推播<br>✦ 門檻依 FRED VXNCLS/VIXCLS 2001–2026 日資料校準；VXN 無獨立回測，僅作警示，進場判斷仍依 VIX 策略過濾器<br>✦ 配套 GAS：VIX_Alert v1.1.0 加入 VXN Discord 警示（≥35 推播／<30 解除）並修正夏冬令盤中判斷'},
   {v:'4.13.1',date:'2026-10-29',notes:'✦ 資安：新增 esc() 並套用於 AI 分析結果、錯誤訊息、名稱與代號的 innerHTML 插值（AI 分析會讀取網頁內容，輸出不可直接當 HTML）<br>✦ 穩定性：所有 Sheets 呼叫統一走 gFetch()，401 時靜默重新授權並重試一次，失敗才提示重新連結<br>✦ Anthropic API Key 不再寫入 localStorage，只放記憶體（AI 請求本來就由 Worker 的金鑰處理），並清除舊的本機快取<br>✦ FRED API Key 移出程式碼，改讀 Sheets 設定!B7（請先 rotate 舊金鑰並把新的放進 B7）<br>✦ 修正：資產快照分頁沒有表頭，原本讀 A2:E 會漏掉 A1 最新一筆，改讀 A1:E<br>✦ 空 catch 改為記錄到 console；200MA 偏離度加入合理範圍檢查，排除 -998% 這類錯誤值'},
   {v:'4.13.0',date:'2026-10-29',notes:'✦ 信仰檢核日期從瀏覽器 localStorage 搬到 Google Sheets「論文庫」F欄（表頭：上次信仰檢核），所有裝置讀到同一份最新狀態<br>✦ 一次性遷移：F欄為空且本機有舊紀錄時自動補寫（不刪本機資料）；儲存論文/自動回寫論文庫時保留 F欄日期<br>✦ 無論文列的代號標記檢核時提示先建立論文'},
   {v:'4.12.0',date:'2026-10-14',notes:'✦ 觀察清單個股分析完成後自動回寫「論文庫」：同代號就更新（B:D，不動A/E）、沒有就新增；更新前舊論文備份到該股預測分頁「季度複查記錄」，無分頁可備份時先跳確認<br>✦ 自動建立預測分頁：複製 RKLB 範本，年份表全面改為公式（營收＝上年×(1+成長率)、FCF＝營收×Margin、折現因子＝1/(1+WACC)^n、現值），新增基期年度/營收格；K2:K4 依 H1 估值定錨（PE Band＝EPS×PE；DCF＝合理股價×係數）；決策標準與合理股價公式沿用原版<br>✦ 建模資料由 AI 搜尋查證並附來源，查不到或未過合理性檢查的儲存格標黃待覆核；成長率/Margin/WACC 標註 AI估算<br>✦ 論文狀態對齊 THESIS_LINT 四態（論文成立/持觀察/動態調整/論文失效），修正寫入端與讀取端用詞不一致的 bug（舊值 成立/部分/動態 相容）；「論文失效」不自動設定<br>✦ 持倉個股只寫論文庫、ETF/TQQQ 略過；寫入失敗改為顯示錯誤，不再靜默吞掉'},
@@ -2718,9 +2750,12 @@ async function fetchMacroData(){
     const irx=irxD.price||null, tnx=tnxD.price||null, fvx=fvxD.price||null;
     const t10y2y=(tnx&&fvx)?parseFloat((tnx-fvx).toFixed(3)):null;
     const vix=indexData.vix?.price||null;
+    // v4.14.0 VXN：獨立 try，抓取失敗不影響其他宏觀指標
+    let vxn=null;
+    try{const vxR=await fetch(`${PROXY}/quote/${encodeURIComponent('^VXN')}`);const vxD=await vxR.json();vxn=vxD.price||null;if(vxn)indexData.vxn={price:vxn};}catch(e){_logErr('vxn',e);}
     // Trimmed Mean PCE 改由 GAS Weekly_Snapshot 寫入 設定!B19，Sheets sync 時讀取
-    return {irx,tnx,fvx,t10y2y,vix};
-  }catch(e){return {irx:null,tnx:null,fvx:null,t10y2y:null,vix:null};}
+    return {irx,tnx,fvx,t10y2y,vix,vxn};
+  }catch(e){return {irx:null,tnx:null,fvx:null,t10y2y:null,vix:null,vxn:null};}
 }
 
 function renderMacroBar(fd){
@@ -2736,6 +2771,26 @@ function renderMacroBar(fd){
   if(tnxEl){tnxEl.textContent=fmt(fd.tnx);tnxEl.style.color=fd.tnx!=null?(fd.tnx>5?'var(--red)':fd.tnx<3?'var(--green)':'var(--yellow)'):'var(--text-muted)';}
   if(t10El){t10El.textContent=fmt(fd.t10y2y,3);t10El.style.color=fd.t10y2y!=null?(fd.t10y2y<0?'var(--red)':'var(--green)'):'var(--text-muted)';}
   if(vixEl){vixEl.textContent=fmtVix(fd.vix);vixEl.style.color=fd.vix!=null?(fd.vix>=30?'var(--red)':fd.vix>=20?'var(--yellow)':'var(--green)'):'var(--text-muted)';}
+  // v4.14.0 VXN：<25 平靜／25–35 警戒／≥35 恐慌；VXN/VIX ≥1.5 標示科技股壓力集中
+  const vxnEl=document.getElementById('fred-vxn');
+  const vxnBadge=document.getElementById('vxn-badge');
+  const vxnRatio=document.getElementById('vxn-ratio');
+  if(vxnEl){
+    const vx=fd.vxn;
+    if(vx!=null){
+      const lv=vx>=35?{t:'恐慌',c:'var(--red)'}:vx>=25?{t:'警戒',c:'var(--yellow)'}:{t:'平靜',c:'var(--green)'};
+      vxnEl.textContent=vx.toFixed(2);vxnEl.style.color=lv.c;
+      if(vxnBadge){vxnBadge.textContent=lv.t;vxnBadge.style.color=lv.c;}
+      if(vxnRatio){
+        if(fd.vix){const rt=vx/fd.vix;const hot=rt>=1.5;vxnRatio.textContent='^VXN · VXN/VIX '+rt.toFixed(2)+(hot?' · 科技股壓力集中':'');vxnRatio.style.color=hot?'var(--red)':'var(--text-muted)';}
+        else{vxnRatio.textContent='^VXN · VXN/VIX —';vxnRatio.style.color='var(--text-muted)';}
+      }
+    }else{
+      vxnEl.textContent='—';vxnEl.style.color='var(--text-muted)';
+      if(vxnBadge){vxnBadge.textContent='—';vxnBadge.style.color='var(--text-muted)';}
+      if(vxnRatio){vxnRatio.textContent='^VXN · VXN/VIX —';vxnRatio.style.color='var(--text-muted)';}
+    }
+  }
   // Trimmed Mean PCE 由 Sheets sync 的 renderPCEBar() 負責，此處不處理
   bar.style.display='block';
 }
