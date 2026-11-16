@@ -1007,8 +1007,8 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.17.1';
-let _appToken=''; // Worker 共用密碼（Sheets 設定!B30），只存記憶體
+const VERSION='v4.17.2';
+let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={},pullbackCache={};
@@ -1019,6 +1019,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.17.2',date:'2026-11-16',notes:'✦ 修正：Worker 共用密碼改存 Sheets 設定!H1（原 B30 已被 GAS 紀錄列佔用）'},
   {v:'4.17.1',date:'2026-11-16',notes:'✦ 安全加固：呼叫 Cloudflare Worker 的 Claude 請求（/v1/messages）改帶 X-App-Token 共用密碼，密碼存 Sheets 設定!B30、登入後自動讀取，不存 localStorage、不進 repo<br>✦ 設定!B30 為空時維持原行為（不帶 header），可先上線前端、最後才在 Worker 啟用 APP_TOKEN'},
   {v:'4.17.0',date:'2026-11-04',notes:'\u2726 \u914d\u7f6e\u9032\u5ea6\u5361 hover \u6d6e\u52d5\u8996\u7a97\u6539\u8cbc\u5361\u7247\u53f3\u5074\uff08\u6301\u6709ETF \u7ffb\u5230\u5de6\u5074\uff09\uff0c\u4e0d\u518d\u88ab\u87a2\u5e55\u622a\u65b7\u3001\u4e0d\u84cb\u4f4f\u89c0\u5bdf\u6e05\u55ae\uff0c\u5167\u5bb9\u6539\u5de6\u53f3\u5206\u6b04<br>\u2726 \u624b\u6a5f\u7248\uff1a\u9ede\u5361\u7247\u5f9e\u5e95\u90e8\u5347\u8d77\u9762\u677f\uff0c\u9ede\u5916\u9762\u6216 \u2715 \u95dc\u9589<br>\u2726 \u4fee\u6b63\uff1aupdateAllocCards \u5099\u63f4\u7b97\u6cd5\u4e0d\u518d\u628a\u73fe\u91d1\u985e\u6301\u80a1\u7b97\u9032\u6210\u9577\u578b'},
   {v:'4.16.0',date:'2026-11-04',notes:'✦ 配置進度「成長型股票」「持有ETF」兩張卡新增 hover 浮動視窗：已配置金額（成本口徑）／目標金額／還差／達成率<br>✦ 浮動視窗內附持股圓餅圖（依成本，排除現金；超過 6 檔時其餘併為「其他」），切片金額依 Sheets 達成率校準<br>✦ 已配置金額 = 目標金額 × 達成率，與卡片數字一致；手機版與指數列相同，不顯示浮動視窗'},
@@ -1414,7 +1415,7 @@ function silentGoogleAuth(){
 async function fetchAppToken(){
   if(!googleToken)return;
   try{
-    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B30')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!H1')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     if(!r.ok)return;
     const d=await r.json();
     _appToken=((d.values&&d.values[0]&&d.values[0][0])||'').trim();
