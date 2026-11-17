@@ -1008,7 +1008,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.20.2';
+const VERSION='v4.20.3';
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
@@ -1020,6 +1020,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.20.3',date:'2026-11-17',notes:'✦ 預測分頁右側面板只用 M:S：進階輸入 M:N、WACC×g 敏感度與反向 DCF O:S（敏感度改 5×4：WACC −0.5%／0／+0.5%／+1.0%），說明列 M13:S14；L 欄整欄灰色分隔左右<br>✦ 折現時間（財年結束日、年末年數、計入比例）不再佔輔助欄，直接寫進折現因子與現值公式；敏感度以陣列公式計算（已用 SKHY 實測：與合理股價逐位相同）<br>✦ 欄位對應調整：國家別 N6、淨現金截止日 N9、備援 WACC N11；v4.20.0–4.20.2 已建立的新版分頁需還原後重新遷移'},
   {v:'4.20.2',date:'2026-11-17',notes:'✦ 預測分頁右側重新編排：進階輸入 M:O（第 1–16 列）、WACC×g 敏感度與反向 DCF 移到 Q:V（第 1–12 列）、折現輔助欄改放 X:Z 並與年度表逐列對齊；全部落在列高一致的第 1–17 列，不再被備註與複查記錄的高列撐開<br>✦ 敏感度表加框、中心格標色；反向 DCF 標題與結果獨立成塊；β 空白時股權成本顯示「—」不再顯示誤導數字<br>✦ 注意：v4.20.0／4.20.1 已建立的新版分頁（STX、SKHY）需還原後重新遷移才會套用新位置'},
   {v:'4.20.1',date:'2026-11-17',notes:'✦ 修正 v4.20.0 遷移：舊表營收為手動輸入（G5/H5 空白）時，由第一年營收反推基期；寫入前驗算成長率能否重現舊營收（誤差 >2% 整檔略過不動）<br>✦ AI 查得的 β 若使公式 WACC 與舊值差 >2pp，不採用（β 欄留空、C2 沿用舊 WACC），由你決定是否填入<br>✦ 預測分頁新排版：隱藏格線、Arial、深色表頭、結果區（現價／合理價／決策）加大強調、假設格淺藍底、年度表隔列底色與統一數字格式、備註與複查記錄合併換行；新建與遷移分頁自動套用<br>✦ 設定頁新增「🎨 排版試做：SKHY」與「🎨 排版：全部持股分頁」（只改格式，數值與公式不動）'},
   {v:'4.20.0',date:'2026-11-17',notes:'✦ 既有預測分頁遷移工具（⚙ 系統設定 → 預測分頁遷移）：持股的舊分頁改用 v4.19.0 新版定義；台股與 ETF 不處理<br>✦ 每檔先複製「_舊」備份、原地改版；成長率／FCF Margin／g／股數／淨現金／倍數／EPS 沿用，季度複查記錄保留並追加遷移紀錄<br>✦ ADS 比率固定為 1（舊分頁股數已是現價所報單位，避免 SKHY 類重複換算）；β／國家別／財年月由 AI 查證；淨現金截止日一律標黃待核對；新舊 WACC 差 >2pp 標黃<br>✦ 修正 v4.19.0：新版輔助欄（財年結束日／年末年數／計入比例）由 H:J 移至 T:V，避免被 GAS 財報速評寫入的 H6:J7 覆蓋；遷移時保留 H6:K20 既有的財報速評內容<br>✦ 失敗自動從備份還原；已是新版或備份已存在者略過；結果寫入「估值遷移對照」分頁（新舊 WACC／合理價／決策）<br>✦ 建議先「試跑 STX／SKHY／AMZN」，確認後再「遷移其餘持股」；RKLB（模板來源）排在最後'},
@@ -2354,20 +2355,20 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
   // v4.19.0 新欄位：不合理或查無 → 用安全預設並標黃待覆核
   const betaRaw=num(model.beta);const beta=(betaRaw!=null&&betaRaw>=0.3&&betaRaw<=3)?betaRaw:null;
   if(beta==null)flags.push('N5');
-  let betaUse=beta,betaNote='AI查證；缺值時 C2 採 N14 備援 WACC';
+  let betaUse=beta,betaNote='AI查證；缺值時 C2 採備援WACC（N11）';
   const fyM=(Number.isInteger(model.fyEndMonth)&&model.fyEndMonth>=1&&model.fyEndMonth<=12)?model.fyEndMonth:12;
   if(fyM!==model.fyEndMonth)flags.push('N3');
   const adsRaw=num(model.adsPerShare);const ads=(adsRaw!=null&&adsRaw>0&&adsRaw<=1000)?adsRaw:1;
   if(ads!==adsRaw)flags.push('N4');
   const country=(typeof model.country==='string'&&/^[A-Z]{2}$/.test(model.country.trim().toUpperCase()))?model.country.trim().toUpperCase():'';
-  if(!country)flags.push('N8');
+  if(!country)flags.push('N6');
   let ncDate='';
   if(typeof model.netCashDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(model.netCashDate)){
     const dd=new Date(model.netCashDate);
     if(!isNaN(dd.getTime())&&dd.getTime()<=Date.now()+86400000)ncDate=model.netCashDate;
   }
-  if(!ncDate)flags.push('N15');
-  if(MG)flags.push('N15'); // 遷移：淨現金截止日由 AI 推定，一律標黃請核對
+  if(!ncDate)flags.push('N9');
+  if(MG)flags.push('N9'); // 遷移：淨現金截止日由 AI 推定，一律標黃請核對
   if(MG&&opts.derived){flags.push('H5');flags.push('G5');} // 基期由第一年營收反推，標黃供核對
   const dw0=num(model.debtWeight);const debtW=(dw0!=null&&dw0>=0&&dw0<=0.6)?dw0:0;
   // 遷移：預估新公式 WACC，與舊值差 >2pp 標黃（N5）
@@ -2382,7 +2383,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
         newWaccEst=ke*(1-debtW)+kd*(1-0.21)*debtW;
         if(typeof opts.oldWacc==='number'&&Math.abs(newWaccEst-opts.oldWacc)>0.02){
           flags.push('N5');
-          betaNote='AI 查得 β='+beta+'，公式 WACC '+(newWaccEst*100).toFixed(1)+'% 與舊值 '+(opts.oldWacc*100).toFixed(1)+'% 差 >2pp，未採用；C2 沿用舊 WACC（N14）。填入此格即改用公式';
+          betaNote='AI 查得 β='+beta+'，公式 WACC '+(newWaccEst*100).toFixed(1)+'% 與舊值 '+(opts.oldWacc*100).toFixed(1)+'% 差 >2pp，未採用；C2 沿用舊 WACC（N11）。填入此格即改用公式';
           betaUse=null;
         }
       }
@@ -2400,48 +2401,47 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
   const eps=isDCF?'':(num(model.eps)==null?'':model.eps);
   const baseYear=by||(new Date().getFullYear()-1);
   const T=awTab(ticker)+'!';
-  // v4.19.0 進階輸入（M:O）、敏感度表與反向 DCF（M18:R29）；G2/G3/G4/K2:K4 位置不動
+  // v4.20.3：右側面板只用 M:S（第 1–14 列）：進階輸入 M:N、敏感度與反向 DCF O:S；折現時間直接寫進 F／G 公式；G2/G3/G4/K2:K4 位置不動
   const adv=[
-    ['進階輸入（v4.19.0）','數值','說明'],
-    ['估值日','=TODAY()','折現起算日（年末折現）'],
-    ['財年結束月',fyM,'1–12；用來推算各年度結束日'],
-    ['每1普通股對應ADS數',ads,'一般股=1；SKHY 10 ADS=1普通股→10；合理價＝權益價值÷(股數×此值)'],
-    ['β',betaUse==null?'':betaUse,betaNote],
-    ['無風險利率 rf',"='估值參數'!B2",'來自「估值參數」分頁（手動維護）'],
-    ['ERP',"='估值參數'!B3",'同上'],
-    ['國家別',country,'對照「估值參數」國家溢酬表'],
-    ['國家溢酬',"=IFERROR(VLOOKUP($N$8,'估值參數'!$A$8:$B$30,2,FALSE),0)",'查無國家別時為 0'],
-    ['負債比重 D/(D+E)',debtW,'預設 0＝全股權'],
-    ['稅前負債成本','=$N$6+0.02','rf＋2% 信用利差（可手改）'],
-    ['稅率',0.21,'可手改'],
-    ['股權成本 Ke','=IF(ISNUMBER($N$5),$N$6+$N$5*$N$7+$N$9,"—")','rf＋β×ERP＋國家溢酬（β空白時不計算）'],
-    ['AI估算WACC（備援）',wacc,'β缺值時 C2 採用'],
-    ['淨現金截止日',ncDate,'資產負債表日；此日之後的 FCF 才計入，空白＝以估值日起算'],
-    ['檢查','=IF(AND(ISNUMBER($C$2),$C$2>$C$3),"OK","⚠️ WACC缺值或 g≥WACC")','']
+    ['進階輸入・敏感度・反向 DCF',''],
+    ['估值日（=今天）','=TODAY()'],
+    ['財年結束月（1–12）',fyM],
+    ['每1普通股＝幾ADS',ads],
+    ['β（空白＝用備援WACC）',betaUse==null?'':betaUse],
+    ['國家別',country],
+    ['國家溢酬（查表）',"=IFERROR(VLOOKUP($N$6,'估值參數'!$A$8:$B$30,2,FALSE),0)"],
+    ['負債比重 D/(D+E)',debtW],
+    ['淨現金截止日',ncDate],
+    ['股權成本 Ke','=IF(ISNUMBER($N$5),\'估值參數\'!$B$2+$N$5*\'估值參數\'!$B$3+$N$7,"—")'],
+    ['備援WACC',wacc],
+    ['檢查','=IF(AND(ISNUMBER($C$2),$C$2>$C$3),"OK","⚠️ WACC缺值或 g≥WACC")']
   ];
-  const cols=['R','S','T','U','V'];
-  const gOff=[-0.01,-0.005,0,0.005,0.01];
-  const sens=[['WACC × g 敏感度（合理股價；中心＝目前假設）','','','','',''],
-    ['g＼WACC',...gOff.map(o=>'=$C$2'+(o<0?'-':'+')+Math.abs(o))]];
+  const advNote='說明：'+betaNote+'；WACC＝rf＋β×ERP＋國家溢酬（rf、ERP、國家溢酬見「估值參數」分頁）；淨現金截止日之後的 FCF 才計入，空白＝自估值日起算；每1普通股＝幾ADS：一般股填 1，合理價＝權益價值÷(股數×此值)。';
+  const wOff=[-0.005,0,0.005,0.01],gOff=[-0.01,-0.005,0,0.005,0.01],cols=['P','Q','R','S'];
+  const dEnd='DATE($A$7:$A$17,$N$3+1,0)';
+  const tA='((('+dEnd+'-$N$2)>0)*(('+dEnd+'-$N$2)/365.25))';
+  const xr='(('+dEnd+'-IF(ISNUMBER($N$9),$N$9,$N$2))/365.25)';
+  const rA='(('+xr+'>0)*('+xr+'<1)*'+xr+'+('+xr+'>=1))';
+  const t17='MAX(0,(DATE($A$17,$N$3+1,0)-$N$2)/365.25)';
+  const sens=[['WACC × g 敏感度（合理股價）','','','',''],
+    ['g＼WACC',...wOff.map(o=>'=$C$2'+(o<0?'-':'+')+Math.abs(o))]];
   gOff.forEach((o,ri)=>{
-    const k=3+ri;
-    sens.push(['=$C$3'+(o<0?'-':'+')+Math.abs(o),...cols.map(X=>`=IF($Q${k}>=${X}$2,"—",(SUMPRODUCT($E$7:$E$17,$Z$7:$Z$17,(1+${X}$2)^(-$Y$7:$Y$17))+$E$17*(1+$Q${k})/(${X}$2-$Q${k})*(1+${X}$2)^(-$Y$17)+$C$5)/($C$4*$N$4))`)]);
+    const k=4+ri;
+    sens.push(['=$C$3'+(o<0?'-':'+')+Math.abs(o),...cols.map(X=>`=IF($O${k}>=${X}$3,"—",(SUMPRODUCT($E$7:$E$17,${rA},(1+${X}$3)^(-${tA}))+$E$17*(1+$O${k})/(${X}$3-$O${k})*(1+${X}$3)^(-${t17})+$C$5)/($C$4*$N$4))`)]);
   });
-  sens.push(['','','','','','']);
-  sens.push(['反向 DCF（現價隱含）','','','','','']);
-  sens.push(['現價隱含的 FCF 倍數（>1＝市場比你的預測樂觀）','','','','=IFERROR(($G$2*$C$4*$N$4-$C$5)/(SUM($G$7:$G$17)+$E$17*(1+$C$3)/($C$2-$C$3)*$F$17),"—")','']);
-  sens.push(['隱含末年 FCF Margin','','','','=IFERROR($D$17*$U$10,"—")','']);
-  sens.push(['驗算：敏感度中心 − 合理股價（應為 0）','','','','=IFERROR($T$5-$G$3,"—")','']);
+  sens.push(['反向 DCF（現價隱含）','','','','']);
+  sens.push(['現價隱含的 FCF 倍數（>1＝市場比預測樂觀）','','','','=IFERROR(($G$2*$C$4*$N$4-$C$5)/(SUM($G$7:$G$17)+$E$17*(1+$C$3)/($C$2-$C$3)*$F$17),"—")']);
+  sens.push(['隱含末年 FCF Margin','','','','=IFERROR($D$17*$S$10,"—")']);
+  sens.push(['驗算：敏感度中心 − 合理股價（應為 0）','','','','=IFERROR($Q$6-$G$3,"—")']);
   const kf=r=>`=IF(ISNUMBER(SEARCH("DCF",$H$1)),$G$3*J${r},$K$1*J${r})`;
   const head=[
     ['','A (項目)','B (數值/公式)','C (說明)','編輯時間','股票代號',ticker,(MG&&opts.h1)||('估值定錨：'+anchorTxt),'',(MG&&opts.j1)||'預估EPS',eps],
-    [1,'WACC (折現率)','=IF(ISNUMBER($N$5),$N$13*(1-$N$10)+$N$11*(1-$N$12)*$N$10,$N$14)','公式：rf＋β×ERP＋國家溢酬；β缺值時採N14備援',awToday(),'現價','=GOOGLEFINANCE("'+ticker+'","price")',isDCF?'J欄＝DCF係數':'J欄＝PE倍數','保守估計',mult[0],kf(2)],
+    [1,'WACC (折現率)','=IF(ISNUMBER($N$5),$N$10*(1-$N$8)+(\'估值參數\'!$B$2+0.02)*(1-0.21)*$N$8,$N$11)','公式：rf＋β×ERP＋國家溢酬；β空白時採備援WACC（N11）',awToday(),'現價','=GOOGLEFINANCE("'+ticker+'","price")',isDCF?'J欄＝DCF係數':'J欄＝PE倍數','保守估計',mult[0],kf(2)],
     [2,'永續成長率 (g)',gt,'長期GDP錨點（AI估算）','','合理股價','=((SUM(G7:G17)+((E17*(1+C3))/(C2-C3))*F17)+C5)/(C4*$N$4)','','合理預估',mult[1],kf(3)],
     [3,(MG&&opts.a4)||'流通股數 (億股)',shares==null?'':shares,'','','決策標準','=IF(G2<=K3*0.7,"🔥 強力購入",IF(G2<=K3*0.8,"💎 建議買入",IF(G2>K3*1.2,"🚨 建議分批賣出","✅ 穩定持有")))','','樂觀溢價',mult[2],kf(4)],
     [4,'淨現金 (億美元)',netCash==null?'':netCash,'','','基期年度/營收(億美元)',baseYear,baseRev==null?'':baseRev,'','','']
   ];
   const yrs=[['年分','營收成長率','營收預估(億美元)','FCF MARGIN','FCF預估','折現因子','FCF現值']];
-  const yh=[['財年結束日','年末年數 t','計入比例']];
   for(let i=0;i<11;i++){
     const r=7+i;
     yrs.push([
@@ -2450,18 +2450,13 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
       i===0?`=$H$5*(1+B${r})`:`=C${r-1}*(1+B${r})`,
       model.margin[i],
       `=C${r}*D${r}`,
-      `=1/(1+$C$2)^Y${r}`,
-      `=E${r}*F${r}*Z${r}`
-    ]);
-    yh.push([
-      `=EOMONTH(DATE(A${r},$N$3,1),0)`,
-      `=MAX(0,(X${r}-$N$2)/365.25)`,
-      `=MIN(1,MAX(0,(X${r}-IF(ISNUMBER($N$15),$N$15,$N$2))/365.25))`
+      `=1/(1+$C$2)^MAX(0,(DATE(A${r},$N$3+1,0)-$N$2)/365.25)`,
+      `=E${r}*F${r}*MIN(1,MAX(0,(DATE(A${r},$N$3+1,0)-IF(ISNUMBER($N$9),$N$9,$N$2))/365.25))`
     ]);
   }
   const srcTxt=(Array.isArray(model.sources)?model.sources:[]).map(s=>`${s.item||''}: ${s.url||''} (${s.date||''})`).join('；');
   const note='分析備註：'+(model.notes||'')+'（估值定錨：'+anchorTxt+'｜'+(model.anchorReason||'')+'）資料來源（AI查證，請抽查）：'+(srcTxt||'無')+'。AI估算：永續成長率、營收成長率、FCF Margin、EPS／倍數、備援WACC；β／國家別／財年月／ADS比率／淨現金截止日由AI查證；WACC 由 C2 公式計算（rf、ERP 見「估值參數」分頁）；折現自估值日起、年末折現，淨現金截止日之後的 FCF 才計入。'+(uniq.length?'⚠️ 黃底儲存格（'+uniq.join('、')+'）為查無資料或未通過合理性檢查，請覆核後再採信估值。':'');
-  const noteFinal=MG?((opts.oldNote?opts.oldNote+'\n':'')+'【v4.20.0 遷移】沿用舊分頁的成長率／FCF Margin／g／股數／淨現金；ADS 比率固定為 1（舊 C4 已是現價所報單位）；WACC 改為公式（舊值保存在 N14 備援與 '+ticker+'_舊 分頁）；β／國家別／財年月由 AI 查證，淨現金截止日（N15）請核對（此日之後的 FCF 才計入，舊版手動剔除已入帳 FCF 的做法改由此欄處理）。'+(uniq.length?'⚠️ 黃底儲存格（'+uniq.join('、')+'）請覆核。':'')):note;
+  const noteFinal=MG?((opts.oldNote?opts.oldNote+'\n':'')+'【v4.20.0 遷移】沿用舊分頁的成長率／FCF Margin／g／股數／淨現金；ADS 比率固定為 1（舊 C4 已是現價所報單位）；WACC 改為公式（舊值保存在 N11 備援與 '+ticker+'_舊 分頁）；β／國家別／財年月由 AI 查證，淨現金截止日（N9）請核對（此日之後的 FCF 才計入，舊版手動剔除已入帳 FCF 的做法改由此欄處理）。'+(uniq.length?'⚠️ 黃底儲存格（'+uniq.join('、')+'）請覆核。':'')):note;
   let sid,bkId=null,preCol=null;
   if(MG){
     const m2=await sheetsApi('?fields=sheets.properties.index');
@@ -2474,13 +2469,13 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
     sid=dup.replies[0].duplicateSheet.properties.sheetId;
   }
   try{
-    await sheetsApi('/values:batchClear','POST',{ranges:MG?[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:AB40']:[T+'A1:AB60']});
+    await sheetsApi('/values:batchClear','POST',{ranges:MG?[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:S40']:[T+'A1:S60']});
     await sheetsApi('/values:batchUpdate','POST',{valueInputOption:'USER_ENTERED',data:[
       {range:T+'A1:K5',values:head},
       {range:T+'A6:G17',values:yrs},
-      {range:T+'X6:Z17',values:yh},
-      {range:T+'M1:O16',values:adv},
-      {range:T+'Q1:V12',values:sens},
+      {range:T+'M1:N12',values:adv},
+      {range:T+'M13',values:[[advNote]]},
+      {range:T+'O2:S12',values:sens},
       {range:T+'A19',values:[[noteFinal]]}
     ].concat(MG?[]:[{range:T+'A21',values:[['【季度複查記錄】']]},{range:T+'A22:D22',values:[reviewRow]}])});
     const rg=(r0,r1,c0,c1)=>({sheetId:sid,startRowIndex:r0,endRowIndex:r1,startColumnIndex:c0,endColumnIndex:c1});
@@ -2490,21 +2485,19 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
       nf(rg(6,17,3,4),'PERCENT','0.0%'),nf(rg(6,17,4,5),'NUMBER','0.0'),nf(rg(6,17,5,6),'PERCENT','0.00%'),nf(rg(6,17,6,7),'NUMBER','0.0'),
       nf(rg(1,3,2,3),'PERCENT','0.0%'),nf(rg(3,4,2,3),'NUMBER','0.00'),nf(rg(4,5,2,3),'NUMBER','0.0'),
       nf(rg(4,5,6,7),'NUMBER','0'),nf(rg(4,5,7,8),'NUMBER','0.0'),nf(rg(1,4,10,11),'NUMBER','0.00'),
-      nf(rg(6,17,23,24),'DATE','yyyy-mm-dd'),nf(rg(6,17,24,25),'NUMBER','0.00'),nf(rg(6,17,25,26),'PERCENT','0%'),
-      nf(rg(1,2,13,14),'DATE','yyyy-mm-dd'),nf(rg(14,15,13,14),'DATE','yyyy-mm-dd'),nf(rg(3,4,13,14),'NUMBER','0.##'),nf(rg(4,5,13,14),'NUMBER','0.00'),
-      nf(rg(5,7,13,14),'PERCENT','0.00%'),nf(rg(8,14,13,14),'PERCENT','0.00%'),
-      nf(rg(1,2,17,22),'PERCENT','0.0%'),nf(rg(2,7,16,17),'PERCENT','0.0%'),nf(rg(2,7,17,22),'NUMBER','0.00'),
-      nf(rg(9,10,20,21),'NUMBER','0.00'),nf(rg(10,11,20,21),'PERCENT','0.0%'),nf(rg(11,12,20,21),'NUMBER','0.00')
+      
+      nf(rg(1,2,13,14),'DATE','yyyy-mm-dd'),nf(rg(2,3,13,14),'NUMBER','0'),nf(rg(3,4,13,14),'NUMBER','0.##'),nf(rg(4,5,13,14),'NUMBER','0.00'),nf(rg(6,8,13,14),'PERCENT','0.00%'),nf(rg(8,9,13,14),'DATE','yyyy-mm-dd'),nf(rg(9,11,13,14),'PERCENT','0.00%'),
+      nf(rg(2,3,15,19),'PERCENT','0.0%'),nf(rg(3,8,14,15),'PERCENT','0.0%'),nf(rg(3,8,15,19),'NUMBER','0.00'),nf(rg(9,10,18,19),'NUMBER','0.00'),nf(rg(10,11,18,19),'PERCENT','0.0%'),nf(rg(11,12,18,19),'NUMBER','0.00')
     ];
-    const cellIdx={H5:[4,7],C4:[3,2],C5:[4,2],G5:[4,6],N3:[2,13],N4:[3,13],N5:[4,13],N8:[7,13],N15:[14,13]};
+    const cellIdx={H5:[4,7],C4:[3,2],C5:[4,2],G5:[4,6],N3:[2,13],N4:[3,13],N5:[4,13],N6:[5,13],N9:[8,13]};
     uniq.forEach(k=>{const p=cellIdx[k];if(p)reqs.push({repeatCell:{range:rg(p[0],p[0]+1,p[1],p[1]+1),cell:{userEnteredFormat:{backgroundColor:{red:1,green:0.95,blue:0.6}}},fields:'userEnteredFormat.backgroundColor'}});});
     await sheetsApi(':batchUpdate','POST',{requests:reqs});
   }catch(e){
     if(MG){
       let rest='已從備份還原';
       try{
-        const bv=await sheetsApi('/values/'+encodeURIComponent(awTab(ticker+'_舊')+'!A1:AB40')+'?valueRenderOption=FORMULA');
-        await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:AB40']});
+        const bv=await sheetsApi('/values/'+encodeURIComponent(awTab(ticker+'_舊')+'!A1:S40')+'?valueRenderOption=FORMULA');
+        await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:S40']});
         await sheetsApi('/values/'+encodeURIComponent(T+'A1')+'?valueInputOption=USER_ENTERED','PUT',{values:bv.values||[]});
       }catch(e2){rest='⚠️ 還原失敗，請手動從 '+ticker+'_舊 還原：'+e2.message;}
       throw new Error('遷移失敗（'+rest+'）：'+e.message);
@@ -2553,9 +2546,10 @@ async function awStyleTab(ticker){
   const hd=(range)=>[bg(range,STY.navy),txt(range,{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),rc(range,{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment')];
   const q=[];
   q.push({updateSheetProperties:{properties:{sheetId:sid,gridProperties:{hideGridlines:true}},fields:'gridProperties.hideGridlines'}});
-  q.push(rc(R(0,80,0,28),{textFormat:{fontFamily:'Arial',fontSize:10},verticalAlignment:'MIDDLE',wrapStrategy:'CLIP'},'userEnteredFormat(textFormat,verticalAlignment,wrapStrategy)'));
-  [72,150,100,110,90,100,100,110,90,80,80,24,200,90,260,24,90,80,80,80,80,80,24,90,90,90].forEach((w,i)=>q.push(colW(w,i,i+1)));
+  q.push(rc(R(0,80,0,19),{textFormat:{fontFamily:'Arial',fontSize:10},verticalAlignment:'MIDDLE',wrapStrategy:'CLIP'},'userEnteredFormat(textFormat,verticalAlignment,wrapStrategy)'));
+  [72,150,100,110,90,100,100,110,90,80,80,14,170,90,80,80,80,80,80].forEach((w,i)=>q.push(colW(w,i,i+1)));
   q.push(rowH(30,0,1),rowH(36,1,5),rowH(28,5,6),rowH(22,6,17));
+  q.push(bg(R(0,200,11,12),{red:0.74,green:0.76,blue:0.78}));
   // 表頭
   q.push(...hd(R(0,1,0,11)),...hd(R(5,6,0,7)));
   // 左側假設區（可編輯）與說明
@@ -2595,22 +2589,30 @@ async function awStyleTab(ticker){
     q.push({updateBorders:{range:R(r,r+1,0,11),bottom:bd}});
     q.push(rowH(Math.max(32,lines(row[3],52)*16+10),r,r+1));
   });
-  // 右側面板（v4.19+ 新版分頁）：進階輸入 M:O、敏感度與反向 DCF Q:V、折現輔助 X:Z；皆在第 1–17 列（列高一致）
+  // 右側面板（v4.19+ 新版分頁）：只用 M:S；進階輸入 M:N、敏感度與反向 DCF O:S，說明列 M13:S14
   if(hasAdv){
     const mg=(r0,r1,c0,c1)=>[{unmergeCells:{range:R(r0,r1,c0,c1)}},{mergeCells:{range:R(r0,r1,c0,c1),mergeType:'MERGE_ALL'}}];
     const bold={fontFamily:'Arial',fontSize:10,bold:true};
-    q.push(...hd(R(0,1,12,15)));
-    q.push(txt(R(1,16,14,15),{fontFamily:'Arial',fontSize:9,foregroundColor:STY.gray}),rc(R(1,16,13,14),{horizontalAlignment:'RIGHT'},'userEnteredFormat.horizontalAlignment'));
-    q.push(...mg(0,1,16,22),...hd(R(0,1,16,22)));
-    q.push(bg(R(1,2,16,22),STY.sec),txt(R(1,2,16,22),bold),rc(R(1,2,16,22),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
-    q.push(bg(R(2,7,16,17),STY.sec),txt(R(2,7,16,17),bold),rc(R(2,7,16,17),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
-    q.push(rc(R(2,7,17,22),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'),bg(R(4,5,19,20),STY.key),txt(R(4,5,19,20),bold));
-    q.push({updateBorders:{range:R(1,7,16,22),top:bd,bottom:bd,left:bd,right:bd,innerHorizontal:bd,innerVertical:bd}});
-    q.push(...mg(8,9,16,22),bg(R(8,9,16,22),STY.navy),txt(R(8,9,16,22),{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}));
-    [9,10,11].forEach(r=>q.push(...mg(r,r+1,16,20)));
-    q.push(rc(R(9,12,20,21),{horizontalAlignment:'CENTER',backgroundColor:STY.key,textFormat:bold},'userEnteredFormat(horizontalAlignment,backgroundColor,textFormat)'));
-    q.push(bg(R(5,6,23,26),STY.navy),txt(R(5,6,23,26),{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),rc(R(5,6,23,26),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
-    q.push(rc(R(6,17,23,26),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
+    const white={fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white};
+    const ctr=(range)=>rc(range,{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment');
+    q.push(...mg(0,1,12,19),...hd(R(0,1,12,19)));
+    // 輸入：可編輯者淺藍底
+    q.push(rc(R(1,12,13,14),{horizontalAlignment:'RIGHT'},'userEnteredFormat.horizontalAlignment'));
+    [2,3,4,5,7,8,10].forEach(r=>q.push(bg(R(r,r+1,13,14),STY.input)));
+    q.push(txt(R(1,12,13,14),bold),{updateBorders:{range:R(1,12,12,14),bottom:bd,innerHorizontal:bd}});
+    // 說明
+    q.push(...mg(12,14,12,19),rc(R(12,14,12,19),{wrapStrategy:'WRAP',verticalAlignment:'TOP',backgroundColor:STY.note,textFormat:{fontFamily:'Arial',fontSize:9,foregroundColor:STY.gray}},'userEnteredFormat(wrapStrategy,verticalAlignment,backgroundColor,textFormat)'));
+    // 敏感度
+    q.push(...mg(1,2,14,19),bg(R(1,2,14,19),STY.sec),txt(R(1,2,14,19),bold));
+    q.push(bg(R(2,3,14,19),STY.navy),txt(R(2,3,14,19),white),ctr(R(2,3,14,19)));
+    q.push(bg(R(3,8,14,15),STY.sec),txt(R(3,8,14,15),bold),ctr(R(3,8,14,15)),ctr(R(3,8,15,19)));
+    q.push(bg(R(5,6,16,17),STY.key),txt(R(5,6,16,17),bold));
+    q.push({updateBorders:{range:R(2,8,14,19),top:bd,bottom:bd,left:bd,right:bd,innerHorizontal:bd,innerVertical:bd}});
+    // 反向 DCF
+    q.push(...mg(8,9,14,19),bg(R(8,9,14,19),STY.navy),txt(R(8,9,14,19),white));
+    [9,10,11].forEach(r=>q.push(...mg(r,r+1,14,18)));
+    q.push(rc(R(9,12,18,19),{horizontalAlignment:'CENTER',backgroundColor:STY.key,textFormat:bold},'userEnteredFormat(horizontalAlignment,backgroundColor,textFormat)'));
+    q.push({updateBorders:{range:R(9,12,14,19),bottom:bd,innerHorizontal:bd}});
   }
   await sheetsApi('/values/'+encodeURIComponent(T+'B1:D1')+'?valueInputOption=USER_ENTERED','PUT',{values:[['項目','數值','說明']]});
   await sheetsApi(':batchUpdate','POST',{requests:q});
