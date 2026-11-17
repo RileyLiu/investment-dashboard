@@ -936,7 +936,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="settings-section"><div class="settings-section-title">🤖 Anthropic API</div><div class="settings-note">API Key 優先從 Google Sheets 設定!B4 自動載入；手動填寫後儲存亦可。</div><div class="settings-field"><label class="settings-label">API Key</label><input type="password" class="settings-input" id="input-apikey" placeholder="sk-ant-..."></div></div>
     <div class="settings-section"><div class="settings-section-title">📊 Google Sheets 連結</div><div class="settings-note">授權後自動從「持股資訊」分頁讀取持股，跨裝置同步。</div><div class="settings-field"><label class="settings-label">試算表 ID</label><input type="text" class="settings-input" id="input-sheetid" placeholder="試算表網址中的長串ID"></div><button class="btn-google" id="btn-google-auth" onclick="startGoogleAuth()"><span>🔗</span><span id="google-auth-text">連結 Google 帳號</span></button></div>
     <div class="settings-section"><div class="settings-section-title">🚀 GitHub 自動上傳</div><div class="settings-note">GitHub PAT 優先從試算表「設定」分頁 B1 讀取。</div><div class="settings-field"><label class="settings-label">GitHub PAT</label><input type="password" class="settings-input" id="input-github-pat" placeholder="github_pat_..."></div><div class="settings-field"><label class="settings-label">Repo（owner/name）</label><input type="text" class="settings-input" id="input-github-repo" placeholder="RileyLiu/investment-dashboard"></div><div class="settings-field"><label class="settings-label">Branch</label><input type="text" class="settings-input" id="input-github-branch" placeholder="main"></div></div>
-    <div class="settings-section"><div class="settings-section-title">🔧 預測分頁遷移（v4.20.0）</div><div class="settings-note">把持股的舊預測分頁改成新版定義（台股與 ETF 不處理）。每檔先備份為「_舊」，輸入數字沿用、複查記錄保留；結果寫入「估值遷移對照」分頁。</div><button class="refresh-btn" onclick="awMigrateRun('pilot')">先試跑 STX／SKHY／AMZN</button> <button class="refresh-btn" onclick="awMigrateRun('rest')">遷移其餘持股</button><div id="mig-log" style="margin-top:8px;font-family:var(--font-mono);font-size:10px;line-height:1.6;color:var(--text-muted);max-height:180px;overflow:auto"></div></div>
+    <div class="settings-section"><div class="settings-section-title">🔧 預測分頁遷移（v4.20.0）</div><div class="settings-note">把持股的舊預測分頁改成新版定義（台股與 ETF 不處理）。每檔先備份為「_舊」，輸入數字沿用、複查記錄保留；結果寫入「估值遷移對照」分頁。</div><button class="refresh-btn" onclick="awMigrateRun('pilot')">先試跑 STX／SKHY／AMZN</button> <button class="refresh-btn" onclick="awMigrateRun('rest')">遷移其餘持股</button> <button class="refresh-btn" onclick="awStyleRun('SKHY')">🎨 排版試做：SKHY</button> <button class="refresh-btn" onclick="awStyleRun('held')">🎨 排版：全部持股分頁</button><div id="mig-log" style="margin-top:8px;font-family:var(--font-mono);font-size:10px;line-height:1.6;color:var(--text-muted);max-height:180px;overflow:auto"></div></div>
     <button class="btn-save" onclick="saveSettings()">儲存設定</button>
     <button class="btn-cancel" onclick="closeModal('settings-modal')">取消</button>
   </div>
@@ -1008,7 +1008,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.20.0';
+const VERSION='v4.20.1';
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
@@ -1020,6 +1020,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.20.1',date:'2026-11-17',notes:'✦ 修正 v4.20.0 遷移：舊表營收為手動輸入（G5/H5 空白）時，由第一年營收反推基期；寫入前驗算成長率能否重現舊營收（誤差 >2% 整檔略過不動）<br>✦ AI 查得的 β 若使公式 WACC 與舊值差 >2pp，不採用（β 欄留空、C2 沿用舊 WACC），由你決定是否填入<br>✦ 預測分頁新排版：隱藏格線、Arial、深色表頭、結果區（現價／合理價／決策）加大強調、假設格淺藍底、年度表隔列底色與統一數字格式、備註與複查記錄合併換行；新建與遷移分頁自動套用<br>✦ 設定頁新增「🎨 排版試做：SKHY」與「🎨 排版：全部持股分頁」（只改格式，數值與公式不動）'},
   {v:'4.20.0',date:'2026-11-17',notes:'✦ 既有預測分頁遷移工具（⚙ 系統設定 → 預測分頁遷移）：持股的舊分頁改用 v4.19.0 新版定義；台股與 ETF 不處理<br>✦ 每檔先複製「_舊」備份、原地改版；成長率／FCF Margin／g／股數／淨現金／倍數／EPS 沿用，季度複查記錄保留並追加遷移紀錄<br>✦ ADS 比率固定為 1（舊分頁股數已是現價所報單位，避免 SKHY 類重複換算）；β／國家別／財年月由 AI 查證；淨現金截止日一律標黃待核對；新舊 WACC 差 >2pp 標黃<br>✦ 修正 v4.19.0：新版輔助欄（財年結束日／年末年數／計入比例）由 H:J 移至 T:V，避免被 GAS 財報速評寫入的 H6:J7 覆蓋；遷移時保留 H6:K20 既有的財報速評內容<br>✦ 失敗自動從備份還原；已是新版或備份已存在者略過；結果寫入「估值遷移對照」分頁（新舊 WACC／合理價／決策）<br>✦ 建議先「試跑 STX／SKHY／AMZN」，確認後再「遷移其餘持股」；RKLB（模板來源）排在最後'},
   {v:'4.19.0',date:'2026-11-17',notes:'✦ 預測分頁模板升級（僅影響之後新建的分頁；既有分頁與 RKLB 範本不動）<br>✦ 折現改為自「估值日」起、年末折現；新增財年結束月與「淨現金截止日」，截止日之前已入帳的 FCF 不重複計入（落實 10/28 守則）<br>✦ 新增 ADS/ADR 比率欄：合理價＝權益價值÷(普通股數×每股對應ADS數)，避免 SKHY 式單位錯誤<br>✦ WACC 改公式：rf＋β×ERP＋國家溢酬（可含負債權重）；rf、ERP、國家溢酬集中於新分頁「估值參數」（手動維護，首次建立時自動產生）；β 缺值時採 AI 備援 WACC<br>✦ 新增 WACC×g 5×5 敏感度表與反向 DCF（現價隱含的 FCF 倍數與末年 FCF Margin），並附驗算格<br>✦ AI 建模新增 β、國家別、財年結束月、淨現金截止日、ADS 比率、負債比重，查證失敗者標黃待覆核<br>✦ 注意：新分頁合理價以今日為估值基準，會高於以基期年底為基準的舊分頁，兩者不可直接比較；G2/G3/G4/K2:K4 位置不變，儀表板讀取邏輯不受影響'},
   {v:'4.18.0',date:'2026-11-17',notes:'✦ 安全邊際定義修正：MOS = (合理價−現價)/合理價（原分母為現價，會放大折扣；例：現價70／合理價100 原顯示 +43%，修正後 +30%）<br>✦ 估值五級「低估買入」門檻由折扣 ≥15% 改為 ≥20%，「深度低估」維持 ≥30%，與 THESIS_LINT 安全邊際規則一致<br>✦ 新建預測分頁的「決策標準」改為：現價 ≤ 合理價 70% 強力購入、≤ 80% 建議買入（原為 &lt; 保守價／&lt; 合理價 95%）；分批賣出條件（&gt; 合理價 120%）不變<br>✦ 修正「強力購入」決策標籤因不含「買入」而顯示灰色的配色問題<br>✦ 注意：既有預測分頁的決策標準公式在 Sheets 內，不會自動更新；儀表板的 MOS 與估值徽章會立即採用新定義'},
@@ -2352,6 +2353,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
   // v4.19.0 新欄位：不合理或查無 → 用安全預設並標黃待覆核
   const betaRaw=num(model.beta);const beta=(betaRaw!=null&&betaRaw>=0.3&&betaRaw<=3)?betaRaw:null;
   if(beta==null)flags.push('N5');
+  let betaUse=beta,betaNote='AI查證；缺值時 C2 採 N14 備援 WACC';
   const fyM=(Number.isInteger(model.fyEndMonth)&&model.fyEndMonth>=1&&model.fyEndMonth<=12)?model.fyEndMonth:12;
   if(fyM!==model.fyEndMonth)flags.push('N3');
   const adsRaw=num(model.adsPerShare);const ads=(adsRaw!=null&&adsRaw>0&&adsRaw<=1000)?adsRaw:1;
@@ -2365,6 +2367,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
   }
   if(!ncDate)flags.push('N15');
   if(MG)flags.push('N15'); // 遷移：淨現金截止日由 AI 推定，一律標黃請核對
+  if(MG&&opts.derived){flags.push('H5');flags.push('G5');} // 基期由第一年營收反推，標黃供核對
   const dw0=num(model.debtWeight);const debtW=(dw0!=null&&dw0>=0&&dw0<=0.6)?dw0:0;
   // 遷移：預估新公式 WACC，與舊值差 >2pp 標黃（N5）
   let newWaccEst=null;
@@ -2376,7 +2379,11 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
       if(beta!=null&&typeof rf==='number'&&typeof erp==='number'){
         const ke=rf+beta*erp+prem,kd=rf+0.02;
         newWaccEst=ke*(1-debtW)+kd*(1-0.21)*debtW;
-        if(typeof opts.oldWacc==='number'&&Math.abs(newWaccEst-opts.oldWacc)>0.02)flags.push('N5');
+        if(typeof opts.oldWacc==='number'&&Math.abs(newWaccEst-opts.oldWacc)>0.02){
+          flags.push('N5');
+          betaNote='AI 查得 β='+beta+'，公式 WACC '+(newWaccEst*100).toFixed(1)+'% 與舊值 '+(opts.oldWacc*100).toFixed(1)+'% 差 >2pp，未採用；C2 沿用舊 WACC（N14）。填入此格即改用公式';
+          betaUse=null;
+        }
       }
     }catch(_){_logErr('migWacc',_);}
   }
@@ -2398,7 +2405,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
     ['估值日','=TODAY()','折現起算日（年末折現）'],
     ['財年結束月',fyM,'1–12；用來推算各年度結束日'],
     ['每1普通股對應ADS數',ads,'一般股=1；SKHY 10 ADS=1普通股→10；合理價＝權益價值÷(股數×此值)'],
-    ['β',beta==null?'':beta,'AI查證；缺值時 C2 採 N14 備援 WACC'],
+    ['β',betaUse==null?'':betaUse,betaNote],
     ['無風險利率 rf',"='估值參數'!B2",'來自「估值參數」分頁（手動維護）'],
     ['ERP',"='估值參數'!B3",'同上'],
     ['國家別',country,'對照「估值參數」國家溢酬表'],
@@ -2503,6 +2510,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
     try{await sheetsApi(':batchUpdate','POST',{requests:[{deleteSheet:{sheetId:sid}}]});}catch(_){_logErr('L2187',_);}
     throw new Error('寫入預測分頁失敗，已移除未完成的分頁：'+e.message);
   }
+  try{await awStyleTab(ticker);}catch(_){_logErr('style',_);}
   if(!MG)sheetTabNames.push(ticker);
   let cmp=null;
   if(MG){
@@ -2514,9 +2522,105 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
     }catch(_){_logErr('migCmp',_);}
   }
   try{const d=await fetchDCFSheet(ticker);if(d){dcfCache[ticker]=d;renderWatchlist();}}catch(_){_logErr('L2191',_);}
-  return{existed:false,flags:uniq,cmp,newWaccEst};
+  return{existed:false,flags:uniq,cmp,newWaccEst,betaAI:beta,betaUsed:betaUse};
 }
 
+
+
+// ===== v4.20.1：預測分頁排版（只改格式，不動格子位置；僅 B1:D1 標題文字改為「項目／數值／說明」）=====
+const STY={navy:{red:0.12,green:0.16,blue:0.27},white:{red:1,green:1,blue:1},band:{red:0.96,green:0.97,blue:0.98},input:{red:0.91,green:0.94,blue:0.996},key:{red:1,green:0.96,blue:0.8},sec:{red:0.91,green:0.92,blue:0.94},note:{red:0.98,green:0.98,blue:0.98},gray:{red:0.42,green:0.45,blue:0.5},line:{red:0.85,green:0.87,blue:0.9}};
+async function awStyleTab(ticker){
+  const meta=await sheetsApi('?fields=sheets.properties(sheetId,title)');
+  const sh=(meta.sheets||[]).find(x=>x.properties.title===ticker);
+  if(!sh)throw new Error('找不到分頁 '+ticker);
+  const sid=sh.properties.sheetId,T=awTab(ticker)+'!';
+  const vr=await sheetsApi('/values:batchGet?ranges='+encodeURIComponent(T+'A18:A19')+'&ranges='+encodeURIComponent(T+'A22:D80')+'&ranges='+encodeURIComponent(T+'M1')+'&valueRenderOption=FORMATTED_VALUE');
+  const nv=vr.valueRanges[0].values||[];
+  const n18=(nv[0]&&nv[0][0])||'',n19=(nv[1]&&nv[1][0])||'';
+  const rv=vr.valueRanges[1].values||[];
+  const m1=(vr.valueRanges[2].values||[[]])[0]||[];
+  const hasAdv=typeof m1[0]==='string'&&m1[0].startsWith('進階輸入');
+  const R=(r0,r1,c0,c1)=>({sheetId:sid,startRowIndex:r0,endRowIndex:r1,startColumnIndex:c0,endColumnIndex:c1});
+  const rc=(range,fmt,fields)=>({repeatCell:{range,cell:{userEnteredFormat:fmt},fields}});
+  const rowH=(h,a,b)=>({updateDimensionProperties:{range:{sheetId:sid,dimension:'ROWS',startIndex:a,endIndex:b},properties:{pixelSize:h},fields:'pixelSize'}});
+  const colW=(w,a,b)=>({updateDimensionProperties:{range:{sheetId:sid,dimension:'COLUMNS',startIndex:a,endIndex:b},properties:{pixelSize:w},fields:'pixelSize'}});
+  const nf=(range,type,pattern,align)=>rc(range,{numberFormat:{type,pattern},horizontalAlignment:align||'RIGHT'},'userEnteredFormat(numberFormat,horizontalAlignment)');
+  const bg=(range,c)=>rc(range,{backgroundColor:c},'userEnteredFormat.backgroundColor');
+  const txt=(range,o)=>rc(range,{textFormat:o},'userEnteredFormat.textFormat');
+  const lines=(t,per)=>String(t||'').split('\n').reduce((a,x)=>a+Math.max(1,Math.ceil(x.length/per)),0);
+  const hd=(range)=>[bg(range,STY.navy),txt(range,{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),rc(range,{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment')];
+  const q=[];
+  q.push({updateSheetProperties:{properties:{sheetId:sid,gridProperties:{hideGridlines:true}},fields:'gridProperties.hideGridlines'}});
+  q.push(rc(R(0,80,0,23),{textFormat:{fontFamily:'Arial',fontSize:10},verticalAlignment:'MIDDLE',wrapStrategy:'CLIP'},'userEnteredFormat(textFormat,verticalAlignment,wrapStrategy)'));
+  [72,150,100,110,90,100,100,110,90,80,80,24,200,90,380,80,80,80,24,90,90,90].forEach((w,i)=>q.push(colW(w,i,i+1)));
+  q.push(rowH(30,0,1),rowH(36,1,5),rowH(28,5,6),rowH(22,6,17));
+  // 表頭
+  q.push(...hd(R(0,1,0,11)),...hd(R(5,6,0,7)));
+  // 左側假設區（可編輯）與說明
+  q.push(bg(R(1,5,2,3),STY.input),txt(R(1,5,2,3),{fontFamily:'Arial',fontSize:10,bold:true}),rc(R(1,5,1,2),{wrapStrategy:'WRAP'},'userEnteredFormat.wrapStrategy'));
+  q.push(txt(R(1,5,3,4),{fontFamily:'Arial',fontSize:9,foregroundColor:STY.gray}),rc(R(1,5,3,4),{wrapStrategy:'WRAP'},'userEnteredFormat.wrapStrategy'));
+  q.push(nf(R(1,3,2,3),'PERCENT','0.0%'),nf(R(3,4,2,3),'NUMBER','#,##0.00'),nf(R(4,5,2,3),'NUMBER','#,##0.0'));
+  // 結果區：現價／合理價／決策
+  q.push(txt(R(1,4,5,6),{fontFamily:'Arial',fontSize:10,bold:true}),rc(R(1,4,5,6),{horizontalAlignment:'RIGHT'},'userEnteredFormat.horizontalAlignment'));
+  q.push(bg(R(1,4,6,7),STY.key),txt(R(1,4,6,7),{fontFamily:'Arial',fontSize:14,bold:true}),rc(R(1,4,6,7),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
+  q.push(nf(R(1,3,6,7),'NUMBER','$#,##0.00','CENTER'),txt(R(3,4,6,7),{fontFamily:'Arial',fontSize:12,bold:true}));
+  const bd={style:'SOLID',width:1,color:STY.line};
+  q.push({updateBorders:{range:R(1,4,5,7),top:bd,bottom:bd,left:bd,right:bd,innerHorizontal:bd}});
+  // 估值倍數區
+  q.push(rc(R(1,4,8,9),{horizontalAlignment:'RIGHT'},'userEnteredFormat.horizontalAlignment'),nf(R(1,4,9,10),'NUMBER','0.0"x"','CENTER'),nf(R(1,4,10,11),'NUMBER','$#,##0.0','RIGHT'),txt(R(1,4,10,11),{fontFamily:'Arial',fontSize:10,bold:true}));
+  q.push(nf(R(0,1,10,11),'NUMBER','0.00','RIGHT'));
+  q.push(rc(R(4,5,5,6),{wrapStrategy:'WRAP'},'userEnteredFormat.wrapStrategy'),nf(R(4,5,6,7),'NUMBER','0','CENTER'),nf(R(4,5,7,8),'NUMBER','#,##0.0','CENTER'));
+  // 11 年預測表
+  for(let r=6;r<17;r++)q.push(bg(R(r,r+1,0,7),(r%2===0)?STY.band:STY.white));
+  q.push(nf(R(6,17,0,1),'NUMBER','0','CENTER'),nf(R(6,17,1,2),'PERCENT','0.0%'),nf(R(6,17,2,3),'NUMBER','#,##0.0'),nf(R(6,17,3,4),'PERCENT','0.0%'),nf(R(6,17,4,5),'NUMBER','#,##0.0'),nf(R(6,17,5,6),'PERCENT','0.0%'),nf(R(6,17,6,7),'NUMBER','#,##0.0'));
+  q.push({updateBorders:{range:R(6,17,0,7),bottom:bd,innerHorizontal:bd}});
+  // 財報速評（GAS 寫入 H6:K17）：淡灰小字、不換行
+  q.push(txt(R(5,17,7,11),{fontFamily:'Arial',fontSize:9,italic:true,foregroundColor:STY.gray}));
+  // 備註（A18／A19 合併、換行）
+  q.push({unmergeCells:{range:R(17,19,0,11)}});
+  [[17,n18],[18,n19]].forEach(([r,t])=>{
+    if(t){q.push({mergeCells:{range:R(r,r+1,0,11),mergeType:'MERGE_ALL'}},rc(R(r,r+1,0,11),{wrapStrategy:'WRAP',verticalAlignment:'TOP',backgroundColor:STY.note,textFormat:{fontFamily:'Arial',fontSize:10}},'userEnteredFormat(wrapStrategy,verticalAlignment,backgroundColor,textFormat)'),rowH(Math.max(40,lines(t,75)*16+14),r,r+1));}
+    else q.push(rowH(8,r,r+1));
+  });
+  q.push(rowH(10,19,20));
+  // 季度複查記錄
+  q.push(bg(R(20,21,0,11),STY.sec),txt(R(20,21,0,11),{fontFamily:'Arial',fontSize:11,bold:true}),rowH(26,20,21));
+  rv.forEach((row,i)=>{
+    if(!row||!row.some(x=>x))return;
+    const r=21+i;
+    q.push({unmergeCells:{range:R(r,r+1,3,11)}},{mergeCells:{range:R(r,r+1,3,11),mergeType:'MERGE_ALL'}});
+    q.push(rc(R(r,r+1,0,11),{wrapStrategy:'WRAP',verticalAlignment:'TOP',textFormat:{fontFamily:'Arial',fontSize:10}},'userEnteredFormat(wrapStrategy,verticalAlignment,textFormat)'));
+    q.push({updateBorders:{range:R(r,r+1,0,11),bottom:bd}});
+    q.push(rowH(Math.max(32,lines(row[3],52)*16+10),r,r+1));
+  });
+  // 進階輸入與敏感度（v4.19+ 新版分頁）
+  if(hasAdv){
+    q.push(...hd(R(0,1,12,15)),bg(R(17,18,12,18),STY.sec),txt(R(17,18,12,18),{fontFamily:'Arial',fontSize:10,bold:true}));
+    q.push(txt(R(1,16,14,15),{fontFamily:'Arial',fontSize:9,foregroundColor:STY.gray}),rc(R(1,16,13,14),{horizontalAlignment:'RIGHT'},'userEnteredFormat.horizontalAlignment'));
+    q.push(bg(R(18,19,12,18),STY.navy),txt(R(18,19,12,18),{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),bg(R(21,22,15,16),STY.key));
+    q.push(bg(R(5,6,19,22),STY.navy),txt(R(5,6,19,22),{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),rc(R(5,6,19,22),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
+  }
+  await sheetsApi('/values/'+encodeURIComponent(T+'B1:D1')+'?valueInputOption=USER_ENTERED','PUT',{values:[['項目','數值','說明']]});
+  await sheetsApi(':batchUpdate','POST',{requests:q});
+}
+async function awStyleRun(mode){
+  if(migBusy)return;
+  if(!googleToken){alert('請先完成 Google 授權');return;}
+  const targets=mode==='held'?awMigTargets():[mode];
+  const box=document.getElementById('mig-log');
+  if(!targets.length){if(box)box.textContent='沒有需要處理的分頁';return;}
+  if(!confirm('將套用新版排版到 '+targets.length+' 個分頁（'+targets.join('、')+'）。\n只改格式與 B1:D1 標題文字，數值與公式不動。確定？'))return;
+  migBusy=true;
+  const lines=[];
+  const say=m=>{lines.push(m);if(box)box.innerHTML=lines.map(awEsc).join('<br>');};
+  for(let i=0;i<targets.length;i++){
+    try{await awStyleTab(targets[i]);say(`[${i+1}/${targets.length}] 🎨 ${targets[i]} 完成`);}
+    catch(e){say(`[${i+1}/${targets.length}] ❌ ${targets[i]}：${e.message}`);}
+    await new Promise(r=>setTimeout(r,1200));
+  }
+  say('排版完成。');
+  migBusy=false;
+}
 
 // ===== v4.20.0：既有預測分頁遷移到新版定義 =====
 const MIG_PILOT=['STX','SKHY','AMZN'];
@@ -2538,15 +2642,33 @@ async function awReadOldTab(ticker){
   const v=d.values||[];
   const c=(r,k)=>{const x=v[r-1]&&v[r-1][k];return (x===undefined||x==='')?null:x;};
   const nc=(r,k)=>{const x=c(r,k);return typeof x==='number'?x:null;};
-  const growth=[],margin=[];
-  for(let r=7;r<=17;r++){growth.push(nc(r,1));margin.push(nc(r,3));}
+  const growth=[],margin=[],rev=[];
+  for(let r=7;r<=17;r++){growth.push(nc(r,1));margin.push(nc(r,3));rev.push(nc(r,2));}
   const h1=c(1,7);
+  const validYear=x=>Number.isInteger(x)&&x>=2000&&x<=2100;
+  let baseYear=nc(5,6),baseRev=nc(5,7),derived=false,chainErr=null;
+  const y7=nc(7,0);
+  // 舊表營收若為手動輸入（G5/H5 空白）→ 由第一年營收反推基期
+  if(!(baseRev>0)||!validYear(baseYear)){
+    if(validYear(y7)&&rev[0]>0&&growth[0]!=null&&growth[0]>-0.9){baseYear=y7-1;baseRev=rev[0]/(1+growth[0]);derived=true;}
+  }
+  if(!(baseRev>0)||!validYear(baseYear))chainErr='無法判定基期年／基期營收';
+  else if(validYear(y7)&&y7!==baseYear+1)chainErr='第一年（'+y7+'）與基期年（'+baseYear+'）不連續';
+  else{
+    let r0=baseRev;
+    for(let i=0;i<11;i++){
+      if(growth[i]==null||margin[i]==null||!(rev[i]>0)){chainErr='第 '+(i+1)+' 年成長率／Margin／營收缺值';break;}
+      r0*=1+growth[i];
+      if(Math.abs(r0/rev[i]-1)>0.02){chainErr='第 '+(i+1)+' 年營收與成長率對不上（'+r0.toFixed(1)+' vs '+rev[i]+'）';break;}
+    }
+  }
   return{
     already:typeof c(1,12)==='string'&&c(1,12).startsWith('進階輸入'),
+    derived,chainErr,
     price:nc(2,6),oldFair:nc(3,6),oldDec:c(4,6),
     h1:typeof h1==='string'?h1:null,j1:typeof c(1,9)==='string'?c(1,9):null,a4:typeof c(4,1)==='string'?c(4,1):null,
     oldNote:typeof c(19,0)==='string'?c(19,0):'',
-    model:{anchor:(typeof h1==='string'&&/DCF/i.test(h1))?'DCF':'PE Band',wacc:nc(2,2),g:nc(3,2),shares:nc(4,2),netCash:nc(5,2),baseYear:nc(5,6),baseRevenue:nc(5,7),eps:nc(1,10),mult:[nc(2,9),nc(3,9),nc(4,9)],growth,margin,notes:''}
+    model:{anchor:(typeof h1==='string'&&/DCF/i.test(h1))?'DCF':'PE Band',wacc:nc(2,2),g:nc(3,2),shares:nc(4,2),netCash:nc(5,2),baseYear,baseRevenue:baseRev>0?baseRev:null,eps:nc(1,10),mult:[nc(2,9),nc(3,9),nc(4,9)],growth,margin,notes:''}
   };
 }
 async function awFetchNewFields(ticker,name){
@@ -2560,11 +2682,12 @@ async function awFetchNewFields(ticker,name){
 async function awMigrateOne(ticker){
   const old=await awReadOldTab(ticker);
   if(old.already)return{skipped:'已是新版'};
+  if(old.chainErr)return{skipped:'舊表營收與成長率驗算不過，未動（'+old.chainErr+'）'};
   const h=holdingsData.find(x=>x.ticker===ticker)||{};
   const nf=await awFetchNewFields(ticker,h.name);
   const model=Object.assign({},old.model,{beta:nf.beta,country:nf.country,fyEndMonth:nf.fyEndMonth,netCashDate:nf.netCashDate,adsPerShare:1,debtWeight:0});
   const review=[awToday(),'模板遷移 v4.20.0','—','沿用舊分頁輸入；新增估值日折現、ADS 欄、WACC 公式、敏感度與反向 DCF。舊版備份於 '+ticker+'_舊。β 來源：'+(nf.betaSource||'無')];
-  const res=await awCreateForecastTab(ticker,model,old.price,review,{migrate:true,h1:old.h1,j1:old.j1,a4:old.a4,oldNote:old.oldNote,oldWacc:old.model.wacc});
+  const res=await awCreateForecastTab(ticker,model,old.price,review,{migrate:true,h1:old.h1,j1:old.j1,a4:old.a4,oldNote:old.oldNote,oldWacc:old.model.wacc,derived:old.derived});
   return{old,res};
 }
 async function awMigLogToSheet(rows){
@@ -2598,7 +2721,7 @@ async function awMigrateRun(mode){
       if(r.skipped){say(`[${i+1}/${targets.length}] ${t}：略過（${r.skipped}）`);continue;}
       const cm=r.res.cmp||{};
       const fl=r.res.flags.join('、');
-      say(`[${i+1}/${targets.length}] ✅ ${t}｜WACC ${pc(r.old.model.wacc)}→${pc(cm.wacc)}｜合理價 ${f(r.old.oldFair)}→${f(cm.fair)}｜現價 ${f(cm.price)}｜${cm.dec||''}${fl?'｜⚠️黃格：'+fl:''}`);
+      say(`[${i+1}/${targets.length}] ✅ ${t}｜WACC ${pc(r.old.model.wacc)}→${pc(cm.wacc)}｜β ${r.res.betaAI==null?'—':r.res.betaAI}${(r.res.betaUsed==null&&r.res.betaAI!=null)?'(未採用)':''}｜合理價 ${f(r.old.oldFair)}→${f(cm.fair)}｜現價 ${f(cm.price)}｜${cm.dec||''}${fl?'｜⚠️黃格：'+fl:''}`);
       sheetRows.push([awToday(),t,r.old.model.wacc,cm.wacc==null?'':cm.wacc,r.old.oldFair==null?'':r.old.oldFair,typeof cm.fair==='number'?cm.fair:'',typeof cm.price==='number'?cm.price:'',cm.dec||'',fl]);
     }catch(e){
       say(`[${i+1}/${targets.length}] ❌ ${t}：${e.message}`);
