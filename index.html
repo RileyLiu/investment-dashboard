@@ -456,7 +456,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <div class="tt-row"><span class="tt-label">🟡 注意</span><span class="tt-val" style="color:var(--yellow)">高估 1–2 支</span></div>
         <div class="tt-row"><span class="tt-label">🔴 警示</span><span class="tt-val" style="color:var(--red)">高估 3 支以上</span></div>
         <div class="tt-divider"></div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">高估：valTier = high / warn（現價超合理價）<br>低估：valTier = deep / low（折扣 ≥ 15%）<br>僅計算有 DCF 分頁的個股</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">高估：valTier = high / warn（現價超合理價）<br>低估：valTier = deep / low（折扣 ≥ 20%；深度 ≥ 30%）<br>僅計算有 DCF 分頁的個股</div>
       </div>
     </div>
     <div class="health-card"><div class="health-card-title">槓桿風險</div><div class="health-signal"><div class="signal-dot" id="sig-lev"></div><div class="signal-value" id="val-lev">—</div></div><div class="signal-desc" id="desc-lev">TQQQ 等槓桿比例</div></div>
@@ -470,7 +470,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <div class="tt-row"><span class="tt-label">🟡 不足</span><span class="tt-val" style="color:var(--yellow)">有持股 0% ≤ MOS &lt; 20%</span></div>
         <div class="tt-row"><span class="tt-label">🟠 高估區</span><span class="tt-val" style="color:var(--yellow)">有持股 MOS &lt; 0%，暫停加碼</span></div>
         <div class="tt-divider"></div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">MOS = (合理價 - 現價) / 現價<br>正數 = 現價低於合理價（有空間）<br>負數 = 現價高於合理價（高估區，暫停加碼）<br>僅計算有 DCF 分頁的個股</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">MOS = (合理價 - 現價) / 合理價<br>正數 = 現價低於合理價（有空間）<br>負數 = 現價高於合理價（高估區，暫停加碼）<br>僅計算有 DCF 分頁的個股</div>
       </div>
     </div>
     <div class="health-card" style="position:relative;cursor:default;" id="card-alloc">
@@ -1007,7 +1007,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.17.2';
+const VERSION='v4.18.0';
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
@@ -1019,6 +1019,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.18.0',date:'2026-11-17',notes:'✦ 安全邊際定義修正：MOS = (合理價−現價)/合理價（原分母為現價，會放大折扣；例：現價70／合理價100 原顯示 +43%，修正後 +30%）<br>✦ 估值五級「低估買入」門檻由折扣 ≥15% 改為 ≥20%，「深度低估」維持 ≥30%，與 THESIS_LINT 安全邊際規則一致<br>✦ 新建預測分頁的「決策標準」改為：現價 ≤ 合理價 70% 強力購入、≤ 80% 建議買入（原為 &lt; 保守價／&lt; 合理價 95%）；分批賣出條件（&gt; 合理價 120%）不變<br>✦ 修正「強力購入」決策標籤因不含「買入」而顯示灰色的配色問題<br>✦ 注意：既有預測分頁的決策標準公式在 Sheets 內，不會自動更新；儀表板的 MOS 與估值徽章會立即採用新定義'},
   {v:'4.17.2',date:'2026-11-16',notes:'✦ 修正：Worker 共用密碼改存 Sheets 設定!H1（原 B30 已被 GAS 紀錄列佔用）'},
   {v:'4.17.1',date:'2026-11-16',notes:'✦ 安全加固：呼叫 Cloudflare Worker 的 Claude 請求（/v1/messages）改帶 X-App-Token 共用密碼，密碼存 Sheets 設定!B30、登入後自動讀取，不存 localStorage、不進 repo<br>✦ 設定!B30 為空時維持原行為（不帶 header），可先上線前端、最後才在 Worker 啟用 APP_TOKEN'},
   {v:'4.17.0',date:'2026-11-04',notes:'\u2726 \u914d\u7f6e\u9032\u5ea6\u5361 hover \u6d6e\u52d5\u8996\u7a97\u6539\u8cbc\u5361\u7247\u53f3\u5074\uff08\u6301\u6709ETF \u7ffb\u5230\u5de6\u5074\uff09\uff0c\u4e0d\u518d\u88ab\u87a2\u5e55\u622a\u65b7\u3001\u4e0d\u84cb\u4f4f\u89c0\u5bdf\u6e05\u55ae\uff0c\u5167\u5bb9\u6539\u5de6\u53f3\u5206\u6b04<br>\u2726 \u624b\u6a5f\u7248\uff1a\u9ede\u5361\u7247\u5f9e\u5e95\u90e8\u5347\u8d77\u9762\u677f\uff0c\u9ede\u5916\u9762\u6216 \u2715 \u95dc\u9589<br>\u2726 \u4fee\u6b63\uff1aupdateAllocCards \u5099\u63f4\u7b97\u6cd5\u4e0d\u518d\u628a\u73fe\u91d1\u985e\u6301\u80a1\u7b97\u9032\u6210\u9577\u578b'},
@@ -1487,9 +1488,9 @@ async function fetchDCFSheet(sheetName){
     const cp=pN(rows[0]?.[1]),fp=pN(rows[1]?.[1]),dec=(rows[2]?.[1]||'').trim();
     const con=pN(rows[0]?.[5]),fair=pN(rows[1]?.[5]),opt=pN(rows[2]?.[5]);
     if(!con&&!fair&&!opt)return null;
-    const mos=cp>0?((fp-cp)/cp*100):null;
+    const mos=(cp>0&&fp>0)?((fp-cp)/fp*100):null; // v4.18.0：分母改為合理價（標準折扣定義）
     let vt='mid';
-    if(cp>0&&fp>0){if(cp<fp*0.7)vt='deep';else if(cp<fp*0.85)vt='low';else if(cp<=fp*1.1)vt='mid';else if(cp<=fp*1.25)vt='warn';else vt='high';}
+    if(cp>0&&fp>0){if(cp<=fp*0.7)vt='deep';else if(cp<=fp*0.8)vt='low';else if(cp<=fp*1.1)vt='mid';else if(cp<=fp*1.25)vt='warn';else vt='high';}
     return{conservative:con,fair,optimistic:opt,currentPrice:cp,fairPrice:fp,decision:dec,mos,valTier:vt};
   }catch(e){return null;}
 }
@@ -2083,7 +2084,7 @@ function renderDCFBand(ticker){
   const pos=range>0?Math.max(2,Math.min(98,((cp-low)/range)*100)):50;
   const mc=cp<conservative?'#34d399':cp<fair?'#fbbf24':'#f87171';
   const dec=decision.replace(/[^\u4e00-\u9fff]/g,'');
-  const dc=(dec.includes('賣出')||dec.includes('減碼'))?'var(--red)':(dec.includes('建倉')||dec.includes('買入'))?'var(--green)':(dec.includes('觀望')||dec.includes('持有'))?'var(--yellow)':'var(--text-muted)';
+  const dc=(dec.includes('賣出')||dec.includes('減碼'))?'var(--red)':(dec.includes('建倉')||dec.includes('買入')||dec.includes('購入'))?'var(--green)':(dec.includes('觀望')||dec.includes('持有'))?'var(--yellow)':'var(--text-muted)';
   return`<div class="dcf-band-wrap"><div class="dcf-band-label"><span>DCF 估值位階</span><span style="color:${dc};font-weight:600">${decision}</span></div><div class="dcf-track"><div class="dcf-marker" style="left:${pos}%;background:${mc}"></div></div><div class="dcf-prices"><span>保守 ${curr}${conservative.toLocaleString()}</span><span>▲ 現價 ${curr}${cp.toLocaleString()}</span><span>樂觀 ${curr}${optimistic.toLocaleString()}</span></div></div>`;
 }
 
@@ -2330,7 +2331,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
     ['','A (項目)','B (數值/公式)','C (說明)','編輯時間','股票代號',ticker,'估值定錨：'+anchorTxt,'','預估EPS',eps],
     [1,'WACC (折現率)',wacc,'依負債結構與產業（AI估算）',awToday(),'現價','=GOOGLEFINANCE("'+ticker+'","price")',isDCF?'J欄＝DCF係數':'J欄＝PE倍數','保守估計',mult[0],kf(2)],
     [2,'永續成長率 (g)',gt,'長期GDP錨點（AI估算）','','合理股價','=((SUM(G7:G17)+((E17*(1+C3))/(C2-C3))*F17)+C5)/C4','','合理預估',mult[1],kf(3)],
-    [3,'流通股數 (億股)',shares==null?'':shares,'','','決策標準','=IF(G2<K2,"🔥 強力購入",IF(G2<K3*0.95,"💎 建議買入",IF(G2>K3*1.2,"🚨 建議分批賣出","✅ 穩定持有")))','','樂觀溢價',mult[2],kf(4)],
+    [3,'流通股數 (億股)',shares==null?'':shares,'','','決策標準','=IF(G2<=K3*0.7,"🔥 強力購入",IF(G2<=K3*0.8,"💎 建議買入",IF(G2>K3*1.2,"🚨 建議分批賣出","✅ 穩定持有")))','','樂觀溢價',mult[2],kf(4)],
     [4,'淨現金 (億美元)',netCash==null?'':netCash,'','','基期年度/營收(億美元)',baseYear,baseRev==null?'':baseRev,'','','']
   ];
   const yrs=[['年分','營收成長率','營收預估(億美元)','FCF MARGIN','FCF預估','折現因子','FCF現值']];
