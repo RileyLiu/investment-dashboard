@@ -1008,7 +1008,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.20.1';
+const VERSION='v4.20.2';
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
@@ -1020,6 +1020,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.20.2',date:'2026-11-17',notes:'✦ 預測分頁右側重新編排：進階輸入 M:O（第 1–16 列）、WACC×g 敏感度與反向 DCF 移到 Q:V（第 1–12 列）、折現輔助欄改放 X:Z 並與年度表逐列對齊；全部落在列高一致的第 1–17 列，不再被備註與複查記錄的高列撐開<br>✦ 敏感度表加框、中心格標色；反向 DCF 標題與結果獨立成塊；β 空白時股權成本顯示「—」不再顯示誤導數字<br>✦ 注意：v4.20.0／4.20.1 已建立的新版分頁（STX、SKHY）需還原後重新遷移才會套用新位置'},
   {v:'4.20.1',date:'2026-11-17',notes:'✦ 修正 v4.20.0 遷移：舊表營收為手動輸入（G5/H5 空白）時，由第一年營收反推基期；寫入前驗算成長率能否重現舊營收（誤差 >2% 整檔略過不動）<br>✦ AI 查得的 β 若使公式 WACC 與舊值差 >2pp，不採用（β 欄留空、C2 沿用舊 WACC），由你決定是否填入<br>✦ 預測分頁新排版：隱藏格線、Arial、深色表頭、結果區（現價／合理價／決策）加大強調、假設格淺藍底、年度表隔列底色與統一數字格式、備註與複查記錄合併換行；新建與遷移分頁自動套用<br>✦ 設定頁新增「🎨 排版試做：SKHY」與「🎨 排版：全部持股分頁」（只改格式，數值與公式不動）'},
   {v:'4.20.0',date:'2026-11-17',notes:'✦ 既有預測分頁遷移工具（⚙ 系統設定 → 預測分頁遷移）：持股的舊分頁改用 v4.19.0 新版定義；台股與 ETF 不處理<br>✦ 每檔先複製「_舊」備份、原地改版；成長率／FCF Margin／g／股數／淨現金／倍數／EPS 沿用，季度複查記錄保留並追加遷移紀錄<br>✦ ADS 比率固定為 1（舊分頁股數已是現價所報單位，避免 SKHY 類重複換算）；β／國家別／財年月由 AI 查證；淨現金截止日一律標黃待核對；新舊 WACC 差 >2pp 標黃<br>✦ 修正 v4.19.0：新版輔助欄（財年結束日／年末年數／計入比例）由 H:J 移至 T:V，避免被 GAS 財報速評寫入的 H6:J7 覆蓋；遷移時保留 H6:K20 既有的財報速評內容<br>✦ 失敗自動從備份還原；已是新版或備份已存在者略過；結果寫入「估值遷移對照」分頁（新舊 WACC／合理價／決策）<br>✦ 建議先「試跑 STX／SKHY／AMZN」，確認後再「遷移其餘持股」；RKLB（模板來源）排在最後'},
   {v:'4.19.0',date:'2026-11-17',notes:'✦ 預測分頁模板升級（僅影響之後新建的分頁；既有分頁與 RKLB 範本不動）<br>✦ 折現改為自「估值日」起、年末折現；新增財年結束月與「淨現金截止日」，截止日之前已入帳的 FCF 不重複計入（落實 10/28 守則）<br>✦ 新增 ADS/ADR 比率欄：合理價＝權益價值÷(普通股數×每股對應ADS數)，避免 SKHY 式單位錯誤<br>✦ WACC 改公式：rf＋β×ERP＋國家溢酬（可含負債權重）；rf、ERP、國家溢酬集中於新分頁「估值參數」（手動維護，首次建立時自動產生）；β 缺值時採 AI 備援 WACC<br>✦ 新增 WACC×g 5×5 敏感度表與反向 DCF（現價隱含的 FCF 倍數與末年 FCF Margin），並附驗算格<br>✦ AI 建模新增 β、國家別、財年結束月、淨現金截止日、ADS 比率、負債比重，查證失敗者標黃待覆核<br>✦ 注意：新分頁合理價以今日為估值基準，會高於以基期年底為基準的舊分頁，兩者不可直接比較；G2/G3/G4/K2:K4 位置不變，儀表板讀取邏輯不受影響'},
@@ -2413,23 +2414,24 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
     ['負債比重 D/(D+E)',debtW,'預設 0＝全股權'],
     ['稅前負債成本','=$N$6+0.02','rf＋2% 信用利差（可手改）'],
     ['稅率',0.21,'可手改'],
-    ['股權成本 Ke','=$N$6+$N$5*$N$7+$N$9','rf＋β×ERP＋國家溢酬'],
+    ['股權成本 Ke','=IF(ISNUMBER($N$5),$N$6+$N$5*$N$7+$N$9,"—")','rf＋β×ERP＋國家溢酬（β空白時不計算）'],
     ['AI估算WACC（備援）',wacc,'β缺值時 C2 採用'],
     ['淨現金截止日',ncDate,'資產負債表日；此日之後的 FCF 才計入，空白＝以估值日起算'],
     ['檢查','=IF(AND(ISNUMBER($C$2),$C$2>$C$3),"OK","⚠️ WACC缺值或 g≥WACC")','']
   ];
-  const cols=['N','O','P','Q','R'];
+  const cols=['R','S','T','U','V'];
   const gOff=[-0.01,-0.005,0,0.005,0.01];
   const sens=[['WACC × g 敏感度（合理股價；中心＝目前假設）','','','','',''],
     ['g＼WACC',...gOff.map(o=>'=$C$2'+(o<0?'-':'+')+Math.abs(o))]];
   gOff.forEach((o,ri)=>{
-    const k=20+ri;
-    sens.push(['=$C$3'+(o<0?'-':'+')+Math.abs(o),...cols.map(X=>`=IF($M${k}>=${X}$19,"—",(SUMPRODUCT($E$7:$E$17,$V$7:$V$17,(1+${X}$19)^(-$U$7:$U$17))+$E$17*(1+$M${k})/(${X}$19-$M${k})*(1+${X}$19)^(-$U$17)+$C$5)/($C$4*$N$4))`)]);
+    const k=3+ri;
+    sens.push(['=$C$3'+(o<0?'-':'+')+Math.abs(o),...cols.map(X=>`=IF($Q${k}>=${X}$2,"—",(SUMPRODUCT($E$7:$E$17,$Z$7:$Z$17,(1+${X}$2)^(-$Y$7:$Y$17))+$E$17*(1+$Q${k})/(${X}$2-$Q${k})*(1+${X}$2)^(-$Y$17)+$C$5)/($C$4*$N$4))`)]);
   });
+  sens.push(['','','','','','']);
   sens.push(['反向 DCF（現價隱含）','','','','','']);
-  sens.push(['現價需要的 FCF 倍數（相對目前預測）','=IFERROR(($G$2*$C$4*$N$4-$C$5)/(SUM($G$7:$G$17)+$E$17*(1+$C$3)/($C$2-$C$3)*$F$17),"—")','>1＝市場比你的預測更樂觀；<1＝更悲觀','','','']);
-  sens.push(['隱含末年 FCF Margin','=IFERROR($D$17*$N$26,"—")','','','','']);
-  sens.push(['驗算：敏感度中心 − 合理股價','=IFERROR($P$22-$G$3,"—")','應為 0','','','']);
+  sens.push(['現價隱含的 FCF 倍數（>1＝市場比你的預測樂觀）','','','','=IFERROR(($G$2*$C$4*$N$4-$C$5)/(SUM($G$7:$G$17)+$E$17*(1+$C$3)/($C$2-$C$3)*$F$17),"—")','']);
+  sens.push(['隱含末年 FCF Margin','','','','=IFERROR($D$17*$U$10,"—")','']);
+  sens.push(['驗算：敏感度中心 − 合理股價（應為 0）','','','','=IFERROR($T$5-$G$3,"—")','']);
   const kf=r=>`=IF(ISNUMBER(SEARCH("DCF",$H$1)),$G$3*J${r},$K$1*J${r})`;
   const head=[
     ['','A (項目)','B (數值/公式)','C (說明)','編輯時間','股票代號',ticker,(MG&&opts.h1)||('估值定錨：'+anchorTxt),'',(MG&&opts.j1)||'預估EPS',eps],
@@ -2448,13 +2450,13 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
       i===0?`=$H$5*(1+B${r})`:`=C${r-1}*(1+B${r})`,
       model.margin[i],
       `=C${r}*D${r}`,
-      `=1/(1+$C$2)^U${r}`,
-      `=E${r}*F${r}*V${r}`
+      `=1/(1+$C$2)^Y${r}`,
+      `=E${r}*F${r}*Z${r}`
     ]);
     yh.push([
       `=EOMONTH(DATE(A${r},$N$3,1),0)`,
-      `=MAX(0,(T${r}-$N$2)/365.25)`,
-      `=MIN(1,MAX(0,(T${r}-IF(ISNUMBER($N$15),$N$15,$N$2))/365.25))`
+      `=MAX(0,(X${r}-$N$2)/365.25)`,
+      `=MIN(1,MAX(0,(X${r}-IF(ISNUMBER($N$15),$N$15,$N$2))/365.25))`
     ]);
   }
   const srcTxt=(Array.isArray(model.sources)?model.sources:[]).map(s=>`${s.item||''}: ${s.url||''} (${s.date||''})`).join('；');
@@ -2472,13 +2474,13 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
     sid=dup.replies[0].duplicateSheet.properties.sheetId;
   }
   try{
-    await sheetsApi('/values:batchClear','POST',{ranges:MG?[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:W40']:[T+'A1:W60']});
+    await sheetsApi('/values:batchClear','POST',{ranges:MG?[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:AB40']:[T+'A1:AB60']});
     await sheetsApi('/values:batchUpdate','POST',{valueInputOption:'USER_ENTERED',data:[
       {range:T+'A1:K5',values:head},
       {range:T+'A6:G17',values:yrs},
-      {range:T+'T6:V17',values:yh},
+      {range:T+'X6:Z17',values:yh},
       {range:T+'M1:O16',values:adv},
-      {range:T+'M18:R29',values:sens},
+      {range:T+'Q1:V12',values:sens},
       {range:T+'A19',values:[[noteFinal]]}
     ].concat(MG?[]:[{range:T+'A21',values:[['【季度複查記錄】']]},{range:T+'A22:D22',values:[reviewRow]}])});
     const rg=(r0,r1,c0,c1)=>({sheetId:sid,startRowIndex:r0,endRowIndex:r1,startColumnIndex:c0,endColumnIndex:c1});
@@ -2488,11 +2490,11 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
       nf(rg(6,17,3,4),'PERCENT','0.0%'),nf(rg(6,17,4,5),'NUMBER','0.0'),nf(rg(6,17,5,6),'PERCENT','0.00%'),nf(rg(6,17,6,7),'NUMBER','0.0'),
       nf(rg(1,3,2,3),'PERCENT','0.0%'),nf(rg(3,4,2,3),'NUMBER','0.00'),nf(rg(4,5,2,3),'NUMBER','0.0'),
       nf(rg(4,5,6,7),'NUMBER','0'),nf(rg(4,5,7,8),'NUMBER','0.0'),nf(rg(1,4,10,11),'NUMBER','0.00'),
-      nf(rg(6,17,19,20),'DATE','yyyy-mm-dd'),nf(rg(6,17,20,21),'NUMBER','0.00'),nf(rg(6,17,21,22),'PERCENT','0%'),
+      nf(rg(6,17,23,24),'DATE','yyyy-mm-dd'),nf(rg(6,17,24,25),'NUMBER','0.00'),nf(rg(6,17,25,26),'PERCENT','0%'),
       nf(rg(1,2,13,14),'DATE','yyyy-mm-dd'),nf(rg(14,15,13,14),'DATE','yyyy-mm-dd'),nf(rg(3,4,13,14),'NUMBER','0.##'),nf(rg(4,5,13,14),'NUMBER','0.00'),
       nf(rg(5,7,13,14),'PERCENT','0.00%'),nf(rg(8,14,13,14),'PERCENT','0.00%'),
-      nf(rg(18,19,13,18),'PERCENT','0.0%'),nf(rg(19,24,12,13),'PERCENT','0.0%'),nf(rg(19,24,13,18),'NUMBER','0.00'),
-      nf(rg(25,26,13,14),'NUMBER','0.00'),nf(rg(26,27,13,14),'PERCENT','0.0%'),nf(rg(27,28,13,14),'NUMBER','0.00')
+      nf(rg(1,2,17,22),'PERCENT','0.0%'),nf(rg(2,7,16,17),'PERCENT','0.0%'),nf(rg(2,7,17,22),'NUMBER','0.00'),
+      nf(rg(9,10,20,21),'NUMBER','0.00'),nf(rg(10,11,20,21),'PERCENT','0.0%'),nf(rg(11,12,20,21),'NUMBER','0.00')
     ];
     const cellIdx={H5:[4,7],C4:[3,2],C5:[4,2],G5:[4,6],N3:[2,13],N4:[3,13],N5:[4,13],N8:[7,13],N15:[14,13]};
     uniq.forEach(k=>{const p=cellIdx[k];if(p)reqs.push({repeatCell:{range:rg(p[0],p[0]+1,p[1],p[1]+1),cell:{userEnteredFormat:{backgroundColor:{red:1,green:0.95,blue:0.6}}},fields:'userEnteredFormat.backgroundColor'}});});
@@ -2501,8 +2503,8 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
     if(MG){
       let rest='已從備份還原';
       try{
-        const bv=await sheetsApi('/values/'+encodeURIComponent(awTab(ticker+'_舊')+'!A1:W40')+'?valueRenderOption=FORMULA');
-        await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:W40']});
+        const bv=await sheetsApi('/values/'+encodeURIComponent(awTab(ticker+'_舊')+'!A1:AB40')+'?valueRenderOption=FORMULA');
+        await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:AB40']});
         await sheetsApi('/values/'+encodeURIComponent(T+'A1')+'?valueInputOption=USER_ENTERED','PUT',{values:bv.values||[]});
       }catch(e2){rest='⚠️ 還原失敗，請手動從 '+ticker+'_舊 還原：'+e2.message;}
       throw new Error('遷移失敗（'+rest+'）：'+e.message);
@@ -2551,8 +2553,8 @@ async function awStyleTab(ticker){
   const hd=(range)=>[bg(range,STY.navy),txt(range,{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),rc(range,{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment')];
   const q=[];
   q.push({updateSheetProperties:{properties:{sheetId:sid,gridProperties:{hideGridlines:true}},fields:'gridProperties.hideGridlines'}});
-  q.push(rc(R(0,80,0,23),{textFormat:{fontFamily:'Arial',fontSize:10},verticalAlignment:'MIDDLE',wrapStrategy:'CLIP'},'userEnteredFormat(textFormat,verticalAlignment,wrapStrategy)'));
-  [72,150,100,110,90,100,100,110,90,80,80,24,200,90,380,80,80,80,24,90,90,90].forEach((w,i)=>q.push(colW(w,i,i+1)));
+  q.push(rc(R(0,80,0,28),{textFormat:{fontFamily:'Arial',fontSize:10},verticalAlignment:'MIDDLE',wrapStrategy:'CLIP'},'userEnteredFormat(textFormat,verticalAlignment,wrapStrategy)'));
+  [72,150,100,110,90,100,100,110,90,80,80,24,200,90,260,24,90,80,80,80,80,80,24,90,90,90].forEach((w,i)=>q.push(colW(w,i,i+1)));
   q.push(rowH(30,0,1),rowH(36,1,5),rowH(28,5,6),rowH(22,6,17));
   // 表頭
   q.push(...hd(R(0,1,0,11)),...hd(R(5,6,0,7)));
@@ -2593,12 +2595,22 @@ async function awStyleTab(ticker){
     q.push({updateBorders:{range:R(r,r+1,0,11),bottom:bd}});
     q.push(rowH(Math.max(32,lines(row[3],52)*16+10),r,r+1));
   });
-  // 進階輸入與敏感度（v4.19+ 新版分頁）
+  // 右側面板（v4.19+ 新版分頁）：進階輸入 M:O、敏感度與反向 DCF Q:V、折現輔助 X:Z；皆在第 1–17 列（列高一致）
   if(hasAdv){
-    q.push(...hd(R(0,1,12,15)),bg(R(17,18,12,18),STY.sec),txt(R(17,18,12,18),{fontFamily:'Arial',fontSize:10,bold:true}));
+    const mg=(r0,r1,c0,c1)=>[{unmergeCells:{range:R(r0,r1,c0,c1)}},{mergeCells:{range:R(r0,r1,c0,c1),mergeType:'MERGE_ALL'}}];
+    const bold={fontFamily:'Arial',fontSize:10,bold:true};
+    q.push(...hd(R(0,1,12,15)));
     q.push(txt(R(1,16,14,15),{fontFamily:'Arial',fontSize:9,foregroundColor:STY.gray}),rc(R(1,16,13,14),{horizontalAlignment:'RIGHT'},'userEnteredFormat.horizontalAlignment'));
-    q.push(bg(R(18,19,12,18),STY.navy),txt(R(18,19,12,18),{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),bg(R(21,22,15,16),STY.key));
-    q.push(bg(R(5,6,19,22),STY.navy),txt(R(5,6,19,22),{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),rc(R(5,6,19,22),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
+    q.push(...mg(0,1,16,22),...hd(R(0,1,16,22)));
+    q.push(bg(R(1,2,16,22),STY.sec),txt(R(1,2,16,22),bold),rc(R(1,2,16,22),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
+    q.push(bg(R(2,7,16,17),STY.sec),txt(R(2,7,16,17),bold),rc(R(2,7,16,17),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
+    q.push(rc(R(2,7,17,22),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'),bg(R(4,5,19,20),STY.key),txt(R(4,5,19,20),bold));
+    q.push({updateBorders:{range:R(1,7,16,22),top:bd,bottom:bd,left:bd,right:bd,innerHorizontal:bd,innerVertical:bd}});
+    q.push(...mg(8,9,16,22),bg(R(8,9,16,22),STY.navy),txt(R(8,9,16,22),{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}));
+    [9,10,11].forEach(r=>q.push(...mg(r,r+1,16,20)));
+    q.push(rc(R(9,12,20,21),{horizontalAlignment:'CENTER',backgroundColor:STY.key,textFormat:bold},'userEnteredFormat(horizontalAlignment,backgroundColor,textFormat)'));
+    q.push(bg(R(5,6,23,26),STY.navy),txt(R(5,6,23,26),{fontFamily:'Arial',fontSize:10,bold:true,foregroundColor:STY.white}),rc(R(5,6,23,26),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
+    q.push(rc(R(6,17,23,26),{horizontalAlignment:'CENTER'},'userEnteredFormat.horizontalAlignment'));
   }
   await sheetsApi('/values/'+encodeURIComponent(T+'B1:D1')+'?valueInputOption=USER_ENTERED','PUT',{values:[['項目','數值','說明']]});
   await sheetsApi(':batchUpdate','POST',{requests:q});
