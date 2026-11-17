@@ -1007,7 +1007,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.18.0';
+const VERSION='v4.19.0';
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
@@ -1019,6 +1019,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.19.0',date:'2026-11-17',notes:'✦ 預測分頁模板升級（僅影響之後新建的分頁；既有分頁與 RKLB 範本不動）<br>✦ 折現改為自「估值日」起、年末折現；新增財年結束月與「淨現金截止日」，截止日之前已入帳的 FCF 不重複計入（落實 10/28 守則）<br>✦ 新增 ADS/ADR 比率欄：合理價＝權益價值÷(普通股數×每股對應ADS數)，避免 SKHY 式單位錯誤<br>✦ WACC 改公式：rf＋β×ERP＋國家溢酬（可含負債權重）；rf、ERP、國家溢酬集中於新分頁「估值參數」（手動維護，首次建立時自動產生）；β 缺值時採 AI 備援 WACC<br>✦ 新增 WACC×g 5×5 敏感度表與反向 DCF（現價隱含的 FCF 倍數與末年 FCF Margin），並附驗算格<br>✦ AI 建模新增 β、國家別、財年結束月、淨現金截止日、ADS 比率、負債比重，查證失敗者標黃待覆核<br>✦ 注意：新分頁合理價以今日為估值基準，會高於以基期年底為基準的舊分頁，兩者不可直接比較；G2/G3/G4/K2:K4 位置不變，儀表板讀取邏輯不受影響'},
   {v:'4.18.0',date:'2026-11-17',notes:'✦ 安全邊際定義修正：MOS = (合理價−現價)/合理價（原分母為現價，會放大折扣；例：現價70／合理價100 原顯示 +43%，修正後 +30%）<br>✦ 估值五級「低估買入」門檻由折扣 ≥15% 改為 ≥20%，「深度低估」維持 ≥30%，與 THESIS_LINT 安全邊際規則一致<br>✦ 新建預測分頁的「決策標準」改為：現價 ≤ 合理價 70% 強力購入、≤ 80% 建議買入（原為 &lt; 保守價／&lt; 合理價 95%）；分批賣出條件（&gt; 合理價 120%）不變<br>✦ 修正「強力購入」決策標籤因不含「買入」而顯示灰色的配色問題<br>✦ 注意：既有預測分頁的決策標準公式在 Sheets 內，不會自動更新；儀表板的 MOS 與估值徽章會立即採用新定義'},
   {v:'4.17.2',date:'2026-11-16',notes:'✦ 修正：Worker 共用密碼改存 Sheets 設定!H1（原 B30 已被 GAS 紀錄列佔用）'},
   {v:'4.17.1',date:'2026-11-16',notes:'✦ 安全加固：呼叫 Cloudflare Worker 的 Claude 請求（/v1/messages）改帶 X-App-Token 共用密碼，密碼存 Sheets 設定!B30、登入後自動讀取，不存 localStorage、不進 repo<br>✦ 設定!B30 為空時維持原行為（不帶 header），可先上線前端、最後才在 Worker 啟用 APP_TOKEN'},
@@ -2273,11 +2274,13 @@ async function awQuote(ticker){
 async function fetchThesisModel(ticker,stock,existing,needModel){
   const today=awToday();
   const exCtx=existing?`\n【既有論文（請在此基礎上更新：保留原有結構與 ✅/⚠️/🚨 條目，只修正過時資料與補充必要條件，不要整份重寫）】\n買入論文：${existing.thesis}\n賣出觸發：${existing.sell}\n`:'';
-  const modelSpec=needModel?`,"model":{"anchor":"PE Band 或 DCF","anchorReason":"一句話","wacc":0.0,"g":0.0,"baseYear":0,"baseRevenue":null,"shares":null,"netCash":null,"growth":[11個數字],"margin":[11個數字],"eps":null,"mult":[0,0,0],"sources":[{"item":"baseRevenue","url":"","date":""}],"notes":"分析備註，2-3句"}`:'';
+  const modelSpec=needModel?`,"model":{"anchor":"PE Band 或 DCF","anchorReason":"一句話","wacc":0.0,"beta":null,"debtWeight":0.0,"country":"US","fyEndMonth":12,"netCashDate":"YYYY-MM-DD","adsPerShare":1,"g":0.0,"baseYear":0,"baseRevenue":null,"shares":null,"netCash":null,"growth":[11個數字],"margin":[11個數字],"eps":null,"mult":[0,0,0],"sources":[{"item":"baseRevenue","url":"","date":""}],"notes":"分析備註，2-3句"}`:'';
   const modelRules=needModel?`
 6. model 內的事實數字（baseYear、baseRevenue、shares、netCash）必須來自你搜尋到的最新財報；查不到就填 null，禁止憑記憶或推測。單位：baseRevenue＝最近一個已完成財年營收（億美元）；shares＝流通股數（億股）；netCash＝現金及短期投資減總負債（億美元，淨負債為負數）。sources 逐項列出來源網址與日期。
 7. growth／margin 是你的判斷，各 11 個小數（例：0.12 代表 12%），從 baseYear+1 起連續 11 年；growth 為營收年增率、margin 為 FCF Margin；長期成長需逐年收斂；g（永續成長率）不得超過 0.035；wacc 依個股風險判斷（小數）。
-8. anchor：有穩定獲利者用「PE Band」（eps 填未來一年預估 EPS，mult 填 [保守PE,合理PE,樂觀PE]）；虧損或早期高成長股用「DCF」（eps 填 null，mult 固定填 [0.8,1.0,1.3]）。`:'';
+8. anchor：有穩定獲利者用「PE Band」（eps 填未來一年預估 EPS，mult 填 [保守PE,合理PE,樂觀PE]）；虧損或早期高成長股用「DCF」（eps 填 null，mult 固定填 [0.8,1.0,1.3]）。
+9. 新增欄位（事實須查證，查不到填 null；不得憑記憶）：beta＝最新 β（對標普500，註明來源）；country＝公司主要風險所在地兩碼代號（US/KR/TW/JP…）；fyEndMonth＝財年結束月份（1~12）；netCashDate＝netCash 所依據的最新資產負債表日期（YYYY-MM-DD）；adsPerShare＝1 股普通股對應幾單位『現價所報的證券』（一般美股普通股填 1；ADR/ADS 須查證，例如 10 ADS＝1 普通股則填 10）；debtWeight＝負債占資本結構比重（0~0.6，無資料填 0）。
+10. baseYear 與 growth／margin 的年份一律以『該財年結束日所在的日曆年』標示（例：財年 2026 年 6 月底結束＝2026）。shares 填普通股億股（表格會乘以 adsPerShare 換成現價所報單位）；eps 須與現價所報的證券一致（ADR 以 ADS 計）。`:'';
   const prompt=`你是價值投資分析師（Buffett+Munger）。請搜尋 ${ticker}（${(stock&&stock.name)||''}）最新財報與公告，整理成寫入 Google 試算表的結構化資料。今天是 ${today}。${exCtx}
 規則：
 1. 只輸出 JSON，不要其他文字，繁體中文。
@@ -2295,6 +2298,30 @@ async function fetchThesisModel(ticker,stock,existing,needModel){
   return out;
 }
 
+// v4.19.0：共用「估值參數」分頁（rf／ERP／國家溢酬）；不存在才建立，存在不動
+const PARAM_TAB='估值參數';
+async function awEnsureParamTab(sheets){
+  if(sheets.some(s=>s.title===PARAM_TAB))return false;
+  const r=await sheetsApi(':batchUpdate','POST',{requests:[{addSheet:{properties:{title:PARAM_TAB}}}]});
+  const sid=r.replies[0].addSheet.properties.sheetId;
+  await sheetsApi('/values/'+encodeURIComponent(awTab(PARAM_TAB)+'!A1:C11')+'?valueInputOption=USER_ENTERED','PUT',{values:[
+    ['項目','數值','說明'],
+    ['無風險利率 rf',0.05,'10 年期公債殖利率；手動維護（2026-10-28 約 5.0%）'],
+    ['ERP 股權風險溢酬',0.045,'沿用 2026-10-28 DCF 重跑守則'],
+    ['rf／ERP 最後更新',awToday(),'更新 rf 或 ERP 後請同步改此日期'],
+    ['','',''],
+    ['國家溢酬表（新分頁依國家別查表）','',''],
+    ['國家別','國家溢酬','說明'],
+    ['US',0,''],
+    ['KR',0.005,'SKHY 守則：韓國溢酬 0.5%'],
+    ['TW',0,'未設定，可自行調整'],
+    ['JP',0,'未設定，可自行調整']
+  ]});
+  const pf=(r0,r1)=>({repeatCell:{range:{sheetId:sid,startRowIndex:r0,endRowIndex:r1,startColumnIndex:1,endColumnIndex:2},cell:{userEnteredFormat:{numberFormat:{type:'PERCENT',pattern:'0.00%'}}},fields:'userEnteredFormat.numberFormat'}});
+  await sheetsApi(':batchUpdate','POST',{requests:[pf(1,3),pf(7,11)]});
+  return true;
+}
+
 // 複製範本分頁並寫入輸入格與公式；已存在同名分頁則不動
 async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
   const meta=await sheetsApi('?fields=sheets.properties(sheetId,title,index)');
@@ -2302,6 +2329,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
   if(sheets.some(s=>s.title===ticker))return{existed:true,flags:[]};
   const tpl=sheets.find(s=>s.title===FORECAST_TEMPLATE_TAB);
   if(!tpl)throw new Error('找不到範本分頁 '+FORECAST_TEMPLATE_TAB);
+  await awEnsureParamTab(sheets);
   const num=x=>(typeof x==='number'&&isFinite(x))?x:null;
   const okArr=a=>Array.isArray(a)&&a.length===11&&a.every(x=>typeof x==='number'&&isFinite(x));
   if(!okArr(model.growth)||!okArr(model.margin))throw new Error('預測假設（成長率／FCF Margin）格式不正確，未建立分頁');
@@ -2314,8 +2342,24 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
   if(shares==null||shares<=0)flags.push('C4');
   if(netCash==null)flags.push('C5');
   if(by==null)flags.push('G5');
+  // v4.19.0 新欄位：不合理或查無 → 用安全預設並標黃待覆核
+  const betaRaw=num(model.beta);const beta=(betaRaw!=null&&betaRaw>=0.3&&betaRaw<=3)?betaRaw:null;
+  if(beta==null)flags.push('N5');
+  const fyM=(Number.isInteger(model.fyEndMonth)&&model.fyEndMonth>=1&&model.fyEndMonth<=12)?model.fyEndMonth:12;
+  if(fyM!==model.fyEndMonth)flags.push('N3');
+  const adsRaw=num(model.adsPerShare);const ads=(adsRaw!=null&&adsRaw>0&&adsRaw<=1000)?adsRaw:1;
+  if(ads!==adsRaw)flags.push('N4');
+  const country=(typeof model.country==='string'&&/^[A-Z]{2}$/.test(model.country.trim().toUpperCase()))?model.country.trim().toUpperCase():'';
+  if(!country)flags.push('N8');
+  let ncDate='';
+  if(typeof model.netCashDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(model.netCashDate)){
+    const dd=new Date(model.netCashDate);
+    if(!isNaN(dd.getTime())&&dd.getTime()<=Date.now()+86400000)ncDate=model.netCashDate;
+  }
+  if(!ncDate)flags.push('N15');
+  const dw0=num(model.debtWeight);const debtW=(dw0!=null&&dw0>=0&&dw0<=0.6)?dw0:0;
   if(quotePrice&&shares>0&&baseRev>0){
-    const mc=quotePrice*shares,ps=mc/baseRev;
+    const mc=quotePrice*shares*ads,ps=mc/baseRev;
     if(ps<0.1||ps>200){flags.push('H5');flags.push('C4');}
     if(netCash!=null&&Math.abs(netCash)>mc)flags.push('C5');
   }
@@ -2326,15 +2370,46 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
   const eps=isDCF?'':(num(model.eps)==null?'':model.eps);
   const baseYear=by||(new Date().getFullYear()-1);
   const T=awTab(ticker)+'!';
+  // v4.19.0 進階輸入（M:O）、敏感度表與反向 DCF（M18:R29）；G2/G3/G4/K2:K4 位置不動
+  const adv=[
+    ['進階輸入（v4.19.0）','數值','說明'],
+    ['估值日','=TODAY()','折現起算日（年末折現）'],
+    ['財年結束月',fyM,'1–12；用來推算各年度結束日'],
+    ['每1普通股對應ADS數',ads,'一般股=1；SKHY 10 ADS=1普通股→10；合理價＝權益價值÷(股數×此值)'],
+    ['β',beta==null?'':beta,'AI查證；缺值時 C2 採 N14 備援 WACC'],
+    ['無風險利率 rf',"='估值參數'!B2",'來自「估值參數」分頁（手動維護）'],
+    ['ERP',"='估值參數'!B3",'同上'],
+    ['國家別',country,'對照「估值參數」國家溢酬表'],
+    ['國家溢酬',"=IFERROR(VLOOKUP($N$8,'估值參數'!$A$8:$B$30,2,FALSE),0)",'查無國家別時為 0'],
+    ['負債比重 D/(D+E)',debtW,'預設 0＝全股權'],
+    ['稅前負債成本','=$N$6+0.02','rf＋2% 信用利差（可手改）'],
+    ['稅率',0.21,'可手改'],
+    ['股權成本 Ke','=$N$6+$N$5*$N$7+$N$9','rf＋β×ERP＋國家溢酬'],
+    ['AI估算WACC（備援）',wacc,'β缺值時 C2 採用'],
+    ['淨現金截止日',ncDate,'資產負債表日；此日之後的 FCF 才計入，空白＝以估值日起算'],
+    ['檢查','=IF(AND(ISNUMBER($C$2),$C$2>$C$3),"OK","⚠️ WACC缺值或 g≥WACC")','']
+  ];
+  const cols=['N','O','P','Q','R'];
+  const gOff=[-0.01,-0.005,0,0.005,0.01];
+  const sens=[['WACC × g 敏感度（合理股價；中心＝目前假設）','','','','',''],
+    ['g＼WACC',...gOff.map(o=>'=$C$2'+(o<0?'-':'+')+Math.abs(o))]];
+  gOff.forEach((o,ri)=>{
+    const k=20+ri;
+    sens.push(['=$C$3'+(o<0?'-':'+')+Math.abs(o),...cols.map(X=>`=IF($M${k}>=${X}$19,"—",(SUMPRODUCT($E$7:$E$17,$J$7:$J$17,(1+${X}$19)^(-$I$7:$I$17))+$E$17*(1+$M${k})/(${X}$19-$M${k})*(1+${X}$19)^(-$I$17)+$C$5)/($C$4*$N$4))`)]);
+  });
+  sens.push(['反向 DCF（現價隱含）','','','','','']);
+  sens.push(['現價需要的 FCF 倍數（相對目前預測）','=IFERROR(($G$2*$C$4*$N$4-$C$5)/(SUM($G$7:$G$17)+$E$17*(1+$C$3)/($C$2-$C$3)*$F$17),"—")','>1＝市場比你的預測更樂觀；<1＝更悲觀','','','']);
+  sens.push(['隱含末年 FCF Margin','=IFERROR($D$17*$N$26,"—")','','','','']);
+  sens.push(['驗算：敏感度中心 − 合理股價','=IFERROR($P$22-$G$3,"—")','應為 0','','','']);
   const kf=r=>`=IF(ISNUMBER(SEARCH("DCF",$H$1)),$G$3*J${r},$K$1*J${r})`;
   const head=[
     ['','A (項目)','B (數值/公式)','C (說明)','編輯時間','股票代號',ticker,'估值定錨：'+anchorTxt,'','預估EPS',eps],
-    [1,'WACC (折現率)',wacc,'依負債結構與產業（AI估算）',awToday(),'現價','=GOOGLEFINANCE("'+ticker+'","price")',isDCF?'J欄＝DCF係數':'J欄＝PE倍數','保守估計',mult[0],kf(2)],
-    [2,'永續成長率 (g)',gt,'長期GDP錨點（AI估算）','','合理股價','=((SUM(G7:G17)+((E17*(1+C3))/(C2-C3))*F17)+C5)/C4','','合理預估',mult[1],kf(3)],
+    [1,'WACC (折現率)','=IF(ISNUMBER($N$5),$N$13*(1-$N$10)+$N$11*(1-$N$12)*$N$10,$N$14)','公式：rf＋β×ERP＋國家溢酬；β缺值時採N14備援',awToday(),'現價','=GOOGLEFINANCE("'+ticker+'","price")',isDCF?'J欄＝DCF係數':'J欄＝PE倍數','保守估計',mult[0],kf(2)],
+    [2,'永續成長率 (g)',gt,'長期GDP錨點（AI估算）','','合理股價','=((SUM(G7:G17)+((E17*(1+C3))/(C2-C3))*F17)+C5)/(C4*$N$4)','','合理預估',mult[1],kf(3)],
     [3,'流通股數 (億股)',shares==null?'':shares,'','','決策標準','=IF(G2<=K3*0.7,"🔥 強力購入",IF(G2<=K3*0.8,"💎 建議買入",IF(G2>K3*1.2,"🚨 建議分批賣出","✅ 穩定持有")))','','樂觀溢價',mult[2],kf(4)],
     [4,'淨現金 (億美元)',netCash==null?'':netCash,'','','基期年度/營收(億美元)',baseYear,baseRev==null?'':baseRev,'','','']
   ];
-  const yrs=[['年分','營收成長率','營收預估(億美元)','FCF MARGIN','FCF預估','折現因子','FCF現值']];
+  const yrs=[['年分','營收成長率','營收預估(億美元)','FCF MARGIN','FCF預估','折現因子','FCF現值','財年結束日','年末年數 t','計入比例']];
   for(let i=0;i<11;i++){
     const r=7+i;
     yrs.push([
@@ -2343,19 +2418,24 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
       i===0?`=$H$5*(1+B${r})`:`=C${r-1}*(1+B${r})`,
       model.margin[i],
       `=C${r}*D${r}`,
-      `=1/(1+$C$2)^(A${r}-$G$5)`,
-      `=E${r}*F${r}`
+      `=1/(1+$C$2)^I${r}`,
+      `=E${r}*F${r}*J${r}`,
+      `=EOMONTH(DATE(A${r},$N$3,1),0)`,
+      `=MAX(0,(H${r}-$N$2)/365.25)`,
+      `=MIN(1,MAX(0,(H${r}-IF(ISNUMBER($N$15),$N$15,$N$2))/365.25))`
     ]);
   }
   const srcTxt=(Array.isArray(model.sources)?model.sources:[]).map(s=>`${s.item||''}: ${s.url||''} (${s.date||''})`).join('；');
-  const note='分析備註：'+(model.notes||'')+'（估值定錨：'+anchorTxt+'｜'+(model.anchorReason||'')+'）資料來源（AI查證，請抽查）：'+(srcTxt||'無')+'。AI估算：WACC、永續成長率、營收成長率、FCF Margin、EPS／倍數。'+(uniq.length?'⚠️ 黃底儲存格（'+uniq.join('、')+'）為查無資料或未通過合理性檢查，請覆核後再採信估值。':'');
+  const note='分析備註：'+(model.notes||'')+'（估值定錨：'+anchorTxt+'｜'+(model.anchorReason||'')+'）資料來源（AI查證，請抽查）：'+(srcTxt||'無')+'。AI估算：永續成長率、營收成長率、FCF Margin、EPS／倍數、備援WACC；β／國家別／財年月／ADS比率／淨現金截止日由AI查證；WACC 由 C2 公式計算（rf、ERP 見「估值參數」分頁）；折現自估值日起、年末折現，淨現金截止日之後的 FCF 才計入。'+(uniq.length?'⚠️ 黃底儲存格（'+uniq.join('、')+'）為查無資料或未通過合理性檢查，請覆核後再採信估值。':'');
   const dup=await sheetsApi(':batchUpdate','POST',{requests:[{duplicateSheet:{sourceSheetId:tpl.sheetId,newSheetName:ticker,insertSheetIndex:tpl.index+1}}]});
   const sid=dup.replies[0].duplicateSheet.properties.sheetId;
   try{
-    await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:K60']});
+    await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:S60']});
     await sheetsApi('/values:batchUpdate','POST',{valueInputOption:'USER_ENTERED',data:[
       {range:T+'A1:K5',values:head},
-      {range:T+'A6:G17',values:yrs},
+      {range:T+'A6:J17',values:yrs},
+      {range:T+'M1:O16',values:adv},
+      {range:T+'M18:R29',values:sens},
       {range:T+'A19',values:[[note]]},
       {range:T+'A21',values:[['【季度複查記錄】']]},
       {range:T+'A22:D22',values:[reviewRow]}
@@ -2366,9 +2446,14 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
       nf(rg(6,17,0,1),'NUMBER','0'),nf(rg(6,17,1,2),'PERCENT','0.0%'),nf(rg(6,17,2,3),'NUMBER','0.0'),
       nf(rg(6,17,3,4),'PERCENT','0.0%'),nf(rg(6,17,4,5),'NUMBER','0.0'),nf(rg(6,17,5,6),'PERCENT','0.00%'),nf(rg(6,17,6,7),'NUMBER','0.0'),
       nf(rg(1,3,2,3),'PERCENT','0.0%'),nf(rg(3,4,2,3),'NUMBER','0.00'),nf(rg(4,5,2,3),'NUMBER','0.0'),
-      nf(rg(4,5,6,7),'NUMBER','0'),nf(rg(4,5,7,8),'NUMBER','0.0'),nf(rg(1,4,10,11),'NUMBER','0.00')
+      nf(rg(4,5,6,7),'NUMBER','0'),nf(rg(4,5,7,8),'NUMBER','0.0'),nf(rg(1,4,10,11),'NUMBER','0.00'),
+      nf(rg(6,17,7,8),'DATE','yyyy-mm-dd'),nf(rg(6,17,8,9),'NUMBER','0.00'),nf(rg(6,17,9,10),'PERCENT','0%'),
+      nf(rg(1,2,13,14),'DATE','yyyy-mm-dd'),nf(rg(14,15,13,14),'DATE','yyyy-mm-dd'),nf(rg(3,4,13,14),'NUMBER','0.##'),nf(rg(4,5,13,14),'NUMBER','0.00'),
+      nf(rg(5,7,13,14),'PERCENT','0.00%'),nf(rg(8,14,13,14),'PERCENT','0.00%'),
+      nf(rg(18,19,13,18),'PERCENT','0.0%'),nf(rg(19,24,12,13),'PERCENT','0.0%'),nf(rg(19,24,13,18),'NUMBER','0.00'),
+      nf(rg(25,26,13,14),'NUMBER','0.00'),nf(rg(26,27,13,14),'PERCENT','0.0%'),nf(rg(27,28,13,14),'NUMBER','0.00')
     ];
-    const cellIdx={H5:[4,7],C4:[3,2],C5:[4,2],G5:[4,6]};
+    const cellIdx={H5:[4,7],C4:[3,2],C5:[4,2],G5:[4,6],N3:[2,13],N4:[3,13],N5:[4,13],N8:[7,13],N15:[14,13]};
     uniq.forEach(k=>{const p=cellIdx[k];if(p)reqs.push({repeatCell:{range:rg(p[0],p[0]+1,p[1],p[1]+1),cell:{userEnteredFormat:{backgroundColor:{red:1,green:0.95,blue:0.6}}},fields:'userEnteredFormat.backgroundColor'}});});
     await sheetsApi(':batchUpdate','POST',{requests:reqs});
   }catch(e){
