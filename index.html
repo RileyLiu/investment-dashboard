@@ -936,6 +936,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="settings-section"><div class="settings-section-title">🤖 Anthropic API</div><div class="settings-note">API Key 優先從 Google Sheets 設定!B4 自動載入；手動填寫後儲存亦可。</div><div class="settings-field"><label class="settings-label">API Key</label><input type="password" class="settings-input" id="input-apikey" placeholder="sk-ant-..."></div></div>
     <div class="settings-section"><div class="settings-section-title">📊 Google Sheets 連結</div><div class="settings-note">授權後自動從「持股資訊」分頁讀取持股，跨裝置同步。</div><div class="settings-field"><label class="settings-label">試算表 ID</label><input type="text" class="settings-input" id="input-sheetid" placeholder="試算表網址中的長串ID"></div><button class="btn-google" id="btn-google-auth" onclick="startGoogleAuth()"><span>🔗</span><span id="google-auth-text">連結 Google 帳號</span></button></div>
     <div class="settings-section"><div class="settings-section-title">🚀 GitHub 自動上傳</div><div class="settings-note">GitHub PAT 優先從試算表「設定」分頁 B1 讀取。</div><div class="settings-field"><label class="settings-label">GitHub PAT</label><input type="password" class="settings-input" id="input-github-pat" placeholder="github_pat_..."></div><div class="settings-field"><label class="settings-label">Repo（owner/name）</label><input type="text" class="settings-input" id="input-github-repo" placeholder="RileyLiu/investment-dashboard"></div><div class="settings-field"><label class="settings-label">Branch</label><input type="text" class="settings-input" id="input-github-branch" placeholder="main"></div></div>
+    <div class="settings-section"><div class="settings-section-title">🔧 預測分頁遷移（v4.20.0）</div><div class="settings-note">把持股的舊預測分頁改成新版定義（台股與 ETF 不處理）。每檔先備份為「_舊」，輸入數字沿用、複查記錄保留；結果寫入「估值遷移對照」分頁。</div><button class="refresh-btn" onclick="awMigrateRun('pilot')">先試跑 STX／SKHY／AMZN</button> <button class="refresh-btn" onclick="awMigrateRun('rest')">遷移其餘持股</button><div id="mig-log" style="margin-top:8px;font-family:var(--font-mono);font-size:10px;line-height:1.6;color:var(--text-muted);max-height:180px;overflow:auto"></div></div>
     <button class="btn-save" onclick="saveSettings()">儲存設定</button>
     <button class="btn-cancel" onclick="closeModal('settings-modal')">取消</button>
   </div>
@@ -1007,7 +1008,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.19.0';
+const VERSION='v4.20.0';
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
@@ -1019,6 +1020,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.20.0',date:'2026-11-17',notes:'✦ 既有預測分頁遷移工具（⚙ 系統設定 → 預測分頁遷移）：持股的舊分頁改用 v4.19.0 新版定義；台股與 ETF 不處理<br>✦ 每檔先複製「_舊」備份、原地改版；成長率／FCF Margin／g／股數／淨現金／倍數／EPS 沿用，季度複查記錄保留並追加遷移紀錄<br>✦ ADS 比率固定為 1（舊分頁股數已是現價所報單位，避免 SKHY 類重複換算）；β／國家別／財年月由 AI 查證；淨現金截止日一律標黃待核對；新舊 WACC 差 >2pp 標黃<br>✦ 修正 v4.19.0：新版輔助欄（財年結束日／年末年數／計入比例）由 H:J 移至 T:V，避免被 GAS 財報速評寫入的 H6:J7 覆蓋；遷移時保留 H6:K20 既有的財報速評內容<br>✦ 失敗自動從備份還原；已是新版或備份已存在者略過；結果寫入「估值遷移對照」分頁（新舊 WACC／合理價／決策）<br>✦ 建議先「試跑 STX／SKHY／AMZN」，確認後再「遷移其餘持股」；RKLB（模板來源）排在最後'},
   {v:'4.19.0',date:'2026-11-17',notes:'✦ 預測分頁模板升級（僅影響之後新建的分頁；既有分頁與 RKLB 範本不動）<br>✦ 折現改為自「估值日」起、年末折現；新增財年結束月與「淨現金截止日」，截止日之前已入帳的 FCF 不重複計入（落實 10/28 守則）<br>✦ 新增 ADS/ADR 比率欄：合理價＝權益價值÷(普通股數×每股對應ADS數)，避免 SKHY 式單位錯誤<br>✦ WACC 改公式：rf＋β×ERP＋國家溢酬（可含負債權重）；rf、ERP、國家溢酬集中於新分頁「估值參數」（手動維護，首次建立時自動產生）；β 缺值時採 AI 備援 WACC<br>✦ 新增 WACC×g 5×5 敏感度表與反向 DCF（現價隱含的 FCF 倍數與末年 FCF Margin），並附驗算格<br>✦ AI 建模新增 β、國家別、財年結束月、淨現金截止日、ADS 比率、負債比重，查證失敗者標黃待覆核<br>✦ 注意：新分頁合理價以今日為估值基準，會高於以基期年底為基準的舊分頁，兩者不可直接比較；G2/G3/G4/K2:K4 位置不變，儀表板讀取邏輯不受影響'},
   {v:'4.18.0',date:'2026-11-17',notes:'✦ 安全邊際定義修正：MOS = (合理價−現價)/合理價（原分母為現價，會放大折扣；例：現價70／合理價100 原顯示 +43%，修正後 +30%）<br>✦ 估值五級「低估買入」門檻由折扣 ≥15% 改為 ≥20%，「深度低估」維持 ≥30%，與 THESIS_LINT 安全邊際規則一致<br>✦ 新建預測分頁的「決策標準」改為：現價 ≤ 合理價 70% 強力購入、≤ 80% 建議買入（原為 &lt; 保守價／&lt; 合理價 95%）；分批賣出條件（&gt; 合理價 120%）不變<br>✦ 修正「強力購入」決策標籤因不含「買入」而顯示灰色的配色問題<br>✦ 注意：既有預測分頁的決策標準公式在 Sheets 內，不會自動更新；儀表板的 MOS 與估值徽章會立即採用新定義'},
   {v:'4.17.2',date:'2026-11-16',notes:'✦ 修正：Worker 共用密碼改存 Sheets 設定!H1（原 B30 已被 GAS 紀錄列佔用）'},
@@ -2323,11 +2325,16 @@ async function awEnsureParamTab(sheets){
 }
 
 // 複製範本分頁並寫入輸入格與公式；已存在同名分頁則不動
-async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
+async function awCreateForecastTab(ticker,model,quotePrice,reviewRow,opts){
+  opts=opts||{};const MG=!!opts.migrate;
   const meta=await sheetsApi('?fields=sheets.properties(sheetId,title,index)');
   const sheets=(meta.sheets||[]).map(s=>s.properties);
-  if(sheets.some(s=>s.title===ticker))return{existed:true,flags:[]};
-  const tpl=sheets.find(s=>s.title===FORECAST_TEMPLATE_TAB);
+  const exSheet=sheets.find(s=>s.title===ticker);
+  if(MG){
+    if(!exSheet)throw new Error('找不到分頁 '+ticker);
+    if(sheets.some(s=>s.title===ticker+'_舊'))throw new Error('備份分頁已存在：'+ticker+'_舊');
+  }else if(exSheet)return{existed:true,flags:[]};
+  const tpl=MG?exSheet:sheets.find(s=>s.title===FORECAST_TEMPLATE_TAB);
   if(!tpl)throw new Error('找不到範本分頁 '+FORECAST_TEMPLATE_TAB);
   await awEnsureParamTab(sheets);
   const num=x=>(typeof x==='number'&&isFinite(x))?x:null;
@@ -2357,7 +2364,22 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
     if(!isNaN(dd.getTime())&&dd.getTime()<=Date.now()+86400000)ncDate=model.netCashDate;
   }
   if(!ncDate)flags.push('N15');
+  if(MG)flags.push('N15'); // 遷移：淨現金截止日由 AI 推定，一律標黃請核對
   const dw0=num(model.debtWeight);const debtW=(dw0!=null&&dw0>=0&&dw0<=0.6)?dw0:0;
+  // 遷移：預估新公式 WACC，與舊值差 >2pp 標黃（N5）
+  let newWaccEst=null;
+  if(MG){
+    try{
+      const pv=await sheetsApi('/values:batchGet?ranges='+encodeURIComponent(PARAM_TAB+'!B2:B3')+'&ranges='+encodeURIComponent(PARAM_TAB+'!A8:B30')+'&valueRenderOption=UNFORMATTED_VALUE');
+      const rf=pv.valueRanges[0].values[0][0],erp=pv.valueRanges[0].values[1][0];
+      const tb=pv.valueRanges[1].values||[];const hit=tb.find(r=>r[0]===country);const prem=hit&&typeof hit[1]==='number'?hit[1]:0;
+      if(beta!=null&&typeof rf==='number'&&typeof erp==='number'){
+        const ke=rf+beta*erp+prem,kd=rf+0.02;
+        newWaccEst=ke*(1-debtW)+kd*(1-0.21)*debtW;
+        if(typeof opts.oldWacc==='number'&&Math.abs(newWaccEst-opts.oldWacc)>0.02)flags.push('N5');
+      }
+    }catch(_){_logErr('migWacc',_);}
+  }
   if(quotePrice&&shares>0&&baseRev>0){
     const mc=quotePrice*shares*ads,ps=mc/baseRev;
     if(ps<0.1||ps>200){flags.push('H5');flags.push('C4');}
@@ -2395,7 +2417,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
     ['g＼WACC',...gOff.map(o=>'=$C$2'+(o<0?'-':'+')+Math.abs(o))]];
   gOff.forEach((o,ri)=>{
     const k=20+ri;
-    sens.push(['=$C$3'+(o<0?'-':'+')+Math.abs(o),...cols.map(X=>`=IF($M${k}>=${X}$19,"—",(SUMPRODUCT($E$7:$E$17,$J$7:$J$17,(1+${X}$19)^(-$I$7:$I$17))+$E$17*(1+$M${k})/(${X}$19-$M${k})*(1+${X}$19)^(-$I$17)+$C$5)/($C$4*$N$4))`)]);
+    sens.push(['=$C$3'+(o<0?'-':'+')+Math.abs(o),...cols.map(X=>`=IF($M${k}>=${X}$19,"—",(SUMPRODUCT($E$7:$E$17,$V$7:$V$17,(1+${X}$19)^(-$U$7:$U$17))+$E$17*(1+$M${k})/(${X}$19-$M${k})*(1+${X}$19)^(-$U$17)+$C$5)/($C$4*$N$4))`)]);
   });
   sens.push(['反向 DCF（現價隱含）','','','','','']);
   sens.push(['現價需要的 FCF 倍數（相對目前預測）','=IFERROR(($G$2*$C$4*$N$4-$C$5)/(SUM($G$7:$G$17)+$E$17*(1+$C$3)/($C$2-$C$3)*$F$17),"—")','>1＝市場比你的預測更樂觀；<1＝更悲觀','','','']);
@@ -2403,13 +2425,14 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
   sens.push(['驗算：敏感度中心 − 合理股價','=IFERROR($P$22-$G$3,"—")','應為 0','','','']);
   const kf=r=>`=IF(ISNUMBER(SEARCH("DCF",$H$1)),$G$3*J${r},$K$1*J${r})`;
   const head=[
-    ['','A (項目)','B (數值/公式)','C (說明)','編輯時間','股票代號',ticker,'估值定錨：'+anchorTxt,'','預估EPS',eps],
+    ['','A (項目)','B (數值/公式)','C (說明)','編輯時間','股票代號',ticker,(MG&&opts.h1)||('估值定錨：'+anchorTxt),'',(MG&&opts.j1)||'預估EPS',eps],
     [1,'WACC (折現率)','=IF(ISNUMBER($N$5),$N$13*(1-$N$10)+$N$11*(1-$N$12)*$N$10,$N$14)','公式：rf＋β×ERP＋國家溢酬；β缺值時採N14備援',awToday(),'現價','=GOOGLEFINANCE("'+ticker+'","price")',isDCF?'J欄＝DCF係數':'J欄＝PE倍數','保守估計',mult[0],kf(2)],
     [2,'永續成長率 (g)',gt,'長期GDP錨點（AI估算）','','合理股價','=((SUM(G7:G17)+((E17*(1+C3))/(C2-C3))*F17)+C5)/(C4*$N$4)','','合理預估',mult[1],kf(3)],
-    [3,'流通股數 (億股)',shares==null?'':shares,'','','決策標準','=IF(G2<=K3*0.7,"🔥 強力購入",IF(G2<=K3*0.8,"💎 建議買入",IF(G2>K3*1.2,"🚨 建議分批賣出","✅ 穩定持有")))','','樂觀溢價',mult[2],kf(4)],
+    [3,(MG&&opts.a4)||'流通股數 (億股)',shares==null?'':shares,'','','決策標準','=IF(G2<=K3*0.7,"🔥 強力購入",IF(G2<=K3*0.8,"💎 建議買入",IF(G2>K3*1.2,"🚨 建議分批賣出","✅ 穩定持有")))','','樂觀溢價',mult[2],kf(4)],
     [4,'淨現金 (億美元)',netCash==null?'':netCash,'','','基期年度/營收(億美元)',baseYear,baseRev==null?'':baseRev,'','','']
   ];
-  const yrs=[['年分','營收成長率','營收預估(億美元)','FCF MARGIN','FCF預估','折現因子','FCF現值','財年結束日','年末年數 t','計入比例']];
+  const yrs=[['年分','營收成長率','營收預估(億美元)','FCF MARGIN','FCF預估','折現因子','FCF現值']];
+  const yh=[['財年結束日','年末年數 t','計入比例']];
   for(let i=0;i<11;i++){
     const r=7+i;
     yrs.push([
@@ -2418,28 +2441,39 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
       i===0?`=$H$5*(1+B${r})`:`=C${r-1}*(1+B${r})`,
       model.margin[i],
       `=C${r}*D${r}`,
-      `=1/(1+$C$2)^I${r}`,
-      `=E${r}*F${r}*J${r}`,
+      `=1/(1+$C$2)^U${r}`,
+      `=E${r}*F${r}*V${r}`
+    ]);
+    yh.push([
       `=EOMONTH(DATE(A${r},$N$3,1),0)`,
-      `=MAX(0,(H${r}-$N$2)/365.25)`,
-      `=MIN(1,MAX(0,(H${r}-IF(ISNUMBER($N$15),$N$15,$N$2))/365.25))`
+      `=MAX(0,(T${r}-$N$2)/365.25)`,
+      `=MIN(1,MAX(0,(T${r}-IF(ISNUMBER($N$15),$N$15,$N$2))/365.25))`
     ]);
   }
   const srcTxt=(Array.isArray(model.sources)?model.sources:[]).map(s=>`${s.item||''}: ${s.url||''} (${s.date||''})`).join('；');
   const note='分析備註：'+(model.notes||'')+'（估值定錨：'+anchorTxt+'｜'+(model.anchorReason||'')+'）資料來源（AI查證，請抽查）：'+(srcTxt||'無')+'。AI估算：永續成長率、營收成長率、FCF Margin、EPS／倍數、備援WACC；β／國家別／財年月／ADS比率／淨現金截止日由AI查證；WACC 由 C2 公式計算（rf、ERP 見「估值參數」分頁）；折現自估值日起、年末折現，淨現金截止日之後的 FCF 才計入。'+(uniq.length?'⚠️ 黃底儲存格（'+uniq.join('、')+'）為查無資料或未通過合理性檢查，請覆核後再採信估值。':'');
-  const dup=await sheetsApi(':batchUpdate','POST',{requests:[{duplicateSheet:{sourceSheetId:tpl.sheetId,newSheetName:ticker,insertSheetIndex:tpl.index+1}}]});
-  const sid=dup.replies[0].duplicateSheet.properties.sheetId;
+  const noteFinal=MG?((opts.oldNote?opts.oldNote+'\n':'')+'【v4.20.0 遷移】沿用舊分頁的成長率／FCF Margin／g／股數／淨現金；ADS 比率固定為 1（舊 C4 已是現價所報單位）；WACC 改為公式（舊值保存在 N14 備援與 '+ticker+'_舊 分頁）；β／國家別／財年月由 AI 查證，淨現金截止日（N15）請核對（此日之後的 FCF 才計入，舊版手動剔除已入帳 FCF 的做法改由此欄處理）。'+(uniq.length?'⚠️ 黃底儲存格（'+uniq.join('、')+'）請覆核。':'')):note;
+  let sid,bkId=null,preCol=null;
+  if(MG){
+    const m2=await sheetsApi('?fields=sheets.properties.index');
+    const bk=await sheetsApi(':batchUpdate','POST',{requests:[{duplicateSheet:{sourceSheetId:tpl.sheetId,newSheetName:ticker+'_舊',insertSheetIndex:(m2.sheets||[]).length}}]});
+    bkId=bk.replies[0].duplicateSheet.properties.sheetId;
+    sid=tpl.sheetId;
+    preCol=await awReadTabCol(ticker);
+  }else{
+    const dup=await sheetsApi(':batchUpdate','POST',{requests:[{duplicateSheet:{sourceSheetId:tpl.sheetId,newSheetName:ticker,insertSheetIndex:tpl.index+1}}]});
+    sid=dup.replies[0].duplicateSheet.properties.sheetId;
+  }
   try{
-    await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:S60']});
+    await sheetsApi('/values:batchClear','POST',{ranges:MG?[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:W40']:[T+'A1:W60']});
     await sheetsApi('/values:batchUpdate','POST',{valueInputOption:'USER_ENTERED',data:[
       {range:T+'A1:K5',values:head},
-      {range:T+'A6:J17',values:yrs},
+      {range:T+'A6:G17',values:yrs},
+      {range:T+'T6:V17',values:yh},
       {range:T+'M1:O16',values:adv},
       {range:T+'M18:R29',values:sens},
-      {range:T+'A19',values:[[note]]},
-      {range:T+'A21',values:[['【季度複查記錄】']]},
-      {range:T+'A22:D22',values:[reviewRow]}
-    ]});
+      {range:T+'A19',values:[[noteFinal]]}
+    ].concat(MG?[]:[{range:T+'A21',values:[['【季度複查記錄】']]},{range:T+'A22:D22',values:[reviewRow]}])});
     const rg=(r0,r1,c0,c1)=>({sheetId:sid,startRowIndex:r0,endRowIndex:r1,startColumnIndex:c0,endColumnIndex:c1});
     const nf=(range,type,pattern)=>({repeatCell:{range,cell:{userEnteredFormat:{numberFormat:{type,pattern}}},fields:'userEnteredFormat.numberFormat'}});
     const reqs=[
@@ -2447,7 +2481,7 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
       nf(rg(6,17,3,4),'PERCENT','0.0%'),nf(rg(6,17,4,5),'NUMBER','0.0'),nf(rg(6,17,5,6),'PERCENT','0.00%'),nf(rg(6,17,6,7),'NUMBER','0.0'),
       nf(rg(1,3,2,3),'PERCENT','0.0%'),nf(rg(3,4,2,3),'NUMBER','0.00'),nf(rg(4,5,2,3),'NUMBER','0.0'),
       nf(rg(4,5,6,7),'NUMBER','0'),nf(rg(4,5,7,8),'NUMBER','0.0'),nf(rg(1,4,10,11),'NUMBER','0.00'),
-      nf(rg(6,17,7,8),'DATE','yyyy-mm-dd'),nf(rg(6,17,8,9),'NUMBER','0.00'),nf(rg(6,17,9,10),'PERCENT','0%'),
+      nf(rg(6,17,19,20),'DATE','yyyy-mm-dd'),nf(rg(6,17,20,21),'NUMBER','0.00'),nf(rg(6,17,21,22),'PERCENT','0%'),
       nf(rg(1,2,13,14),'DATE','yyyy-mm-dd'),nf(rg(14,15,13,14),'DATE','yyyy-mm-dd'),nf(rg(3,4,13,14),'NUMBER','0.##'),nf(rg(4,5,13,14),'NUMBER','0.00'),
       nf(rg(5,7,13,14),'PERCENT','0.00%'),nf(rg(8,14,13,14),'PERCENT','0.00%'),
       nf(rg(18,19,13,18),'PERCENT','0.0%'),nf(rg(19,24,12,13),'PERCENT','0.0%'),nf(rg(19,24,13,18),'NUMBER','0.00'),
@@ -2457,12 +2491,124 @@ async function awCreateForecastTab(ticker,model,quotePrice,reviewRow){
     uniq.forEach(k=>{const p=cellIdx[k];if(p)reqs.push({repeatCell:{range:rg(p[0],p[0]+1,p[1],p[1]+1),cell:{userEnteredFormat:{backgroundColor:{red:1,green:0.95,blue:0.6}}},fields:'userEnteredFormat.backgroundColor'}});});
     await sheetsApi(':batchUpdate','POST',{requests:reqs});
   }catch(e){
+    if(MG){
+      let rest='已從備份還原';
+      try{
+        const bv=await sheetsApi('/values/'+encodeURIComponent(awTab(ticker+'_舊')+'!A1:W40')+'?valueRenderOption=FORMULA');
+        await sheetsApi('/values:batchClear','POST',{ranges:[T+'A1:K5',T+'A6:G17',T+'A19:G20',T+'M1:W40']});
+        await sheetsApi('/values/'+encodeURIComponent(T+'A1')+'?valueInputOption=USER_ENTERED','PUT',{values:bv.values||[]});
+      }catch(e2){rest='⚠️ 還原失敗，請手動從 '+ticker+'_舊 還原：'+e2.message;}
+      throw new Error('遷移失敗（'+rest+'）：'+e.message);
+    }
     try{await sheetsApi(':batchUpdate','POST',{requests:[{deleteSheet:{sheetId:sid}}]});}catch(_){_logErr('L2187',_);}
     throw new Error('寫入預測分頁失敗，已移除未完成的分頁：'+e.message);
   }
-  sheetTabNames.push(ticker);
+  if(!MG)sheetTabNames.push(ticker);
+  let cmp=null;
+  if(MG){
+    try{await awAppendReview(ticker,preCol,[reviewRow]);}catch(_){_logErr('migReview',_);}
+    try{
+      const nv=await sheetsApi('/values:batchGet?ranges='+encodeURIComponent(T+'C2')+'&ranges='+encodeURIComponent(T+'G2:G4')+'&valueRenderOption=UNFORMATTED_VALUE');
+      const g1=nv.valueRanges[1].values||[];
+      cmp={wacc:(nv.valueRanges[0].values||[[null]])[0][0],price:(g1[0]||[])[0],fair:(g1[1]||[])[0],dec:(g1[2]||[])[0]};
+    }catch(_){_logErr('migCmp',_);}
+  }
   try{const d=await fetchDCFSheet(ticker);if(d){dcfCache[ticker]=d;renderWatchlist();}}catch(_){_logErr('L2191',_);}
-  return{existed:false,flags:uniq};
+  return{existed:false,flags:uniq,cmp,newWaccEst};
+}
+
+
+// ===== v4.20.0：既有預測分頁遷移到新版定義 =====
+const MIG_PILOT=['STX','SKHY','AMZN'];
+const MIG_LOG_TAB='估值遷移對照';
+let migBusy=false;
+function awMigTargets(){
+  const seen=new Set(),out=[];
+  holdingsData.forEach(h=>{
+    const t=h.ticker;
+    if(!t||seen.has(t)||h.type==='etf'||h.type==='wave'||/^\d/.test(t))return;
+    if(!sheetTabNames.includes(t))return;
+    seen.add(t);out.push(t);
+  });
+  out.sort((a,b)=>(a===FORECAST_TEMPLATE_TAB)-(b===FORECAST_TEMPLATE_TAB)); // 模板來源分頁放最後
+  return out;
+}
+async function awReadOldTab(ticker){
+  const d=await sheetsApi('/values/'+encodeURIComponent(awTab(ticker)+'!A1:O20')+'?valueRenderOption=UNFORMATTED_VALUE');
+  const v=d.values||[];
+  const c=(r,k)=>{const x=v[r-1]&&v[r-1][k];return (x===undefined||x==='')?null:x;};
+  const nc=(r,k)=>{const x=c(r,k);return typeof x==='number'?x:null;};
+  const growth=[],margin=[];
+  for(let r=7;r<=17;r++){growth.push(nc(r,1));margin.push(nc(r,3));}
+  const h1=c(1,7);
+  return{
+    already:typeof c(1,12)==='string'&&c(1,12).startsWith('進階輸入'),
+    price:nc(2,6),oldFair:nc(3,6),oldDec:c(4,6),
+    h1:typeof h1==='string'?h1:null,j1:typeof c(1,9)==='string'?c(1,9):null,a4:typeof c(4,1)==='string'?c(4,1):null,
+    oldNote:typeof c(19,0)==='string'?c(19,0):'',
+    model:{anchor:(typeof h1==='string'&&/DCF/i.test(h1))?'DCF':'PE Band',wacc:nc(2,2),g:nc(3,2),shares:nc(4,2),netCash:nc(5,2),baseYear:nc(5,6),baseRevenue:nc(5,7),eps:nc(1,10),mult:[nc(2,9),nc(3,9),nc(4,9)],growth,margin,notes:''}
+  };
+}
+async function awFetchNewFields(ticker,name){
+  const prompt=`請搜尋 ${ticker}（${name||''}）最新公開資訊，只輸出 JSON，不要其他文字：{"beta":數字或null,"betaSource":"來源網址或名稱","country":"主要風險所在地兩碼代號如US/KR/TW/JP","fyEndMonth":財年結束月份1到12,"netCashDate":"最近一份已公布資產負債表日期YYYY-MM-DD或null"}。規則：beta 為對標普500的最新 β，查不到填 null，禁止憑記憶；netCashDate 為該公司最近一次公布財報的資產負債表日期，查不到填 null。今天是 ${awToday()}。`;
+  const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
+  const data=await r.json();if(data.error)throw new Error(data.error.message);
+  const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+  const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('新欄位解析失敗');
+  return JSON.parse(m[0]);
+}
+async function awMigrateOne(ticker){
+  const old=await awReadOldTab(ticker);
+  if(old.already)return{skipped:'已是新版'};
+  const h=holdingsData.find(x=>x.ticker===ticker)||{};
+  const nf=await awFetchNewFields(ticker,h.name);
+  const model=Object.assign({},old.model,{beta:nf.beta,country:nf.country,fyEndMonth:nf.fyEndMonth,netCashDate:nf.netCashDate,adsPerShare:1,debtWeight:0});
+  const review=[awToday(),'模板遷移 v4.20.0','—','沿用舊分頁輸入；新增估值日折現、ADS 欄、WACC 公式、敏感度與反向 DCF。舊版備份於 '+ticker+'_舊。β 來源：'+(nf.betaSource||'無')];
+  const res=await awCreateForecastTab(ticker,model,old.price,review,{migrate:true,h1:old.h1,j1:old.j1,a4:old.a4,oldNote:old.oldNote,oldWacc:old.model.wacc});
+  return{old,res};
+}
+async function awMigLogToSheet(rows){
+  try{
+    const meta=await sheetsApi('?fields=sheets.properties.title');
+    if(!(meta.sheets||[]).some(s=>s.properties.title===MIG_LOG_TAB)){
+      await sheetsApi(':batchUpdate','POST',{requests:[{addSheet:{properties:{title:MIG_LOG_TAB}}}]});
+      await sheetsApi('/values/'+encodeURIComponent(MIG_LOG_TAB+'!A1:I1')+'?valueInputOption=USER_ENTERED','PUT',{values:[['日期','代號','舊WACC','新WACC','舊合理價','新合理價','現價','新決策','待覆核／備註']]});
+    }
+    await sheetsApi('/values/'+encodeURIComponent(MIG_LOG_TAB+'!A:I')+':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS','POST',{values:rows});
+  }catch(e){_logErr('migLog',e);}
+}
+async function awMigrateRun(mode){
+  if(migBusy)return;
+  if(!googleToken||!holdingsData.length){alert('請先完成 Google 授權並載入持股');return;}
+  const all=awMigTargets();
+  const targets=mode==='pilot'?all.filter(t=>MIG_PILOT.includes(t)):all.filter(t=>!MIG_PILOT.includes(t));
+  const box=document.getElementById('mig-log');
+  if(!targets.length){if(box)box.textContent='沒有需要處理的分頁';return;}
+  if(!confirm('即將遷移 '+targets.length+' 個分頁（'+targets.join('、')+'）。\n每檔會先複製「_舊」備份，再原地改成新版，季度複查記錄保留。\n過程需保持此頁開啟，確定開始？'))return;
+  migBusy=true;
+  const lines=[],sheetRows=[];
+  const say=m=>{lines.push(m);if(box)box.innerHTML=lines.map(awEsc).join('<br>');};
+  const f=x=>typeof x==='number'?x.toFixed(2):'—';
+  const pc=x=>typeof x==='number'?(x*100).toFixed(1)+'%':'—';
+  say('開始遷移 '+targets.length+' 檔…');
+  for(let i=0;i<targets.length;i++){
+    const t=targets[i];
+    try{
+      const r=await awMigrateOne(t);
+      if(r.skipped){say(`[${i+1}/${targets.length}] ${t}：略過（${r.skipped}）`);continue;}
+      const cm=r.res.cmp||{};
+      const fl=r.res.flags.join('、');
+      say(`[${i+1}/${targets.length}] ✅ ${t}｜WACC ${pc(r.old.model.wacc)}→${pc(cm.wacc)}｜合理價 ${f(r.old.oldFair)}→${f(cm.fair)}｜現價 ${f(cm.price)}｜${cm.dec||''}${fl?'｜⚠️黃格：'+fl:''}`);
+      sheetRows.push([awToday(),t,r.old.model.wacc,cm.wacc==null?'':cm.wacc,r.old.oldFair==null?'':r.old.oldFair,typeof cm.fair==='number'?cm.fair:'',typeof cm.price==='number'?cm.price:'',cm.dec||'',fl]);
+    }catch(e){
+      say(`[${i+1}/${targets.length}] ❌ ${t}：${e.message}`);
+      sheetRows.push([awToday(),t,'','','','','','','失敗：'+e.message]);
+    }
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  if(sheetRows.length)await awMigLogToSheet(sheetRows);
+  say('完成。對照表已寫入分頁「'+MIG_LOG_TAB+'」；請先抽查黃底儲存格，確認後再刪除「_舊」備份分頁。');
+  migBusy=false;
 }
 
 // 主流程：分析完成後 → 論文庫 upsert（含備份）＋ 預測分頁
