@@ -1031,7 +1031,8 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.22.0';
+const VERSION='v4.22.1';
+const AI_MODEL='claude-sonnet-5-5'; // v4.22.1：所有 AI 呼叫統一用這個常數，之後換模型只改這行（Worker 白名單要同步放行）
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
@@ -1044,6 +1045,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.22.1',date:'2026-11-19',notes:'✦ AI 模型升級：claude-sonnet-4-6 → claude-sonnet-5-5；6 個呼叫點改用單一常數 AI_MODEL。需搭配 Worker v2.2（白名單放行 5.5）<br>✦ Claude 解讀：提示詞要求純文字、120 字內，並濾掉殘留的 markdown 符號（##、**、---）；快取 key 加入提示詞版本與模型，舊格式的快取不會再被讀出<br>✦ AAII 資料日統一顯示為 YYYY-MM-DD（原本直接顯示 Sheets 儲存格文字，例如 Nov 11 2026）'},
   {v:'4.22.0',date:'2026-11-19',notes:'✦ 「風險總覽」改名「宏觀環境」；VIX／VXN／AAII 三張卡搬到觀察清單最上方（市場溫度計下方），宏觀環境頁只留短期利率、10 年公債、殖利率曲線、Trimmed Mean PCE<br>✦ 新增市場情緒綜合判斷：恐慌程度（VIX≥20 或 AAII≥+2σ）× SPX 52 週位置（30／70 分界，與位置條同色）→ 六種狀態燈號；第二行補 VXN／NDX 位置。只描述狀態，不是買賣訊號<br>✦ 「🧠 Claude 解讀」按鈕：按下才呼叫（走 Worker /v1/messages），結果以日期＋數據快照為 key 快取在 localStorage（可重建快取，不存決策資料）<br>✦ 啟動時即載入 VIX／VXN，不必先開宏觀環境頁；AAII 仍在 Sheets 同步後出現（週更，顯示資料日期）'},
   {v:'4.21.3',date:'2026-11-19',notes:'✦ 市場溫度計：漲跌幅移到指數數字右側同一行（▲/▼ 漲跌點 (漲跌幅%)，漲紅跌綠），原本數字下方那行併入<br>✦ 修正 SPX / NDX / SOX 漲跌幅永遠顯示 0 (0.00%)：Worker /quote 沒回傳前收盤與漲跌，前端改用 prevClose 計算；取不到時顯示 — ，不再用 0 冒充平盤<br>✦ 搭配 Worker 更新（/quote 新增 prevClose / change / changePct）；Worker 尚未更新前，漲跌幅顯示 —'},
   {v:'4.21.2',date:'2026-11-18',notes:'✦ 預測分頁排版變緊湊：A～K 欄合計 1152→890 px、右側面板 674→582 px，整張表約 1470 px，一般筆電全螢幕可一眼看完<br>✦ 備註列與季度複查記錄的列高依新欄寬重算（每行字數 75→58、48→37），避免文字被切<br>✦ 只改格式，不動數字／公式／複查記錄；套用方式：⚙ 系統設定 → 預測分頁遷移 → 「🎨 排版：全部持股分頁」'},
@@ -1315,13 +1317,18 @@ async function loadSentimentStrip(){
   }catch(e){_logErr('vxn-strip',e);}
   renderSentimentCards();updateMarketSignal();
 }
+function stripMd(t){
+  // v4.22.1：模型偶爾仍會帶 markdown，畫面是純文字，把標題/粗體/分隔線/反引號濾掉
+  return String(t).replace(/^\s{0,3}#{1,6}\s*/gm,'').replace(/^\s*[-*_]{3,}\s*$/gm,'').replace(/\*\*(.+?)\*\*/g,'$1').replace(/__(.+?)__/g,'$1').replace(/`([^`]+)`/g,'$1').replace(/\n{3,}/g,'\n\n').trim();
+}
+const SIGNAL_PROMPT_VER='p2';
 async function runSignalAI(){
   const s=signalState,out=document.getElementById('signal-ai-out'),btn=document.getElementById('signal-ai-btn');
   if(!s){showToast('指數與 VIX 資料尚未載入完成');return;}
   if(!out)return;
   const show=(t,isErr)=>{out.style.display='block';out.style.color=isErr?'var(--red)':'';out.innerHTML=esc(t).replace(/\n/g,'<br>');};
   const day=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'});
-  const key=[day,s.vix.toFixed(1),s.vxn!=null?s.vxn.toFixed(1):'-',s.spxPos.toFixed(0),s.ndxPos!=null?s.ndxPos.toFixed(0):'-',s.sigma!=null?s.sigma.toFixed(1):'-',s.title].join('|');
+  const key=[day,s.vix.toFixed(1),s.vxn!=null?s.vxn.toFixed(1):'-',s.spxPos.toFixed(0),s.ndxPos!=null?s.ndxPos.toFixed(0):'-',s.sigma!=null?s.sigma.toFixed(1):'-',s.title,SIGNAL_PROMPT_VER,AI_MODEL].join('|');
   try{const cc=JSON.parse(localStorage.getItem('signal_ai_cache')||'null');if(cc&&cc.key===key&&cc.text){show(cc.text+'\n（快取 · '+cc.time+'）');return;}}catch(e){}
   if(btn){btn.disabled=true;btn.textContent='🧠 解讀中…';}
   show('Claude 解讀中，約需 10 秒…');
@@ -1329,16 +1336,17 @@ async function runSignalAI(){
 以下是儀表板目前的市場情緒與價格位置數據，以及規則式判讀。請用繁體中文寫 2~3 句：
 1. 這組數據合起來在說什麼（情緒與價格是否背離）；
 2. 一個反向思考：若這個判讀錯了，最可能的原因是什麼。
+格式：純文字，不要標題、粗體、分隔線、條列符號，全部控制在 120 字內。
 不要給買賣指令，不要預測短期漲跌；AAII 為週更資料，請留意資料日期。只能使用下列數據，不要補充未提供的數字。
 ${s.inputs}
 ${s.tech}
 ${s.why}
 規則式判讀：「${s.title}」`;
   try{
-    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:AI_MODEL,max_tokens:400,messages:[{role:'user',content:prompt}]})});
     const data=await r.json();
     if(data.error)throw new Error(typeof data.error==='string'?data.error:(data.error.message||'API error'));
-    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    const text=stripMd((data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(''));
     if(!text)throw new Error('沒有回應內容');
     const time=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
     show(text);
@@ -2467,7 +2475,7 @@ async function fetchThesisModel(ticker,stock,existing,needModel){
 4. status：yes（論文成立）／partial（有 1 條 invalidation signal，持觀察）／adjust（核心不變但參數需重新校準）／no（買入邏輯根本動搖）。
 5. review：moat、valuation、risk 各 1-2 句。${modelRules}
 輸出格式：{"thesis":"...","sellTrigger":"...","status":"yes","review":{"moat":"...","valuation":"...","risk":"..."}${modelSpec}}`;
-  const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4096,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
+  const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:AI_MODEL,max_tokens:4096,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
   const data=await r.json();if(data.error)throw new Error(data.error.message);
   const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
   const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('建模資料解析失敗，請重試');
@@ -2874,7 +2882,7 @@ async function awReadOldTab(ticker){
 }
 async function awFetchNewFields(ticker,name){
   const prompt=`請搜尋 ${ticker}（${name||''}）最新公開資訊，只輸出 JSON，不要其他文字：{"beta":數字或null,"betaSource":"來源網址或名稱","country":"主要風險所在地兩碼代號如US/KR/TW/JP","fyEndMonth":財年結束月份1到12,"netCashDate":"最近一份已公布資產負債表日期YYYY-MM-DD或null"}。規則：beta 為對標普500的最新 β，查不到填 null，禁止憑記憶；netCashDate 為該公司最近一次公布財報的資產負債表日期，查不到填 null。今天是 ${awToday()}。`;
-  const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
+  const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:AI_MODEL,max_tokens:1200,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
   const data=await r.json();if(data.error)throw new Error(data.error.message);
   const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
   const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('新欄位解析失敗');
@@ -3066,7 +3074,7 @@ async function runAnalysis(ticker,stock){
   };
   const pk=stock?.type==='wave'?'wave':stock?.type==='etf'?'etf':'value';
   try{
-    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompts[pk]}]})});
+    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:AI_MODEL,max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompts[pk]}]})});
     const data=await r.json();if(data.error)throw new Error(data.error.message);
     const tb=data.content.find(b=>b.type==='text');const raw=tb?tb.text:'';
     const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('解析失敗，請重試');
@@ -3273,7 +3281,7 @@ async function runHealthPlan(){
 請生成本月3個具體行動項目，只輸出JSON：
 {"actions":[{"priority":"HIGH/MID/LOW","action":"具體行動（含金額或比例）","reason":"30字內理由","type":"BUY/SELL/HOLD/REBALANCE"}]}`;
   try{
-    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:AI_MODEL,max_tokens:800,messages:[{role:'user',content:prompt}]})});
     const data=await r.json();if(data.error)throw new Error(data.error.message);
     const tb=data.content.find(b=>b.type==='text');const raw=tb?tb.text:'';
     const m=raw.match(/\{[\s\S]*\}/);if(!m)throw new Error('解析失敗');
@@ -3364,6 +3372,16 @@ function renderPCEBar(pce){
   if(pceBadgeEl){pceBadgeEl.textContent=pceLabel;pceBadgeEl.style.color=pceColor;}
   if(pceTtCurrent){pceTtCurrent.textContent=pce.toFixed(1)+'%（'+pceLabel+'）';pceTtCurrent.style.color=pceColor;}
 }
+function fmtAaiiDate(s){
+  // v4.22.1：統一成 YYYY-MM-DD；解析不了就原樣顯示
+  if(!s||s==='—')return '—';
+  const t=String(s).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(t))return t;
+  const d=new Date(t);
+  if(isNaN(d.getTime()))return t;
+  const z=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());
+}
 function renderAAIIBar(aaiiData){
   // aaiiData: {bearish, avg4w, spread, date}
   const bearishEl=document.getElementById('aaii-bearish');
@@ -3372,7 +3390,7 @@ function renderAAIIBar(aaiiData){
   const bearish=parseFloat(aaiiData.bearish)||0;
   const avg4w=parseFloat(aaiiData.avg4w)||0;
   const spread=parseFloat(aaiiData.spread)||0;
-  const date=aaiiData.date||'—';
+  const date=fmtAaiiDate(aaiiData.date);
   // σ 計算
   const MEAN=31.0,STD=9.0;
   const sigma=(bearish-MEAN)/STD;
@@ -3767,7 +3785,7 @@ async function runRiskAnalysis(){
 {"title":"🎯 一句話總結","content":"現在最需要做的一件具體事..."}
 ]}`;
   try{
-    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:AI_MODEL,max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const data=await r.json();if(data.error)throw new Error(data.error.message);
     const tb=data.content.find(b=>b.type==='text');const raw=tb?tb.text:'';
     // 強化 JSON parse：清控制字元 → 直接 parse → fallback 把換行跳脫
