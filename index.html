@@ -68,6 +68,9 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .index-cn{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.05em;}
 .index-price{font-family:var(--font-mono);font-size:18px;font-weight:600;margin-bottom:2px;}
 .index-change{font-family:var(--font-mono);font-size:11px;margin-bottom:6px;}
+.index-price-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.index-price-row .index-price{margin-bottom:0;}
+.index-price-row .index-change{margin-bottom:0;font-size:12px;font-weight:600;}
 .index-52w-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-bottom:3px;}
 .index-52w-track{position:relative;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:visible;}
 .index-52w-fill{height:100%;border-radius:2px;background:linear-gradient(to right,var(--green),var(--yellow),var(--red));}
@@ -343,8 +346,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <!-- SPX 標普500 -->
     <div class="index-cell" id="cell-spx">
       <div class="index-cell-label"><span class="index-code">SPX</span><span class="index-cn">標普500</span></div>
-      <div class="index-price" id="spx-price">—</div>
-      <div class="index-change" id="spx-change" style="color:var(--text-muted)">—</div>
+      <div class="index-price-row">
+        <div class="index-price" id="spx-price">—</div>
+        <div class="index-change" id="spx-change" style="color:var(--text-muted)">—</div>
+      </div>
       <div class="index-52w-label"><span id="spx-52w-low">低</span><span id="spx-52w-pct">—</span><span id="spx-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="spx-dot" style="left:50%;background:var(--yellow)"></div></div>
       <div class="index-tooltip">
@@ -359,8 +364,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <!-- NDX 那斯達克100 -->
     <div class="index-cell" id="cell-ndx">
       <div class="index-cell-label"><span class="index-code">NDX</span><span class="index-cn">那斯達克100</span></div>
-      <div class="index-price" id="ndx-price">—</div>
-      <div class="index-change" id="ndx-change" style="color:var(--text-muted)">—</div>
+      <div class="index-price-row">
+        <div class="index-price" id="ndx-price">—</div>
+        <div class="index-change" id="ndx-change" style="color:var(--text-muted)">—</div>
+      </div>
       <div class="index-52w-label"><span id="ndx-52w-low">低</span><span id="ndx-52w-pct">—</span><span id="ndx-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="ndx-dot" style="left:50%;background:var(--yellow)"></div></div>
       <div class="index-tooltip">
@@ -375,8 +382,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <!-- SOX 費城半導體 -->
     <div class="index-cell" id="cell-sox">
       <div class="index-cell-label"><span class="index-code">SOX</span><span class="index-cn">費城半導體</span></div>
-      <div class="index-price" id="sox-price">—</div>
-      <div class="index-change" id="sox-change" style="color:var(--text-muted)">—</div>
+      <div class="index-price-row">
+        <div class="index-price" id="sox-price">—</div>
+        <div class="index-change" id="sox-change" style="color:var(--text-muted)">—</div>
+      </div>
       <div class="index-52w-label"><span id="sox-52w-low">低</span><span id="sox-52w-pct">—</span><span id="sox-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="sox-dot" style="left:50%;background:var(--yellow)"></div></div>
       <div class="index-tooltip">
@@ -1008,7 +1017,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.21.2';
+const VERSION='v4.21.3';
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
@@ -1020,6 +1029,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.21.3',date:'2026-11-19',notes:'✦ 市場溫度計：漲跌幅移到指數數字右側同一行（▲/▼ 漲跌點 (漲跌幅%)，漲紅跌綠），原本數字下方那行併入<br>✦ 修正 SPX / NDX / SOX 漲跌幅永遠顯示 0 (0.00%)：Worker /quote 沒回傳前收盤與漲跌，前端改用 prevClose 計算；取不到時顯示 — ，不再用 0 冒充平盤<br>✦ 搭配 Worker 更新（/quote 新增 prevClose / change / changePct）；Worker 尚未更新前，漲跌幅顯示 —'},
   {v:'4.21.2',date:'2026-11-18',notes:'✦ 預測分頁排版變緊湊：A～K 欄合計 1152→890 px、右側面板 674→582 px，整張表約 1470 px，一般筆電全螢幕可一眼看完<br>✦ 備註列與季度複查記錄的列高依新欄寬重算（每行字數 75→58、48→37），避免文字被切<br>✦ 只改格式，不動數字／公式／複查記錄；套用方式：⚙ 系統設定 → 預測分頁遷移 → 「🎨 排版：全部持股分頁」'},
   {v:'4.21.1',date:'2026-11-18',notes:'✦ 新增「重建預測分頁」（⚙ 系統設定 → 預測分頁遷移）：舊表有殘季列（如「2026Q4(剩餘)」）、遷移被略過的持股，改由 AI 依新版定義重新建模，規則與 SKHY／STX 一致<br>✦ 每檔先複製「_舊」備份，再原地改成新版；季度複查記錄與 H6:K20 財報速評內容保留；失敗自動從備份還原<br>✦ 與遷移不同：成長率／Margin／EPS／倍數／股數／淨現金由 AI 重新查證判斷，不沿用舊表數字；結果寫入「估值遷移對照」，請抽查新舊合理價差距<br>✦ 預設目標 AMKR／GOOG／MSFT；先試跑 AMKR，再跑其餘兩檔'},
   {v:'4.21.0',date:'2026-11-17',notes:'✦ 決策標準改為「兩套並列」：G4 同時看 PE Band（現價 vs PE 合理價，原規則）與 DCF（現價 vs G3，≤70% 深度低估／≤80% 低估買入／>120% 明顯高估），分成買／持有／賣三類；兩邊同類顯示「雙法一致」，不同類顯示「⚠️ 估值分歧，需人工判斷」，不給單一結論；兩套各自結論列在 M16:N17<br>✦ 舊分頁遷移時一併換成新公式；v4.20.3 已建立的新版分頁按「🎨 排版」即會補上；DCF 定錨的分頁維持原判斷<br>✦ 排版：年度表置中、C 欄加寬、表頭 H1:I1 合併並自動換行、決策格 G4:H4 合併、季度複查記錄標題整列合併、複查記錄與備註列高重算、右側說明改 3 列高並縮短、財報速評不再斜體；N4 顯示 1.0<br>✦ 所有 Sheets 請求遇到每分鐘配額（429）自動等候重試（20／40／60 秒），遷移每檔間隔改 3 秒'},
@@ -1234,7 +1244,12 @@ async function fetchIndexQuote(id,symbol){
     const r=await fetch(`${PROXY}/quote/${symbol}`);
     const q=await r.json();
     if(q.price){
-      indexData[id]={price:q.price,change:q.change||0,changePct:q.changePct||0,low52:q.low52||q.price*0.7,high52:q.high52||q.price*1.3};
+      // v4.21.3：漲跌幅優先用 Worker 回傳值，沒有就用 prevClose 自算；兩者都沒有就存 null（顯示 —，不冒充 0）
+      let chg=Number.isFinite(q.change)?q.change:null;
+      let pct=Number.isFinite(q.changePct)?q.changePct:null;
+      if((chg==null||pct==null)&&Number.isFinite(q.prevClose)&&q.prevClose>0){chg=q.price-q.prevClose;pct=chg/q.prevClose*100;}
+      if(chg==null||pct==null){chg=null;pct=null;}
+      indexData[id]={price:q.price,change:chg,changePct:pct,low52:q.low52||q.price*0.7,high52:q.high52||q.price*1.3};
       renderIndexCell(id,indexData[id],false);
     }
   }catch(e){_logErr('L1128',e);}
@@ -1261,13 +1276,19 @@ function renderIndexCell(id,data,isVix){
     const cd=document.getElementById('vix-current-desc');
     if(cr&&cd){cr.style.display='flex';cd.textContent=`${data.price.toFixed(2)} · ${lv}`;cd.style.color=chgColor;}
   } else {
-    const sign=data.changePct>0?'+':'';
     priceEl.textContent=data.price>1000?data.price.toLocaleString(undefined,{maximumFractionDigits:0}):data.price.toFixed(2);
-    changeEl.textContent=`${sign}${(data.change||0).toFixed(data.price>500?0:2)} (${sign}${(data.changePct||0).toFixed(2)}%)`;
-    changeEl.style.color=chgColor;
-    // hover today
     const todayEl=document.getElementById(`${id}-today`);
-    if(todayEl){todayEl.textContent=`${sign}${(data.changePct||0).toFixed(2)}%`;todayEl.style.color=chgColor;}
+    if(data.changePct==null||data.change==null){
+      // 沒有前收盤資料：顯示 —，不用 0 冒充平盤
+      changeEl.textContent='—';changeEl.style.color='var(--text-muted)';
+      if(todayEl){todayEl.textContent='—';todayEl.style.color='var(--text-muted)';}
+    } else {
+      const sign=data.changePct>0?'+':'';
+      const arrow=data.changePct>0?'▲':data.changePct<0?'▼':'–';
+      changeEl.textContent=`${arrow} ${sign}${data.change.toFixed(2)} (${sign}${data.changePct.toFixed(2)}%)`;
+      changeEl.style.color=chgColor;
+      if(todayEl){todayEl.textContent=`${sign}${data.changePct.toFixed(2)}%`;todayEl.style.color=chgColor;}
+    }
   }
   if(data.low52&&data.high52&&data.high52>data.low52){
     const pos=Math.max(2,Math.min(98,((data.price-data.low52)/(data.high52-data.low52))*100));
@@ -1325,9 +1346,9 @@ function updateIndexHovers(){
 
   // 今日漲跌
   const spxTodayEl=document.getElementById('spx-today');
-  if(spxTodayEl&&indexData.spx){const sg=indexData.spx.changePct>=0?'+':'';spxTodayEl.textContent=sg+(indexData.spx.changePct||0).toFixed(2)+'%';spxTodayEl.style.color=indexData.spx.changePct>0?'var(--red)':indexData.spx.changePct<0?'var(--green)':'var(--text-muted)';}
+  if(spxTodayEl&&indexData.spx&&indexData.spx.changePct!=null){const sg=indexData.spx.changePct>=0?'+':'';spxTodayEl.textContent=sg+(indexData.spx.changePct||0).toFixed(2)+'%';spxTodayEl.style.color=indexData.spx.changePct>0?'var(--red)':indexData.spx.changePct<0?'var(--green)':'var(--text-muted)';}
   const ndxTodayEl=document.getElementById('ndx-today');
-  if(ndxTodayEl&&indexData.ndx){const sg=indexData.ndx.changePct>=0?'+':'';ndxTodayEl.textContent=sg+(indexData.ndx.changePct||0).toFixed(2)+'%';ndxTodayEl.style.color=indexData.ndx.changePct>0?'var(--red)':indexData.ndx.changePct<0?'var(--green)':'var(--text-muted)';}
+  if(ndxTodayEl&&indexData.ndx&&indexData.ndx.changePct!=null){const sg=indexData.ndx.changePct>=0?'+':'';ndxTodayEl.textContent=sg+(indexData.ndx.changePct||0).toFixed(2)+'%';ndxTodayEl.style.color=indexData.ndx.changePct>0?'var(--red)':indexData.ndx.changePct<0?'var(--green)':'var(--text-muted)';}
 }
 
 // === ETF QUOTES ===
@@ -3612,7 +3633,7 @@ async function runRiskAnalysis(){
   // 宏觀數據
   let macroCtx='';
   if(indexData.vix)macroCtx+=`VIX:${indexData.vix.price.toFixed(1)} `;
-  if(indexData.spx)macroCtx+=`SPX:${indexData.spx.price.toLocaleString()} (${indexData.spx.changePct>=0?'+':''}${indexData.spx.changePct?.toFixed(2)}%) `;
+  if(indexData.spx)macroCtx+=`SPX:${indexData.spx.price.toLocaleString()} ${indexData.spx.changePct!=null?`(${indexData.spx.changePct>=0?'+':''}${indexData.spx.changePct.toFixed(2)}%) `:''}`;
   if(indexData.ndx)macroCtx+=`NDX:${indexData.ndx.price.toLocaleString()} `;
   if(indexData.sox)macroCtx+=`SOX:${indexData.sox.price.toLocaleString()} `;
   // 論文摘要
