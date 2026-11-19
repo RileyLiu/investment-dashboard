@@ -223,6 +223,14 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .macro-tooltip{position:absolute;top:calc(100% + 8px);left:0;z-index:600;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:260px;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
 .recovery-tooltip{position:fixed;z-index:900;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:260px;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
 .macro-cell:hover .macro-tooltip{display:block;animation:fadeIn 0.15s ease;}
+.signal-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-family:var(--font-mono);}
+.signal-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.signal-dot{width:10px;height:10px;border-radius:50%;background:var(--text-muted);flex:none;}
+.signal-title{font-size:14px;font-weight:600;}
+.signal-line{font-size:11px;color:var(--text-muted);line-height:1.7;}
+.signal-actions{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.signal-note{font-size:9px;color:var(--text-muted);}
+.signal-ai{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;line-height:1.8;color:var(--text-secondary);}
 .sync-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:7px;margin-bottom:20px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
 .sync-banner.synced{border-color:var(--green-dim);color:var(--green);}
 .sync-banner.error{border-color:var(--red-dim);color:var(--red);}
@@ -327,7 +335,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <button class="nav-tab active" onclick="showPage('watchlist',this)">觀察清單</button>
     <button class="nav-tab" id="tab-holdings" onclick="showPage('holdings',this)" style="display:none">持股管理</button>
     <button class="nav-tab" id="tab-health" onclick="showPage('health',this)" style="display:none">配置健診</button>
-    <button class="nav-tab" id="tab-risk" onclick="showPage('risk',this)" style="display:none">風險總覽</button>
+    <button class="nav-tab" id="tab-risk" onclick="showPage('risk',this)" style="display:none">宏觀環境</button>
     <button class="nav-tab" id="tab-monte" onclick="showPage('monte',this)" style="display:none">蒙地卡羅</button>
   </div>
   <div class="nav-right">
@@ -397,6 +405,103 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <div class="tt-row"><span class="tt-label">SOX 今日漲跌</span><span class="tt-val" id="sox-today">—</span></div>
       </div>
     </div>
+  </div>
+  <!-- ── v4.22.0 市場情緒：VIX / VXN / AAII（由宏觀環境頁搬來）+ 綜合判斷 ── -->
+  <div class="index-bar" id="sentiment-bar" style="margin-bottom:10px;">
+      <!-- VIX -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">VIX 恐慌指數</div>
+        <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vix">—</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">^VIX</div>
+        <div class="macro-tooltip">
+          <div class="tt-title">VIX 恐慌指數</div>
+          <div class="tt-row"><span class="tt-label">意義</span><span class="tt-val">市場隱含波動率（30天）</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">區間解讀</div>
+          <div class="tt-row"><span class="tt-label">&lt; 20（平靜）</span><span class="tt-val" style="color:var(--green)">市場樂觀，正常操作</span></div>
+          <div class="tt-row"><span class="tt-label">20–30（警戒）</span><span class="tt-val" style="color:var(--yellow)">控制倉位，等待明朗</span></div>
+          <div class="tt-row"><span class="tt-label">&gt; 30（恐慌）</span><span class="tt-val" style="color:var(--red)">極端情緒，歷史加碼區</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">Buffett 法則</div>
+          <div class="tt-row"><span class="tt-label">VIX 歷史高點</span><span class="tt-val">2020 疫情 89.5</span></div>
+          <div class="tt-row"><span class="tt-label">2024 日圓閃崩</span><span class="tt-val">65.7</span></div>
+          <div class="tt-row"><span class="tt-label">2022 升息高峰</span><span class="tt-val">36.4</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">歷史建倉報酬率實證（S&amp;P500）</div>
+          <div class="tt-row"><span class="tt-label">VIX &gt; 30 後1年</span><span class="tt-val" style="color:var(--green)">平均 +25%</span></div>
+          <div class="tt-row"><span class="tt-label">VIX &gt; 50 後1年</span><span class="tt-val" style="color:var(--green)">平均 +35%</span></div>
+          <div class="tt-row"><span class="tt-label">VIX &gt; 50 後5年</span><span class="tt-val" style="color:var(--green)">平均 +129%</span></div>
+          <div class="tt-row"><span class="tt-label">正報酬勝率</span><span class="tt-val" style="color:var(--green)">100%（1988年以來每次）</span></div>
+          <div class="tt-row"><span class="tt-label">2020疫情VIX89→建倉</span><span class="tt-val" style="color:var(--green)">1年後 +42.96%</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VIX 30+ 且基本面未變 → 你的子彈就是為此刻準備的</div>
+        </div>
+      </div>
+
+      <!-- VXN -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">VXN 納指恐慌指數</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vxn">—</div>
+          <div style="font-family:var(--font-mono);font-size:11px;" id="vxn-badge">—</div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;" id="vxn-ratio">^VXN · VXN/VIX —</div>
+        <div class="macro-tooltip">
+          <div class="tt-title">VXN 納斯達克100波動率</div>
+          <div class="tt-row"><span class="tt-label">意義</span><span class="tt-val">NDX 隱含波動率（30天）</span></div>
+          <div class="tt-row"><span class="tt-label">對照 VIX</span><span class="tt-val">科技股集中時更貼近曝險</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">區間解讀</div>
+          <div class="tt-row"><span class="tt-label">&lt; 25（平靜）</span><span class="tt-val" style="color:var(--green)">科技股情緒穩定</span></div>
+          <div class="tt-row"><span class="tt-label">25–35（警戒）</span><span class="tt-val" style="color:var(--yellow)">控制倉位，留意槓桿部位</span></div>
+          <div class="tt-row"><span class="tt-label">&ge; 35（恐慌）</span><span class="tt-val" style="color:var(--red)">極端情緒，Discord 推播</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">VXN / VIX 比值</div>
+          <div class="tt-row"><span class="tt-label">歷史中位數</span><span class="tt-val">1.21</span></div>
+          <div class="tt-row"><span class="tt-label">90 百分位</span><span class="tt-val">1.52</span></div>
+          <div class="tt-row"><span class="tt-label">&ge; 1.5</span><span class="tt-val" style="color:var(--red)">科技股壓力集中</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">歷史分布（2001–2026 日資料）</div>
+          <div class="tt-row"><span class="tt-label">中位數 / 平均</span><span class="tt-val">21.2 / 24.6</span></div>
+          <div class="tt-row"><span class="tt-label">75 / 90 百分位</span><span class="tt-val">28.1 / 40.4</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VXN 僅作警示，無獨立回測；進場仍依 VIX 策略過濾器（Fed 升息？信用利差擴大？）</div>
+        </div>
+      </div>
+
+      <!-- AAII 散戶情緒 -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">AAII 散戶情緒</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="aaii-bearish">—</div>
+          <div style="font-family:var(--font-mono);font-size:11px;" id="aaii-sigma-badge">—</div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">Bearish% · 週更</div>
+        <div class="macro-tooltip" style="left:auto;right:0;">
+          <div class="tt-title">AAII 散戶情緒 · 逆向指標</div>
+          <div class="tt-row"><span class="tt-label">當週 Bearish%</span><span class="tt-val" id="aaii-tt-bearish">—</span></div>
+          <div class="tt-row"><span class="tt-label">偏離程度</span><span class="tt-val" id="aaii-tt-sigma">—</span></div>
+          <div class="tt-row"><span class="tt-label">4週均值</span><span class="tt-val" id="aaii-tt-avg">—</span></div>
+          <div class="tt-row"><span class="tt-label">Bull-Bear Spread</span><span class="tt-val" id="aaii-tt-spread">—</span></div>
+          <div class="tt-row"><span class="tt-label">資料日期</span><span class="tt-val" id="aaii-tt-date">—</span></div>
+          <div class="tt-divider"></div>
+          <div class="tt-title">區間解讀</div>
+          <div class="tt-row"><span class="tt-label">Bearish &lt; +1σ（&lt;42%）</span><span class="tt-val" style="color:var(--text-muted)">正常範圍</span></div>
+          <div class="tt-row"><span class="tt-label">Bearish +1~+2σ（42–51%）</span><span class="tt-val" style="color:var(--yellow)">悲觀偏高，留意機會</span></div>
+          <div class="tt-row"><span class="tt-label">Bearish &gt; +2σ（&gt;51%）</span><span class="tt-val" style="color:var(--green)">極端恐慌，共振加碼區</span></div>
+          <div class="tt-row"><span class="tt-label">Bullish &gt; +1σ + VIX &lt; 15</span><span class="tt-val" style="color:var(--red)">過熱警戒，暫緩加碼</span></div>
+          <div class="tt-divider"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">每週四更新 · GAS Weekly_Snapshot 自動寫入設定!B15</div>
+        </div>
+      </div>
+  </div>
+  <div class="signal-panel" id="market-signal">
+    <div class="signal-head"><span class="signal-dot" id="signal-dot"></span><span class="signal-title" id="signal-title">—</span></div>
+    <div class="signal-line" id="signal-why">等待指數與 VIX 資料…</div>
+    <div class="signal-line" id="signal-inputs"></div>
+    <div class="signal-line" id="signal-tech"></div>
+    <div class="signal-actions"><button class="btn-nav" id="signal-ai-btn" onclick="runSignalAI()">🧠 Claude 解讀</button><span class="signal-note">規則式判讀只描述狀態，不是買賣訊號；建倉仍看安全邊際</span></div>
+    <div class="signal-ai" id="signal-ai-out" style="display:none"></div>
   </div>
   <!-- 配置進度 -->
   <div class="section-header"><span class="section-label">配置進度</span><div class="section-line"></div></div>
@@ -504,13 +609,13 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <!-- RISK PAGE -->
 <div class="page" id="page-risk" style="padding:16px 20px;max-width:1400px;margin:0 auto;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-    <div class="section-header" style="margin-bottom:0;flex:1"><span class="section-label">風險總覽</span><div class="section-line"></div></div>
+    <div class="section-header" style="margin-bottom:0;flex:1"><span class="section-label">宏觀環境</span><div class="section-line"></div></div>
 
   </div>
   <!-- 宏觀環境指標欄 -->
   <div id="macro-bar" style="display:none;margin-bottom:16px;">
-    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">宏觀環境指標 · Yahoo Finance 即時</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
+    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">利率與通膨指標 · Yahoo Finance / 達拉斯聯儲</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
 
       <!-- 短期利率 -->
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
@@ -572,70 +677,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         </div>
       </div>
 
-    </div>
-    <!-- 第二排：VIX + VXN + Trimmed Mean PCE + AAII -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
-
-      <!-- VIX -->
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
-        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">VIX 恐慌指數</div>
-        <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vix">—</div>
-        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">^VIX</div>
-        <div class="macro-tooltip">
-          <div class="tt-title">VIX 恐慌指數</div>
-          <div class="tt-row"><span class="tt-label">意義</span><span class="tt-val">市場隱含波動率（30天）</span></div>
-          <div class="tt-divider"></div>
-          <div class="tt-title">區間解讀</div>
-          <div class="tt-row"><span class="tt-label">&lt; 20（平靜）</span><span class="tt-val" style="color:var(--green)">市場樂觀，正常操作</span></div>
-          <div class="tt-row"><span class="tt-label">20–30（警戒）</span><span class="tt-val" style="color:var(--yellow)">控制倉位，等待明朗</span></div>
-          <div class="tt-row"><span class="tt-label">&gt; 30（恐慌）</span><span class="tt-val" style="color:var(--red)">極端情緒，歷史加碼區</span></div>
-          <div class="tt-divider"></div>
-          <div class="tt-title">Buffett 法則</div>
-          <div class="tt-row"><span class="tt-label">VIX 歷史高點</span><span class="tt-val">2020 疫情 89.5</span></div>
-          <div class="tt-row"><span class="tt-label">2024 日圓閃崩</span><span class="tt-val">65.7</span></div>
-          <div class="tt-row"><span class="tt-label">2022 升息高峰</span><span class="tt-val">36.4</span></div>
-          <div class="tt-divider"></div>
-          <div class="tt-title">歷史建倉報酬率實證（S&amp;P500）</div>
-          <div class="tt-row"><span class="tt-label">VIX &gt; 30 後1年</span><span class="tt-val" style="color:var(--green)">平均 +25%</span></div>
-          <div class="tt-row"><span class="tt-label">VIX &gt; 50 後1年</span><span class="tt-val" style="color:var(--green)">平均 +35%</span></div>
-          <div class="tt-row"><span class="tt-label">VIX &gt; 50 後5年</span><span class="tt-val" style="color:var(--green)">平均 +129%</span></div>
-          <div class="tt-row"><span class="tt-label">正報酬勝率</span><span class="tt-val" style="color:var(--green)">100%（1988年以來每次）</span></div>
-          <div class="tt-row"><span class="tt-label">2020疫情VIX89→建倉</span><span class="tt-val" style="color:var(--green)">1年後 +42.96%</span></div>
-          <div class="tt-divider"></div>
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VIX 30+ 且基本面未變 → 你的子彈就是為此刻準備的</div>
-        </div>
-      </div>
-
-      <!-- VXN -->
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
-        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">VXN 納指恐慌指數</div>
-        <div style="display:flex;align-items:baseline;gap:8px;">
-          <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vxn">—</div>
-          <div style="font-family:var(--font-mono);font-size:11px;" id="vxn-badge">—</div>
-        </div>
-        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;" id="vxn-ratio">^VXN · VXN/VIX —</div>
-        <div class="macro-tooltip">
-          <div class="tt-title">VXN 納斯達克100波動率</div>
-          <div class="tt-row"><span class="tt-label">意義</span><span class="tt-val">NDX 隱含波動率（30天）</span></div>
-          <div class="tt-row"><span class="tt-label">對照 VIX</span><span class="tt-val">科技股集中時更貼近曝險</span></div>
-          <div class="tt-divider"></div>
-          <div class="tt-title">區間解讀</div>
-          <div class="tt-row"><span class="tt-label">&lt; 25（平靜）</span><span class="tt-val" style="color:var(--green)">科技股情緒穩定</span></div>
-          <div class="tt-row"><span class="tt-label">25–35（警戒）</span><span class="tt-val" style="color:var(--yellow)">控制倉位，留意槓桿部位</span></div>
-          <div class="tt-row"><span class="tt-label">&ge; 35（恐慌）</span><span class="tt-val" style="color:var(--red)">極端情緒，Discord 推播</span></div>
-          <div class="tt-divider"></div>
-          <div class="tt-title">VXN / VIX 比值</div>
-          <div class="tt-row"><span class="tt-label">歷史中位數</span><span class="tt-val">1.21</span></div>
-          <div class="tt-row"><span class="tt-label">90 百分位</span><span class="tt-val">1.52</span></div>
-          <div class="tt-row"><span class="tt-label">&ge; 1.5</span><span class="tt-val" style="color:var(--red)">科技股壓力集中</span></div>
-          <div class="tt-divider"></div>
-          <div class="tt-title">歷史分布（2001–2026 日資料）</div>
-          <div class="tt-row"><span class="tt-label">中位數 / 平均</span><span class="tt-val">21.2 / 24.6</span></div>
-          <div class="tt-row"><span class="tt-label">75 / 90 百分位</span><span class="tt-val">28.1 / 40.4</span></div>
-          <div class="tt-divider"></div>
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);line-height:1.6;">VXN 僅作警示，無獨立回測；進場仍依 VIX 策略過濾器（Fed 升息？信用利差擴大？）</div>
-        </div>
-      </div>
 
       <!-- Trimmed Mean PCE -->
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
@@ -645,7 +686,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           <div style="font-family:var(--font-mono);font-size:11px;" id="pce-trimmed-badge">—</div>
         </div>
         <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">達拉斯聯儲 · 月更</div>
-        <div class="macro-tooltip">
+        <div class="macro-tooltip" style="left:auto;right:0;">
           <div class="tt-title">Trimmed Mean PCE · 修剪均值通膨</div>
           <div class="tt-row"><span class="tt-label">發布機構</span><span class="tt-val">達拉斯聯儲 (Dallas Fed)</span></div>
           <div class="tt-row"><span class="tt-label">計算方式</span><span class="tt-val">剔除頭尾各 25% 極端值後的核心 PCE</span></div>
@@ -670,33 +711,6 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
           <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">FRED: PCETRIM12M159SFRBDAL · 月更，延遲約 3 週</div>
         </div>
       </div>
-
-      <!-- AAII 散戶情緒 -->
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
-        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">AAII 散戶情緒</div>
-        <div style="display:flex;align-items:baseline;gap:8px;">
-          <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="aaii-bearish">—</div>
-          <div style="font-family:var(--font-mono);font-size:11px;" id="aaii-sigma-badge">—</div>
-        </div>
-        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">Bearish% · 週更</div>
-        <div class="macro-tooltip" style="left:auto;right:0;">
-          <div class="tt-title">AAII 散戶情緒 · 逆向指標</div>
-          <div class="tt-row"><span class="tt-label">當週 Bearish%</span><span class="tt-val" id="aaii-tt-bearish">—</span></div>
-          <div class="tt-row"><span class="tt-label">偏離程度</span><span class="tt-val" id="aaii-tt-sigma">—</span></div>
-          <div class="tt-row"><span class="tt-label">4週均值</span><span class="tt-val" id="aaii-tt-avg">—</span></div>
-          <div class="tt-row"><span class="tt-label">Bull-Bear Spread</span><span class="tt-val" id="aaii-tt-spread">—</span></div>
-          <div class="tt-row"><span class="tt-label">資料日期</span><span class="tt-val" id="aaii-tt-date">—</span></div>
-          <div class="tt-divider"></div>
-          <div class="tt-title">區間解讀</div>
-          <div class="tt-row"><span class="tt-label">Bearish &lt; +1σ（&lt;42%）</span><span class="tt-val" style="color:var(--text-muted)">正常範圍</span></div>
-          <div class="tt-row"><span class="tt-label">Bearish +1~+2σ（42–51%）</span><span class="tt-val" style="color:var(--yellow)">悲觀偏高，留意機會</span></div>
-          <div class="tt-row"><span class="tt-label">Bearish &gt; +2σ（&gt;51%）</span><span class="tt-val" style="color:var(--green)">極端恐慌，共振加碼區</span></div>
-          <div class="tt-row"><span class="tt-label">Bullish &gt; +1σ + VIX &lt; 15</span><span class="tt-val" style="color:var(--red)">過熱警戒，暫緩加碼</span></div>
-          <div class="tt-divider"></div>
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">每週四更新 · GAS Weekly_Snapshot 自動寫入設定!B15</div>
-        </div>
-      </div>
-
     </div>
   </div>
   <!-- ── v3.9.0 Nasdaq / Gold 比值週期圖 ── -->
@@ -1017,18 +1031,20 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.21.3';
+const VERSION='v4.22.0';
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
 let googleToken=null,holdingsData=[],currentTicker=null,currentThesisTicker=null,thesisStatus='yes';
 let usdTwd=32,dcfCache={},sheetTabNames=[],thesisCache={},pullbackCache={};
 let indexData={};
+let aaiiState=null; // v4.22.0：{bearish,sigma,label,date}，由 renderAAIIBar 寫入，供綜合判斷使用
 let chartCategory=null,chartStocks=null,chartGrowth=null;
 let riskCdInterval=null,riskAiData=null;
 let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.22.0',date:'2026-11-19',notes:'✦ 「風險總覽」改名「宏觀環境」；VIX／VXN／AAII 三張卡搬到觀察清單最上方（市場溫度計下方），宏觀環境頁只留短期利率、10 年公債、殖利率曲線、Trimmed Mean PCE<br>✦ 新增市場情緒綜合判斷：恐慌程度（VIX≥20 或 AAII≥+2σ）× SPX 52 週位置（30／70 分界，與位置條同色）→ 六種狀態燈號；第二行補 VXN／NDX 位置。只描述狀態，不是買賣訊號<br>✦ 「🧠 Claude 解讀」按鈕：按下才呼叫（走 Worker /v1/messages），結果以日期＋數據快照為 key 快取在 localStorage（可重建快取，不存決策資料）<br>✦ 啟動時即載入 VIX／VXN，不必先開宏觀環境頁；AAII 仍在 Sheets 同步後出現（週更，顯示資料日期）'},
   {v:'4.21.3',date:'2026-11-19',notes:'✦ 市場溫度計：漲跌幅移到指數數字右側同一行（▲/▼ 漲跌點 (漲跌幅%)，漲紅跌綠），原本數字下方那行併入<br>✦ 修正 SPX / NDX / SOX 漲跌幅永遠顯示 0 (0.00%)：Worker /quote 沒回傳前收盤與漲跌，前端改用 prevClose 計算；取不到時顯示 — ，不再用 0 冒充平盤<br>✦ 搭配 Worker 更新（/quote 新增 prevClose / change / changePct）；Worker 尚未更新前，漲跌幅顯示 —'},
   {v:'4.21.2',date:'2026-11-18',notes:'✦ 預測分頁排版變緊湊：A～K 欄合計 1152→890 px、右側面板 674→582 px，整張表約 1470 px，一般筆電全螢幕可一眼看完<br>✦ 備註列與季度複查記錄的列高依新欄寬重算（每行字數 75→58、48→37），避免文字被切<br>✦ 只改格式，不動數字／公式／複查記錄；套用方式：⚙ 系統設定 → 預測分頁遷移 → 「🎨 排版：全部持股分頁」'},
   {v:'4.21.1',date:'2026-11-18',notes:'✦ 新增「重建預測分頁」（⚙ 系統設定 → 預測分頁遷移）：舊表有殘季列（如「2026Q4(剩餘)」）、遷移被略過的持股，改由 AI 依新版定義重新建模，規則與 SKHY／STX 一致<br>✦ 每檔先複製「_舊」備份，再原地改成新版；季度複查記錄與 H6:K20 財報速評內容保留；失敗自動從備份還原<br>✦ 與遷移不同：成長率／Margin／EPS／倍數／股數／淨現金由 AI 重新查證判斷，不沿用舊表數字；結果寫入「估值遷移對照」，請抽查新舊合理價差距<br>✦ 預設目標 AMKR／GOOG／MSFT；先試跑 AMKR，再跑其餘兩檔'},
@@ -1217,6 +1233,123 @@ function init(){
   }
 }
 
+// === v4.22.0 市場情緒：VIX / VXN 卡片 + 綜合判斷 + Claude 解讀 ===
+// 門檻沿用既有卡片：VIX ≥30 恐慌／≥20 警戒；VXN ≥35 恐慌／≥25 警戒、VXN/VIX ≥1.5 壓力集中；AAII σ≥+2 極端恐慌
+// 位置分界 30／70，與市場溫度計位置條顏色一致
+let signalState=null;
+function idxPos(d){
+  if(!d||!d.low52||!d.high52||!(d.high52>d.low52))return null;
+  return Math.max(2,Math.min(98,((d.price-d.low52)/(d.high52-d.low52))*100));
+}
+function vixLevel(v){return v>=30?{t:'恐慌',c:'var(--red)'}:v>=20?{t:'警戒',c:'var(--yellow)'}:{t:'平靜',c:'var(--green)'};}
+function vxnLevel(v){return v>=35?{t:'恐慌',c:'var(--red)'}:v>=25?{t:'警戒',c:'var(--yellow)'}:{t:'平靜',c:'var(--green)'};}
+const SIGNAL_MATRIX={
+  'H-low':{t:'恐慌且價格低：逆向觀察區',c:'var(--green)'},
+  'H-mid':{t:'情緒偏恐慌，價格未到便宜區',c:'var(--yellow)'},
+  'H-high':{t:'情緒先於價格轉空，價格仍高',c:'var(--red)'},
+  'L-low':{t:'平靜且價格低：留意是否被忽略',c:'var(--yellow)'},
+  'L-mid':{t:'中性',c:'var(--text-muted)'},
+  'L-high':{t:'樂觀且價格高：留意過熱',c:'var(--red)'}
+};
+function computeMarketSignal(){
+  const vix=indexData.vix?.price, vxn=indexData.vxn?.price;
+  const spxPos=idxPos(indexData.spx), ndxPos=idxPos(indexData.ndx);
+  if(vix==null||spxPos==null)return null;
+  const sg=aaiiState?aaiiState.sigma:null;
+  const fearVix=vix>=20, fearAaii=sg!=null&&sg>=2;
+  const fearHigh=fearVix||fearAaii;
+  const tier=spxPos<30?'low':spxPos<70?'mid':'high';
+  const m=SIGNAL_MATRIX[(fearHigh?'H':'L')+'-'+tier];
+  const why=fearHigh?('恐慌依據：'+[fearVix?'VIX '+vix.toFixed(2)+'（'+vixLevel(vix).t+'）':null,fearAaii?'AAII '+(sg>=0?'+':'')+sg.toFixed(1)+'σ（極端恐慌）':null].filter(Boolean).join(' ＋ ')):('恐慌未達門檻：VIX '+vix.toFixed(2)+'（'+vixLevel(vix).t+'）'+(sg!=null?'、AAII '+(sg>=0?'+':'')+sg.toFixed(1)+'σ':'、AAII 未載入'));
+  const inputs='SPX 52 週位置 '+spxPos.toFixed(0)+'%（'+(tier==='low'?'低':tier==='mid'?'中':'高')+'）· VIX '+vix.toFixed(2)+' · AAII '+(aaiiState?(sg>=0?'+':'')+sg.toFixed(1)+'σ（資料日 '+aaiiState.date+'，週更）':'未載入（同步 Sheets 後出現）');
+  let tech='科技股：VXN 載入中…';
+  if(vxn!=null){
+    const rt=vxn/vix;
+    tech='科技股：VXN '+vxn.toFixed(2)+'（'+vxnLevel(vxn).t+'）· VXN/VIX '+rt.toFixed(2)+(rt>=1.5?' · 壓力集中':'')+(ndxPos!=null?' · NDX 位置 '+ndxPos.toFixed(0)+'%':'');
+  }
+  return {title:m.t,color:m.c,why,inputs,tech,vix,vxn:vxn??null,spxPos,ndxPos,sigma:sg,aaiiDate:aaiiState?aaiiState.date:null};
+}
+function updateMarketSignal(){
+  const box=document.getElementById('market-signal');
+  if(!box)return;
+  const s=computeMarketSignal();
+  signalState=s;
+  const set=(id,t,col)=>{const e=document.getElementById(id);if(e){e.textContent=t;if(col)e.style.color=col;}};
+  if(!s){
+    set('signal-title','—','var(--text-muted)');set('signal-why','等待指數與 VIX 資料…');set('signal-inputs','');set('signal-tech','');
+    const d=document.getElementById('signal-dot');if(d)d.style.background='var(--text-muted)';
+    return;
+  }
+  set('signal-title',s.title,s.color);
+  const d=document.getElementById('signal-dot');if(d)d.style.background=s.color;
+  set('signal-why',s.why);set('signal-inputs',s.inputs);set('signal-tech',s.tech);
+}
+function renderSentimentCards(){
+  const vix=indexData.vix?.price??null, vx=indexData.vxn?.price??null;
+  const vixEl=document.getElementById('fred-vix');
+  if(vixEl){vixEl.textContent=vix!=null?vix.toFixed(2):'—';vixEl.style.color=vix!=null?vixLevel(vix).c:'var(--text-muted)';}
+  const vxnEl=document.getElementById('fred-vxn');
+  const vxnBadge=document.getElementById('vxn-badge');
+  const vxnRatio=document.getElementById('vxn-ratio');
+  if(!vxnEl)return;
+  if(vx!=null){
+    const lv=vxnLevel(vx);
+    vxnEl.textContent=vx.toFixed(2);vxnEl.style.color=lv.c;
+    if(vxnBadge){vxnBadge.textContent=lv.t;vxnBadge.style.color=lv.c;}
+    if(vxnRatio){
+      if(vix){const rt=vx/vix;const hot=rt>=1.5;vxnRatio.textContent='^VXN · VXN/VIX '+rt.toFixed(2)+(hot?' · 科技股壓力集中':'');vxnRatio.style.color=hot?'var(--red)':'var(--text-muted)';}
+      else{vxnRatio.textContent='^VXN · VXN/VIX —';vxnRatio.style.color='var(--text-muted)';}
+    }
+  }else{
+    vxnEl.textContent='—';vxnEl.style.color='var(--text-muted)';
+    if(vxnBadge){vxnBadge.textContent='—';vxnBadge.style.color='var(--text-muted)';}
+    if(vxnRatio){vxnRatio.textContent='^VXN · VXN/VIX —';vxnRatio.style.color='var(--text-muted)';}
+  }
+}
+async function loadSentimentStrip(){
+  renderSentimentCards();updateMarketSignal(); // VIX 已有就先畫
+  try{
+    const r=await fetch(`${PROXY}/quote/${encodeURIComponent('^VXN')}`);
+    const d=await r.json();
+    if(d.price)indexData.vxn={price:d.price};
+  }catch(e){_logErr('vxn-strip',e);}
+  renderSentimentCards();updateMarketSignal();
+}
+async function runSignalAI(){
+  const s=signalState,out=document.getElementById('signal-ai-out'),btn=document.getElementById('signal-ai-btn');
+  if(!s){showToast('指數與 VIX 資料尚未載入完成');return;}
+  if(!out)return;
+  const show=(t,isErr)=>{out.style.display='block';out.style.color=isErr?'var(--red)':'';out.innerHTML=esc(t).replace(/\n/g,'<br>');};
+  const day=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Taipei'});
+  const key=[day,s.vix.toFixed(1),s.vxn!=null?s.vxn.toFixed(1):'-',s.spxPos.toFixed(0),s.ndxPos!=null?s.ndxPos.toFixed(0):'-',s.sigma!=null?s.sigma.toFixed(1):'-',s.title].join('|');
+  try{const cc=JSON.parse(localStorage.getItem('signal_ai_cache')||'null');if(cc&&cc.key===key&&cc.text){show(cc.text+'\n（快取 · '+cc.time+'）');return;}}catch(e){}
+  if(btn){btn.disabled=true;btn.textContent='🧠 解讀中…';}
+  show('Claude 解讀中，約需 10 秒…');
+  const prompt=`你是 Riley 的投資夥伴，風格是 Buffett + Munger 價值投資，聚焦 5~10 年內在價值，不追短線。
+以下是儀表板目前的市場情緒與價格位置數據，以及規則式判讀。請用繁體中文寫 2~3 句：
+1. 這組數據合起來在說什麼（情緒與價格是否背離）；
+2. 一個反向思考：若這個判讀錯了，最可能的原因是什麼。
+不要給買賣指令，不要預測短期漲跌；AAII 為週更資料，請留意資料日期。只能使用下列數據，不要補充未提供的數字。
+${s.inputs}
+${s.tech}
+${s.why}
+規則式判讀：「${s.title}」`;
+  try{
+    const r=await fetch(`${PROXY}/v1/messages`,{method:'POST',headers:proxyHeaders(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    const data=await r.json();
+    if(data.error)throw new Error(typeof data.error==='string'?data.error:(data.error.message||'API error'));
+    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    if(!text)throw new Error('沒有回應內容');
+    const time=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+    show(text);
+    try{localStorage.setItem('signal_ai_cache',JSON.stringify({key,text,time}));}catch(e){}
+  }catch(e){
+    show('解讀失敗：'+e.message+(e.message==='forbidden'?'（請先登入 Google，讓前端取得 Worker 密碼）':''),true);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🧠 Claude 解讀';}
+  }
+}
+
 // === INDEX BAR ===
 async function fetchAllIndexData(){
   await Promise.all([
@@ -1226,6 +1359,7 @@ async function fetchAllIndexData(){
     fetchIndexQuote('sox','%5ESOX'),
   ]);
   updateIndexHovers();
+  loadSentimentStrip();
 }
 
 async function fetchVIX(){
@@ -3204,35 +3338,13 @@ function renderMacroBar(fd){
   const bar=document.getElementById('macro-bar');
   if(!bar||!fd)return;
   const fmt=(v,d=2)=>v!=null?v.toFixed(d)+'%':'—';
-  const fmtVix=(v)=>v!=null?v.toFixed(2):'—';
   const irxEl=document.getElementById('fred-fedfunds');
   const tnxEl=document.getElementById('fred-dgs10');
   const t10El=document.getElementById('fred-t10y2y');
-  const vixEl=document.getElementById('fred-vix');
   if(irxEl){irxEl.textContent=fmt(fd.irx);irxEl.style.color=fd.irx!=null?(fd.irx>4?'var(--red)':fd.irx<2?'var(--green)':'var(--yellow)'):'var(--text-muted)';}
   if(tnxEl){tnxEl.textContent=fmt(fd.tnx);tnxEl.style.color=fd.tnx!=null?(fd.tnx>5?'var(--red)':fd.tnx<3?'var(--green)':'var(--yellow)'):'var(--text-muted)';}
   if(t10El){t10El.textContent=fmt(fd.t10y2y,3);t10El.style.color=fd.t10y2y!=null?(fd.t10y2y<0?'var(--red)':'var(--green)'):'var(--text-muted)';}
-  if(vixEl){vixEl.textContent=fmtVix(fd.vix);vixEl.style.color=fd.vix!=null?(fd.vix>=30?'var(--red)':fd.vix>=20?'var(--yellow)':'var(--green)'):'var(--text-muted)';}
-  // v4.14.0 VXN：<25 平靜／25–35 警戒／≥35 恐慌；VXN/VIX ≥1.5 標示科技股壓力集中
-  const vxnEl=document.getElementById('fred-vxn');
-  const vxnBadge=document.getElementById('vxn-badge');
-  const vxnRatio=document.getElementById('vxn-ratio');
-  if(vxnEl){
-    const vx=fd.vxn;
-    if(vx!=null){
-      const lv=vx>=35?{t:'恐慌',c:'var(--red)'}:vx>=25?{t:'警戒',c:'var(--yellow)'}:{t:'平靜',c:'var(--green)'};
-      vxnEl.textContent=vx.toFixed(2);vxnEl.style.color=lv.c;
-      if(vxnBadge){vxnBadge.textContent=lv.t;vxnBadge.style.color=lv.c;}
-      if(vxnRatio){
-        if(fd.vix){const rt=vx/fd.vix;const hot=rt>=1.5;vxnRatio.textContent='^VXN · VXN/VIX '+rt.toFixed(2)+(hot?' · 科技股壓力集中':'');vxnRatio.style.color=hot?'var(--red)':'var(--text-muted)';}
-        else{vxnRatio.textContent='^VXN · VXN/VIX —';vxnRatio.style.color='var(--text-muted)';}
-      }
-    }else{
-      vxnEl.textContent='—';vxnEl.style.color='var(--text-muted)';
-      if(vxnBadge){vxnBadge.textContent='—';vxnBadge.style.color='var(--text-muted)';}
-      if(vxnRatio){vxnRatio.textContent='^VXN · VXN/VIX —';vxnRatio.style.color='var(--text-muted)';}
-    }
-  }
+  // v4.22.0：VIX／VXN 卡片已搬到觀察清單，改由 renderSentimentCards() 負責
   // Trimmed Mean PCE 由 Sheets sync 的 renderPCEBar() 負責，此處不處理
   bar.style.display='block';
 }
@@ -3285,6 +3397,8 @@ function renderAAIIBar(aaiiData){
   if(ttAvg)ttAvg.textContent=avg4w.toFixed(1)+'%';
   if(ttSpread){ttSpread.textContent=(spread>=0?'+':'')+spread.toFixed(1)+'%';ttSpread.style.color=spread>=0?'var(--red)':'var(--green)';}
   if(ttDate)ttDate.textContent=date;
+  aaiiState={bearish,sigma,label:sigmaLabel,date};
+  updateMarketSignal();
 }
 
 // === v4.4.0 估值週期：巴菲特指標 + OECD CLI ===
