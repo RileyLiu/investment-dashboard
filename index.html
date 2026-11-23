@@ -411,7 +411,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <!-- VIX -->
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;position:relative;cursor:default;" class="macro-cell">
         <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">VIX 恐慌指數</div>
-        <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vix">—</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vix">—</div>
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;" id="vix-chg">—</div>
+        </div>
         <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;">^VIX</div>
         <div class="macro-tooltip">
           <div class="tt-title">VIX 恐慌指數</div>
@@ -444,6 +447,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <div style="display:flex;align-items:baseline;gap:8px;">
           <div style="font-family:var(--font-mono);font-size:20px;font-weight:600;" id="fred-vxn">—</div>
           <div style="font-family:var(--font-mono);font-size:11px;" id="vxn-badge">—</div>
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;" id="vxn-chg">—</div>
         </div>
         <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:4px;" id="vxn-ratio">^VXN · VXN/VIX —</div>
         <div class="macro-tooltip">
@@ -1031,7 +1035,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.22.1';
+const VERSION='v4.22.2';
 const AI_MODEL='claude-sonnet-5-5'; // v4.22.1：所有 AI 呼叫統一用這個常數，之後換模型只改這行（Worker 白名單要同步放行）
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
@@ -1045,6 +1049,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.22.2',date:'2026-11-23',notes:'✦ VIX／VXN 兩張卡新增「相較昨收」漲跌（▲/▼ 點數 (百分比)，漲紅跌綠，與 SPX／NDX／SOX 一致；紅綠只表示數字漲跌，恐慌等級仍看原本的區間色與標籤）<br>✦ 資料走 Worker /quote 的 prevClose（與上排指數同一路徑），取不到顯示 —，不用 0 冒充平盤；VIX 原本 /vix 回傳缺值被 || 0 蓋成 0 的問題一併修正'},
   {v:'4.22.1',date:'2026-11-19',notes:'✦ AI 模型升級：claude-sonnet-4-6 → claude-sonnet-5-5；6 個呼叫點改用單一常數 AI_MODEL。需搭配 Worker v2.2（白名單放行 5.5）<br>✦ Claude 解讀：提示詞要求純文字、120 字內，並濾掉殘留的 markdown 符號（##、**、---）；快取 key 加入提示詞版本與模型，舊格式的快取不會再被讀出<br>✦ AAII 資料日統一顯示為 YYYY-MM-DD（原本直接顯示 Sheets 儲存格文字，例如 Nov 11 2026）'},
   {v:'4.22.0',date:'2026-11-19',notes:'✦ 「風險總覽」改名「宏觀環境」；VIX／VXN／AAII 三張卡搬到觀察清單最上方（市場溫度計下方），宏觀環境頁只留短期利率、10 年公債、殖利率曲線、Trimmed Mean PCE<br>✦ 新增市場情緒綜合判斷：恐慌程度（VIX≥20 或 AAII≥+2σ）× SPX 52 週位置（30／70 分界，與位置條同色）→ 六種狀態燈號；第二行補 VXN／NDX 位置。只描述狀態，不是買賣訊號<br>✦ 「🧠 Claude 解讀」按鈕：按下才呼叫（走 Worker /v1/messages），結果以日期＋數據快照為 key 快取在 localStorage（可重建快取，不存決策資料）<br>✦ 啟動時即載入 VIX／VXN，不必先開宏觀環境頁；AAII 仍在 Sheets 同步後出現（週更，顯示資料日期）'},
   {v:'4.21.3',date:'2026-11-19',notes:'✦ 市場溫度計：漲跌幅移到指數數字右側同一行（▲/▼ 漲跌點 (漲跌幅%)，漲紅跌綠），原本數字下方那行併入<br>✦ 修正 SPX / NDX / SOX 漲跌幅永遠顯示 0 (0.00%)：Worker /quote 沒回傳前收盤與漲跌，前端改用 prevClose 計算；取不到時顯示 — ，不再用 0 冒充平盤<br>✦ 搭配 Worker 更新（/quote 新增 prevClose / change / changePct）；Worker 尚未更新前，漲跌幅顯示 —'},
@@ -1286,10 +1291,30 @@ function updateMarketSignal(){
   const d=document.getElementById('signal-dot');if(d)d.style.background=s.color;
   set('signal-why',s.why);set('signal-inputs',s.inputs);set('signal-tech',s.tech);
 }
+// v4.22.2：從 Worker /quote 回傳解析「相較昨收」漲跌；優先用 change/changePct，沒有就用 prevClose 自算；都沒有回 null（顯示 —，不用 0 冒充平盤）
+function parseQuoteChange(q){
+  if(!q)return{change:null,changePct:null};
+  let chg=Number.isFinite(q.change)?q.change:null;
+  let pct=Number.isFinite(q.changePct)?q.changePct:null;
+  if((chg==null||pct==null)&&Number.isFinite(q.price)&&Number.isFinite(q.prevClose)&&q.prevClose>0){chg=q.price-q.prevClose;pct=chg/q.prevClose*100;}
+  if(chg==null||pct==null)return{change:null,changePct:null};
+  return{change:chg,changePct:pct};
+}
+// 台灣慣例：漲紅跌綠（VIX／VXN 與上方 SPX／NDX／SOX 一致，僅表示數字漲跌，不代表好壞）
+function setChgEl(id,d){
+  const el=document.getElementById(id);if(!el)return;
+  if(!d||d.change==null||d.changePct==null){el.textContent='—';el.style.color='var(--text-muted)';return;}
+  const sign=d.changePct>0?'+':'';
+  const arrow=d.changePct>0?'▲':d.changePct<0?'▼':'–';
+  el.textContent=`${arrow} ${sign}${d.change.toFixed(2)} (${sign}${d.changePct.toFixed(2)}%)`;
+  el.style.color=d.changePct>0?'var(--red)':d.changePct<0?'var(--green)':'var(--text-muted)';
+}
 function renderSentimentCards(){
   const vix=indexData.vix?.price??null, vx=indexData.vxn?.price??null;
   const vixEl=document.getElementById('fred-vix');
   if(vixEl){vixEl.textContent=vix!=null?vix.toFixed(2):'—';vixEl.style.color=vix!=null?vixLevel(vix).c:'var(--text-muted)';}
+  setChgEl('vix-chg',indexData.vix);
+  setChgEl('vxn-chg',indexData.vxn);
   const vxnEl=document.getElementById('fred-vxn');
   const vxnBadge=document.getElementById('vxn-badge');
   const vxnRatio=document.getElementById('vxn-ratio');
@@ -1313,7 +1338,7 @@ async function loadSentimentStrip(){
   try{
     const r=await fetch(`${PROXY}/quote/${encodeURIComponent('^VXN')}`);
     const d=await r.json();
-    if(d.price)indexData.vxn={price:d.price};
+    if(d.price)indexData.vxn={price:d.price,...parseQuoteChange(d)};
   }catch(e){_logErr('vxn-strip',e);}
   renderSentimentCards();updateMarketSignal();
 }
@@ -1375,7 +1400,15 @@ async function fetchVIX(){
     const r=await fetch(`${PROXY}/vix`);
     const d=await r.json();
     if(d.vix){
-      indexData.vix={price:d.vix,change:d.change||0,changePct:d.changePct||0,low52:d.low52||10,high52:d.high52||90};
+      // v4.22.2：漲跌優先用 /quote/^VIX（與 SPX/NDX/SOX 同一條 prevClose 路徑）；/vix 的 0/0 視為缺值，不冒充平盤
+      let ch=parseQuoteChange({change:d.change,changePct:d.changePct});
+      if(ch.change===0&&ch.changePct===0)ch={change:null,changePct:null};
+      try{
+        const qr=await fetch(`${PROXY}/quote/${encodeURIComponent('^VIX')}`);
+        const qc=parseQuoteChange(await qr.json());
+        if(qc.change!=null)ch=qc;
+      }catch(e){_logErr('vix-chg',e);}
+      indexData.vix={price:d.vix,change:ch.change,changePct:ch.changePct,low52:d.low52||10,high52:d.high52||90};
       renderIndexCell('vix',indexData.vix,true);
     }
   }catch(e){document.getElementById('vix-price').textContent='—';}
@@ -2020,7 +2053,7 @@ function updateAllocCards(meta){
   document.getElementById('alloc-cash-val').textContent='NT$'+d萬+'萬';
   document.getElementById('alloc-cash-sub').textContent=`現金 NT$${p萬}萬 · 保留 NT$${r萬}萬`;
   if(meta.vix!=null&&!indexData.vix){
-    indexData.vix={price:meta.vix,change:0,changePct:0,low52:10,high52:50};
+    indexData.vix={price:meta.vix,change:null,changePct:null,low52:10,high52:50};
     renderIndexCell('vix',indexData.vix,true);
   }
 }
@@ -3336,7 +3369,7 @@ async function fetchMacroData(){
     const vix=indexData.vix?.price||null;
     // v4.14.0 VXN：獨立 try，抓取失敗不影響其他宏觀指標
     let vxn=null;
-    try{const vxR=await fetch(`${PROXY}/quote/${encodeURIComponent('^VXN')}`);const vxD=await vxR.json();vxn=vxD.price||null;if(vxn)indexData.vxn={price:vxn};}catch(e){_logErr('vxn',e);}
+    try{const vxR=await fetch(`${PROXY}/quote/${encodeURIComponent('^VXN')}`);const vxD=await vxR.json();vxn=vxD.price||null;if(vxn)indexData.vxn={price:vxn,...parseQuoteChange(vxD)};}catch(e){_logErr('vxn',e);}
     // Trimmed Mean PCE 改由 GAS Weekly_Snapshot 寫入 設定!B19，Sheets sync 時讀取
     return {irx,tnx,fvx,t10y2y,vix,vxn};
   }catch(e){return {irx:null,tnx:null,fvx:null,t10y2y:null,vix:null,vxn:null};}
