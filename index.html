@@ -511,8 +511,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
   <div class="section-header"><span class="section-label">配置進度</span><div class="section-line"></div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
     <div class="alloc-card"><div class="alloc-label">可部署子彈</div><div class="alloc-value text-green" id="alloc-cash-val">—</div><div class="alloc-sub" id="alloc-cash-sub">載入中...</div><div class="progress-bar"><div class="progress-fill" id="alloc-cash-bar" style="width:0%;background:var(--green)"></div></div></div>
-    <div class="alloc-card has-tip"><div class="alloc-label">成長型股票</div><div class="alloc-value text-accent" id="alloc-growth-pct">—</div><div class="alloc-sub" id="alloc-growth-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-growth-bar" style="width:0%;background:var(--accent)"></div></div><div class="alloc-tip" id="alloc-growth-tip"></div></div>
-    <div class="alloc-card has-tip"><div class="alloc-label">持有ETF</div><div class="alloc-value text-purple" id="alloc-etf-pct">—</div><div class="alloc-sub" id="alloc-etf-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-etf-bar" style="width:0%;background:var(--purple)"></div></div><div class="alloc-tip" id="alloc-etf-tip"></div></div>
+    <div class="alloc-card has-tip" style="display:none"><div class="alloc-label">成長型股票</div><div class="alloc-value text-accent" id="alloc-growth-pct">—</div><div class="alloc-sub" id="alloc-growth-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-growth-bar" style="width:0%;background:var(--accent)"></div></div><div class="alloc-tip" id="alloc-growth-tip"></div></div>
+    <div class="alloc-card has-tip" style="display:none"><div class="alloc-label">持有ETF</div><div class="alloc-value text-purple" id="alloc-etf-pct">—</div><div class="alloc-sub" id="alloc-etf-sub">目標執行進度</div><div class="progress-bar"><div class="progress-fill" id="alloc-etf-bar" style="width:0%;background:var(--purple)"></div></div><div class="alloc-tip" id="alloc-etf-tip"></div></div>
+    <div class="alloc-card"><div class="alloc-label">核心 ETF</div><div class="alloc-value text-purple" id="cs-core-pct">—</div><div class="alloc-sub" id="cs-core-sub">同步後顯示</div><div class="progress-bar"><div class="progress-fill" id="cs-core-bar" style="width:0%;background:var(--purple)"></div></div></div>
+    <div class="alloc-card"><div class="alloc-label">衛星比重</div><div class="alloc-value text-accent" id="cs-sat-pct">—</div><div class="alloc-sub" id="cs-sat-sub">同步後顯示</div><div class="progress-bar"><div class="progress-fill" id="cs-sat-bar" style="width:0%;background:var(--green)"></div></div></div>
   </div>
   <div class="section-header"><span class="section-label">觀察清單</span><div class="section-line"></div></div>
   <div id="watchlist-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
@@ -555,6 +557,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
     <div class="risk-card"><div class="risk-title">50MA 偏離（季線）</div><div id="risk-ma50"></div></div>
     <div class="risk-card"><div class="risk-title">趨勢 ＋ KD 判斷</div><div id="risk-trend"></div></div>
   </div>
+  <div id="coresat-section" style="display:none;margin-bottom:24px">
+    <div class="section-header"><span class="section-label">核心／衛星配置</span><div class="section-line"></div></div>
+    <div id="coresat-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px"></div>
+  </div>
   <div class="section-header"><span class="section-label">持股列表</span><div class="section-line"></div><button class="btn-nav" style="font-size:9px;white-space:nowrap" onclick="syncSheets()">↻ 同步試算表</button></div>
   <div id="holdings-list"></div>
 </div>
@@ -592,16 +598,16 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       </div>
     </div>
     <div class="health-card" style="position:relative;cursor:default;" id="card-alloc">
-      <div class="health-card-title">配置達成率 <span style="font-size:8px;opacity:0.5;margin-left:4px">hover 說明</span></div>
+      <div class="health-card-title">核心／衛星 <span style="font-size:8px;opacity:0.5;margin-left:4px">hover 說明</span></div>
       <div class="health-signal"><div class="signal-dot" id="sig-etf"></div><div class="signal-value" id="val-etf">—</div></div>
-      <div class="signal-desc" id="desc-etf">成長股 / ETF 達成率</div>
+      <div class="signal-desc" id="desc-etf">衛星比重 / 核心偏離</div>
       <div class="health-tooltip" id="tt-alloc">
-        <div class="tt-title">配置達成率 · 判斷邏輯</div>
-        <div class="tt-row"><span class="tt-label">🟢 達標</span><span class="tt-val" style="color:var(--green)">兩者皆 ≥ 80%</span></div>
-        <div class="tt-row"><span class="tt-label">🟡 進行中</span><span class="tt-val" style="color:var(--yellow)">任一 50–80%</span></div>
-        <div class="tt-row"><span class="tt-label">🔴 不足</span><span class="tt-val" style="color:var(--red)">任一 &lt; 50%</span></div>
+        <div class="tt-title">核心／衛星 · 判斷邏輯</div>
+        <div class="tt-row"><span class="tt-label">🟢 正常</span><span class="tt-val" style="color:var(--green)">衛星 ≤ 上限且核心偏離 ≤ 5pp</span></div>
+        <div class="tt-row"><span class="tt-label">🟡 偏離</span><span class="tt-val" style="color:var(--yellow)">核心任一檔偏離 &gt; 5pp</span></div>
+        <div class="tt-row"><span class="tt-label">🔴 超標</span><span class="tt-val" style="color:var(--red)">衛星 &gt; 上限</span></div>
         <div class="tt-divider"></div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">達成率 = Sheets J欄配置金額 / 目標金額<br>目標金額 = TTO × 目標比例（60% / 40%）<br>來源：Sheets G12 / G33 直接讀取</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.6;">比例以市值計，不含現金<br>核心＝Sheets「核心配置」A 欄，其餘持股皆為衛星<br>上限讀 核心配置!F2</div>
       </div>
     </div>
   </div>
@@ -1035,7 +1041,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.22.3';
+const VERSION='v4.23.0';
 const AI_MODEL='claude-sonnet-5-5'; // v4.22.1：所有 AI 呼叫統一用這個常數，之後換模型只改這行（Worker 白名單要同步放行）
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
@@ -1049,6 +1055,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.23.0',date:'2026-11-25',notes:'✦ 核心／衛星架構：新增 Sheets「核心配置」分頁（A2:B10 核心代號與目標％，F2 衛星上限、F3/F4 C 規則門檻），預設核心 A＝VTI 45／QQQ 30／006208 25，讀不到時沿用預設<br>✦ 觀察清單「配置進度」：原「成長型股票／持有ETF」兩卡（65/35 舊目標）隱藏，改顯示「核心 ETF」佔持股比與下一筆該投的標的、「衛星比重」對上限（超出顯示金額）<br>✦ 持股頁新增「核心／衛星配置」面板：核心逐檔顯示目前／目標／還差（以目前核心規模計，⭐＝最低於目標）；衛星逐檔顯示佔比、MOS 與 C 規則訊號（MOS＜−20% 轉 1/3、＜−40% 再轉 1/3、論文失效全轉），並提示約略金額與轉入標的<br>✦ 配置健診第 6 格「配置達成率」改為「核心／衛星」：衛星超過上限紅燈、核心任一檔偏離 >5pp 黃燈<br>✦ 不在核心清單的持股一律視為衛星（含 SMH）；現金類不計入；無 DCF 分頁的衛星不判斷 MOS'},
   {v:'4.22.3',date:'2026-11-25',notes:'✦ 配置健診「集中度」改為先依代號合併再取前 3 大（GOOG 定期＋手動、MSFT 定期＋手動不再拆成兩筆而被低估）<br>✦ 「地區分布」目標改讀 Sheets 設定!B12（US 目標％，可填 70、70% 或 0.7）；空白或格式錯誤時沿用 70%，說明列顯示目前目標<br>✦ 成長曲線：讀取資產快照時自動排除離群值（與前後各 3 筆的中位數相差 >35% 不畫入，Sheets 原始資料不動，console 會列出被排除的日期）<br>✦ 成長曲線「實際總資產」改名「持股市值（不含現金）」，與快照 B 欄實際口徑一致'},
   {v:'4.22.2',date:'2026-11-23',notes:'✦ VIX／VXN 兩張卡新增「相較昨收」漲跌（▲/▼ 點數 (百分比)，漲紅跌綠，與 SPX／NDX／SOX 一致；紅綠只表示數字漲跌，恐慌等級仍看原本的區間色與標籤）<br>✦ 資料走 Worker /quote 的 prevClose（與上排指數同一路徑），取不到顯示 —，不用 0 冒充平盤；VIX 原本 /vix 回傳缺值被 || 0 蓋成 0 的問題一併修正'},
   {v:'4.22.1',date:'2026-11-19',notes:'✦ AI 模型升級：claude-sonnet-4-6 → claude-sonnet-5-5；6 個呼叫點改用單一常數 AI_MODEL。需搭配 Worker v2.2（白名單放行 5.5）<br>✦ Claude 解讀：提示詞要求純文字、120 字內，並濾掉殘留的 markdown 符號（##、**、---）；快取 key 加入提示詞版本與模型，舊格式的快取不會再被讀出<br>✦ AAII 資料日統一顯示為 YYYY-MM-DD（原本直接顯示 Sheets 儲存格文字，例如 Nov 11 2026）'},
@@ -1791,7 +1798,7 @@ async function fetchAllDCF(){
       if(sn&&sheetTabNames.includes(sn)){const d=await fetchDCFSheet(sn);if(d)dcfCache[h.ticker]=d;}
     }
   }
-  renderWatchlist();renderHealthPage(lastMeta);
+  renderWatchlist();renderHealthPage(lastMeta);try{renderCorePanel();}catch(e){console.warn('[核心/衛星]',e);}
 }
 
 // === PARSE META ===
@@ -1921,7 +1928,9 @@ async function syncSheets(){
   try{renderHoldings();}catch(e){_logErr('L1601',e);}
   renderGrowthChart();
   await fetchRegionTarget();
+  await fetchCoreConfig();
   renderHealthPage(meta);
+  try{renderCorePanel();}catch(e){console.warn('[核心/衛星]',e);}
   fetchFIREProgress();
   // 讀取 AAII 情緒數據（設定!B15:B18）
   try{
@@ -2070,6 +2079,82 @@ async function fetchRegionTarget(){
     const d=await r.json();const v=parseRegionTarget(d.values?.[0]?.[0]);
     regionTargetUS=v==null?70:v;
   }catch(e){regionTargetUS=70;console.warn('[地區目標] 讀取失敗，沿用 70%:',e);}
+}
+
+// === v4.23.0 核心／衛星 ===
+var coreCfg={targets:[{ticker:'VTI',pct:45},{ticker:'QQQ',pct:30},{ticker:'006208',pct:25}],satCap:30,c1:-20,c2:-40,src:'預設'};
+async function fetchCoreConfig(){
+  if(!googleToken)return;
+  try{
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values:batchGet?ranges=${encodeURIComponent('核心配置!A2:B10')}&ranges=${encodeURIComponent('核心配置!F2:F4')}`;
+    const r=await gFetch(url,{headers:{Authorization:`Bearer ${googleToken}`}});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();const vr=d.valueRanges||[];
+    const num=s=>{const v=parseFloat(String(s==null?'':s).replace(/[%,\s]/g,''));return isNaN(v)?null:v;};
+    const tg=(vr[0]?.values||[]).map(row=>({ticker:String(row[0]||'').replace(/\s/g,''),pct:num(row[1])})).filter(x=>x.ticker&&x.pct!=null&&x.pct>0);
+    if(tg.length){const sum=tg.reduce((s,x)=>s+x.pct,0);coreCfg.targets=tg.map(x=>({ticker:x.ticker,pct:x.pct/sum*100}));coreCfg.src='Sheets';}
+    const pv=(vr[1]?.values||[]).map(row=>num(row[0]));
+    let cap=pv[0];if(cap!=null){if(cap>0&&cap<=1)cap*=100;if(cap>0&&cap<=100)coreCfg.satCap=cap;}
+    let a=pv[1],b=pv[2];
+    if(a!=null)a=-Math.abs(a<=1&&a>=-1?a*100:a);if(b!=null)b=-Math.abs(b<=1&&b>=-1?b*100:b);
+    if(a!=null)coreCfg.c1=a;if(b!=null)coreCfg.c2=b;
+    if(coreCfg.c2>coreCfg.c1){const t=coreCfg.c1;coreCfg.c1=coreCfg.c2;coreCfg.c2=t;}
+  }catch(e){console.warn('[核心配置] 讀取失敗，沿用預設 A：',e);}
+}
+function computeCoreSat(){
+  const byTk=new Map();
+  for(const h of holdingsData){
+    if(h.type==='cash')continue;
+    const v=h.price*h.shares*(h.currency==='USD'?usdTwd:1);if(!(v>0))continue;
+    const o=byTk.get(h.ticker)||{ticker:h.ticker,val:0,type:h.type};o.val+=v;byTk.set(h.ticker,o);
+  }
+  const total=[...byTk.values()].reduce((s,x)=>s+x.val,0);
+  const coreSet=new Set(coreCfg.targets.map(t=>t.ticker));
+  const coreTotal=coreCfg.targets.reduce((s,t)=>s+(byTk.get(t.ticker)?.val||0),0);
+  const core=coreCfg.targets.map(t=>{const val=byTk.get(t.ticker)?.val||0;const cur=coreTotal>0?val/coreTotal*100:0;return{ticker:t.ticker,val,cur,target:t.pct,dev:cur-t.pct,need:Math.max(0,t.pct/100*coreTotal-val)};});
+  const next=core.length?[...core].sort((a,b)=>a.dev-b.dev)[0]:null;
+  const sat=[...byTk.values()].filter(x=>!coreSet.has(x.ticker)).map(x=>{
+    const d=dcfCache[x.ticker];const mos=(d&&!d.isETF&&d.mos!=null&&!isNaN(d.mos))?d.mos:null;
+    const th=(thesisCache[x.ticker]&&thesisCache[x.ticker].status)||null;
+    let sig=null;
+    if(th==='no')sig={lv:'gray',txt:'論文失效：全部轉核心',amt:x.val};
+    else if(mos!=null&&mos<coreCfg.c2)sig={lv:'red',txt:`第二階：再轉 1/3`,amt:x.val/3};
+    else if(mos!=null&&mos<coreCfg.c1)sig={lv:'yellow',txt:`第一階：轉 1/3`,amt:x.val/3};
+    return Object.assign({},x,{pct:total>0?x.val/total*100:0,mos,th,sig});
+  }).sort((a,b)=>b.val-a.val);
+  const satTotal=sat.reduce((s,x)=>s+x.val,0);
+  return{total,coreTotal,satTotal,corePct:total>0?coreTotal/total*100:0,satPct:total>0?satTotal/total*100:0,core,next,sat,maxDev:core.reduce((m,x)=>Math.max(m,Math.abs(x.dev)),0)};
+}
+function renderCorePanel(){
+  if(!holdingsData.length)return;
+  const cs=computeCoreSat();if(!(cs.total>0))return;
+  const wan=n=>'NT$'+(n/10000).toFixed(1)+'萬';
+  const cap=coreCfg.satCap,over=cs.satPct>cap;
+  const setT=(id,t)=>{const e=el(id);if(e)e.textContent=t;};
+  setT('cs-core-pct',cs.corePct.toFixed(1)+'%');
+  setT('cs-core-sub',cs.next?`佔持股市值 · 下一筆投 ${cs.next.ticker}`:'未設定核心');
+  const cb=el('cs-core-bar');if(cb)cb.style.width=Math.min(100,cs.corePct)+'%';
+  setT('cs-sat-pct',cs.satPct.toFixed(1)+'%');
+  setT('cs-sat-sub',over?`上限 ${cap.toFixed(0)}% · 超出 ${wan((cs.satPct-cap)/100*cs.total)}`:`上限 ${cap.toFixed(0)}% · 在上限內`);
+  const sb=el('cs-sat-bar');if(sb){sb.style.width=Math.min(100,cs.satPct/cap*100)+'%';sb.style.background=over?'var(--red)':'var(--green)';}
+  const sec=el('coresat-section'),body=el('coresat-body');if(!sec||!body)return;
+  sec.style.display='block';
+  const g='display:grid;grid-template-columns:1.1fr 0.9fr 0.9fr 1.3fr;gap:6px;font-family:var(--font-mono);font-size:11px;padding:5px 0;border-bottom:1px solid var(--border);align-items:center';
+  const hd=a=>`<div style="${g};color:var(--text-muted);font-size:9px;letter-spacing:0.08em">${a.map(x=>`<div>${x}</div>`).join('')}</div>`;
+  const coreRows=cs.core.map(x=>{const isN=cs.next&&cs.next.ticker===x.ticker;const dc=Math.abs(x.dev)>5?'var(--yellow)':'var(--text-secondary)';
+    return`<div style="${g}"><div style="font-weight:600">${isN?'⭐ ':''}${esc(x.ticker)}</div><div>${x.cur.toFixed(1)}%</div><div>${x.target.toFixed(0)}% <span style="color:${dc};font-size:9px">${x.dev>=0?'+':''}${x.dev.toFixed(1)}</span></div><div>${x.need>0?wan(x.need):'—'}</div></div>`;}).join('');
+  const sc={gray:'var(--text-muted)',red:'var(--red)',yellow:'var(--yellow)'};
+  const tgt=cs.next?cs.next.ticker:'核心';
+  const satRows=cs.sat.length?cs.sat.map(x=>{const s=x.sig;
+    const sig=s?`<span style="color:${sc[s.lv]}">● ${s.txt}</span><div style="font-size:9px;color:var(--text-muted)">約 ${wan(s.amt)} → ${esc(tgt)}</div>`:`<span style="color:var(--text-muted)">${x.mos==null?'無 DCF':'—'}</span>`;
+    return`<div style="${g}"><div style="font-weight:600">${esc(x.ticker)}</div><div>${x.pct.toFixed(1)}%</div><div>${x.mos==null?'—':(x.mos>=0?'+':'')+x.mos.toFixed(0)+'%'}</div><div>${sig}</div></div>`;}).join(''):`<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);padding:6px 0">無衛星持股</div>`;
+  body.innerHTML=`
+    <div class="alloc-card"><div class="alloc-label">核心 ETF · ${wan(cs.coreTotal)} · 佔持股 ${cs.corePct.toFixed(1)}%</div>
+      ${hd(['代號','目前','目標 / 偏離','還差'])}${coreRows}
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:8px;line-height:1.6">⭐ 最低於目標＝下一筆投入；還差以目前核心規模計 · 來源：${coreCfg.src==='Sheets'?'Sheets 核心配置':'預設 A（讀不到 Sheets）'}</div></div>
+    <div class="alloc-card"><div class="alloc-label">衛星 · ${wan(cs.satTotal)} · <span style="color:${over?'var(--red)':'var(--green)'}">${cs.satPct.toFixed(1)}%</span> / 上限 ${cap.toFixed(0)}%</div>
+      ${hd(['代號','佔持股','MOS','C 規則'])}${satRows}
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:8px;line-height:1.6">C 規則：MOS &lt; ${coreCfg.c1.toFixed(0)}% 轉 1/3、&lt; ${coreCfg.c2.toFixed(0)}% 再轉 1/3、論文失效全轉；轉出投入最低於目標的核心 ETF。僅提示，不自動交易</div></div>`;
 }
 
 // === 資產快照 ===
@@ -2230,7 +2315,7 @@ function renderRiskMonitor(){
 
 function renderHoldings(){
   const c=el('holdings-list');if(!c)return;
-  computeAndRenderPnL();renderRiskMonitor();
+  computeAndRenderPnL();renderRiskMonitor();try{renderCorePanel();}catch(e){console.warn('[核心/衛星]',e);}
   if(!holdingsData.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">尚無持股資料</div><div class="empty-sub">請在設定中連結 Google 帳號<br>然後點擊右上角「同步試算表」</div></div>`;return;}
   const sorted=[...holdingsData].sort((a,b)=>(b.price-b.cost)*b.shares*(b.currency==='USD'?usdTwd:1)-(a.price-a.cost)*a.shares*(a.currency==='USD'?usdTwd:1));
   c.innerHTML=sorted.map(h=>{
@@ -3297,16 +3382,12 @@ function renderHealthPage(meta){
   if(warnList.length>0)mosDescParts.push(`不足：${warnList.map(h=>h.ticker).join('/')}`);
   const mosDesc=mosDescParts.length>0?mosDescParts.join('\n'):'所有持股安全邊際充足';
   setSig('cash',mosSigColor,`高估 ${dangerList.length} · 不足 ${warnList.length}`,mosDesc);
-  // 6. 配置達成率（取代 ETF 執行）：成長股 + ETF 並列，從 meta 直接讀
-  if(meta&&meta.growthActual!=null&&meta.etfActual!=null){
-    const gPct=meta.growthActual,ePct=meta.etfActual;
-    const minPct=Math.min(gPct,ePct);
-    const allocColor=minPct>=80?'green':minPct>=50?'yellow':'red';
-    setSig('etf',allocColor,`${gPct.toFixed(0)}% / ${ePct.toFixed(0)}%`,`成長股 ${gPct.toFixed(0)}% · ETF ${ePct.toFixed(0)}%`);
-  }else{
-    const etfPct=parseFloat(el('alloc-etf-pct')?.textContent)||0;
-    setSig('etf',etfPct<50?'red':etfPct<70?'yellow':'green',`${etfPct.toFixed(1)}%`,'ETF 目標達成率');
-  }
+  // 6. 核心／衛星（v4.23.0 取代配置達成率）
+  try{
+    const cs=computeCoreSat();
+    if(cs.total>0){const cap=coreCfg.satCap;const col=cs.satPct>cap?'red':cs.maxDev>5?'yellow':'green';
+      setSig('etf',col,`衛星 ${cs.satPct.toFixed(0)}% / ${cap.toFixed(0)}%`,`核心最大偏離 ${cs.maxDev.toFixed(1)}pp${cs.next?' · 下一筆 '+cs.next.ticker:''}`);}
+  }catch(e){console.warn('[核心/衛星] 健診計算失敗',e);}
   // 估值健康區塊（下方獨立）
   const vh=el('valuation-health');
   if(vh){
