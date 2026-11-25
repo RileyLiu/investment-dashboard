@@ -1035,7 +1035,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.22.2';
+const VERSION='v4.22.3';
 const AI_MODEL='claude-sonnet-5-5'; // v4.22.1：所有 AI 呼叫統一用這個常數，之後換模型只改這行（Worker 白名單要同步放行）
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
@@ -1049,6 +1049,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.22.3',date:'2026-11-25',notes:'✦ 配置健診「集中度」改為先依代號合併再取前 3 大（GOOG 定期＋手動、MSFT 定期＋手動不再拆成兩筆而被低估）<br>✦ 「地區分布」目標改讀 Sheets 設定!B12（US 目標％，可填 70、70% 或 0.7）；空白或格式錯誤時沿用 70%，說明列顯示目前目標<br>✦ 成長曲線：讀取資產快照時自動排除離群值（與前後各 3 筆的中位數相差 >35% 不畫入，Sheets 原始資料不動，console 會列出被排除的日期）<br>✦ 成長曲線「實際總資產」改名「持股市值（不含現金）」，與快照 B 欄實際口徑一致'},
   {v:'4.22.2',date:'2026-11-23',notes:'✦ VIX／VXN 兩張卡新增「相較昨收」漲跌（▲/▼ 點數 (百分比)，漲紅跌綠，與 SPX／NDX／SOX 一致；紅綠只表示數字漲跌，恐慌等級仍看原本的區間色與標籤）<br>✦ 資料走 Worker /quote 的 prevClose（與上排指數同一路徑），取不到顯示 —，不用 0 冒充平盤；VIX 原本 /vix 回傳缺值被 || 0 蓋成 0 的問題一併修正'},
   {v:'4.22.1',date:'2026-11-19',notes:'✦ AI 模型升級：claude-sonnet-4-6 → claude-sonnet-5-5；6 個呼叫點改用單一常數 AI_MODEL。需搭配 Worker v2.2（白名單放行 5.5）<br>✦ Claude 解讀：提示詞要求純文字、120 字內，並濾掉殘留的 markdown 符號（##、**、---）；快取 key 加入提示詞版本與模型，舊格式的快取不會再被讀出<br>✦ AAII 資料日統一顯示為 YYYY-MM-DD（原本直接顯示 Sheets 儲存格文字，例如 Nov 11 2026）'},
   {v:'4.22.0',date:'2026-11-19',notes:'✦ 「風險總覽」改名「宏觀環境」；VIX／VXN／AAII 三張卡搬到觀察清單最上方（市場溫度計下方），宏觀環境頁只留短期利率、10 年公債、殖利率曲線、Trimmed Mean PCE<br>✦ 新增市場情緒綜合判斷：恐慌程度（VIX≥20 或 AAII≥+2σ）× SPX 52 週位置（30／70 分界，與位置條同色）→ 六種狀態燈號；第二行補 VXN／NDX 位置。只描述狀態，不是買賣訊號<br>✦ 「🧠 Claude 解讀」按鈕：按下才呼叫（走 Worker /v1/messages），結果以日期＋數據快照為 key 快取在 localStorage（可重建快取，不存決策資料）<br>✦ 啟動時即載入 VIX／VXN，不必先開宏觀環境頁；AAII 仍在 Sheets 同步後出現（週更，顯示資料日期）'},
@@ -1919,6 +1920,7 @@ async function syncSheets(){
   await syncAllThesisToSheets();
   try{renderHoldings();}catch(e){_logErr('L1601',e);}
   renderGrowthChart();
+  await fetchRegionTarget();
   renderHealthPage(meta);
   fetchFIREProgress();
   // 讀取 AAII 情緒數據（設定!B15:B18）
@@ -2058,6 +2060,18 @@ function updateAllocCards(meta){
   }
 }
 
+// v4.22.3：地區目標（US％），由 設定!B12 讀入，空白／錯誤時沿用 70
+var regionTargetUS=70; // var：避免載入順序造成 TDZ
+function parseRegionTarget(raw){const s=String(raw==null?'':raw).replace(/[%\s,]/g,'');if(!s)return null;let v=parseFloat(s);if(isNaN(v))return null;if(v>0&&v<=1)v=v*100;return(v>=0&&v<=100)?v:null;}
+async function fetchRegionTarget(){
+  if(!googleToken)return;
+  try{
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('設定!B12')}`,{headers:{Authorization:`Bearer ${googleToken}`}});
+    const d=await r.json();const v=parseRegionTarget(d.values?.[0]?.[0]);
+    regionTargetUS=v==null?70:v;
+  }catch(e){regionTargetUS=70;console.warn('[地區目標] 讀取失敗，沿用 70%:',e);}
+}
+
 // === 資產快照 ===
 async function writeAssetSnapshot(){
   if(!googleToken||!holdingsData.length)return;
@@ -2095,7 +2109,18 @@ async function fetchAssetSnapshots(){
     const d=await r.json();
     const all=(d.values||[]).map(r=>({date:r[0]||'',total:parseFloat(r[1])||0,usdPnl:parseFloat(r[2])||0,twPnl:parseFloat(r[3])||0,vix:parseFloat(r[4])||null})).filter(r=>r.date&&r.total>0);
     const byDate=new Map();for(const row of all)byDate.set(row.date,row);
-    return Array.from(byDate.values()).sort((a,b)=>a.date.localeCompare(b.date));
+    const rows=Array.from(byDate.values()).sort((a,b)=>a.date.localeCompare(b.date));
+    // v4.22.3：離群值排除（與前後各 3 筆中位數差 >35%），不改動 Sheets
+    const med=a=>{const s=[...a].sort((x,y)=>x-y),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2;};
+    const dropped=[];
+    const kept=rows.filter((r,i)=>{
+      const nb=[...rows.slice(Math.max(0,i-3),i),...rows.slice(i+1,i+4)].map(x=>x.total);
+      if(nb.length<3)return true;
+      const m=med(nb);if(!(m>0))return true;
+      const off=Math.abs(r.total-m)/m>0.35;if(off)dropped.push(`${r.date}(${r.total})`);return !off;
+    });
+    if(dropped.length)console.log('[快照] 排除離群值：',dropped.join(', '));
+    return kept;
   }catch(e){return[];}
 }
 async function fetchFIREProgress(){
@@ -2262,7 +2287,7 @@ async function renderGrowthChart(){
   const ctx=el('chart-growth').getContext('2d');
   if(chartGrowth)chartGrowth.destroy();
   const fm={family:'IBM Plex Mono',size:10};
-  chartGrowth=new Chart(ctx,{type:'line',data:{labels:allL,datasets:[{label:'實際總資產',data:aD,borderColor:'#38bdf8',backgroundColor:'#38bdf815',borderWidth:2,pointRadius:4,pointBackgroundColor:'#38bdf8',fill:true,tension:0.3,spanGaps:false},{label:'目標年末',data:tD,borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:2,borderDash:[6,4],pointRadius:5,pointBackgroundColor:'#fbbf24',pointStyle:'triangle',fill:false,tension:0,spanGaps:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a9abf',font:{family:'IBM Plex Mono',size:13},usePointStyle:true,padding:14}},tooltip:{bodyFont:{family:'IBM Plex Mono'},callbacks:{label:ctx=>` NT$${ctx.parsed.y?.toFixed(1)}萬`}}},scales:{x:{ticks:{color:'#7a9abf',font:fm,maxTicksLimit:8},grid:{color:'#1e3050'}},y:{ticks:{color:'#7a9abf',font:fm,callback:v=>`${v}萬`},grid:{color:'#1e3050'}}}}});
+  chartGrowth=new Chart(ctx,{type:'line',data:{labels:allL,datasets:[{label:'持股市值（不含現金）',data:aD,borderColor:'#38bdf8',backgroundColor:'#38bdf815',borderWidth:2,pointRadius:4,pointBackgroundColor:'#38bdf8',fill:true,tension:0.3,spanGaps:false},{label:'目標年末',data:tD,borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:2,borderDash:[6,4],pointRadius:5,pointBackgroundColor:'#fbbf24',pointStyle:'triangle',fill:false,tension:0,spanGaps:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a9abf',font:{family:'IBM Plex Mono',size:13},usePointStyle:true,padding:14}},tooltip:{bodyFont:{family:'IBM Plex Mono'},callbacks:{label:ctx=>` NT$${ctx.parsed.y?.toFixed(1)}萬`}}},scales:{x:{ticks:{color:'#7a9abf',font:fm,maxTicksLimit:8},grid:{color:'#1e3050'}},y:{ticks:{color:'#7a9abf',font:fm,callback:v=>`${v}萬`},grid:{color:'#1e3050'}}}}});
 }
 
 // === DCF BAND ===
@@ -3242,14 +3267,18 @@ function renderHealthPage(meta){
     const dd=el('desc-'+id);if(dd)dd.textContent=desc;
   }
   // 1. 集中度：前3大持股
-  const sorted=[...holdingsData].sort((a,b)=>b.price*b.shares*(b.currency==='USD'?usdTwd:1)-a.price*a.shares*(a.currency==='USD'?usdTwd:1));
-  const top3=sorted.slice(0,3).reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
+  // v4.22.3：同代號多列（定期／手動）先合併再排序
+  const byTk=new Map();
+  for(const h of holdingsData){const v=h.price*h.shares*(h.currency==='USD'?usdTwd:1);byTk.set(h.ticker,(byTk.get(h.ticker)||0)+v);}
+  const sorted=[...byTk.entries()].map(([ticker,val])=>({ticker,val})).sort((a,b)=>b.val-a.val);
+  const top3=sorted.slice(0,3).reduce((s,x)=>s+x.val,0);
   const concPct=top3/totalTWD*100;
-  setSig('conc',concPct>65?'red':concPct>50?'yellow':'green',`${concPct.toFixed(0)}%`,`前3：${sorted.slice(0,3).map(h=>h.ticker).join('/')}`);
+  setSig('conc',concPct>65?'red':concPct>50?'yellow':'green',`${concPct.toFixed(0)}%`,`前3：${sorted.slice(0,3).map(x=>x.ticker).join('/')}`);
   // 2. 地區分布
   const usdTWD=holdingsData.filter(h=>h.currency==='USD').reduce((s,h)=>s+h.price*h.shares*usdTwd,0);
   const usdPct=usdTWD/totalTWD*100,twPct=100-usdPct;
-  setSig('region',Math.abs(usdPct-70)>20?'yellow':'green',`US ${usdPct.toFixed(0)}% / TW ${twPct.toFixed(0)}%`,'美台持倉分布');
+  const rT=(typeof regionTargetUS==='number'&&!isNaN(regionTargetUS))?regionTargetUS:70;
+  setSig('region',Math.abs(usdPct-rT)>20?'yellow':'green',`US ${usdPct.toFixed(0)}% / TW ${twPct.toFixed(0)}%`,`目標 US ${rT.toFixed(0)}%（設定!B12）`);
   // 3. 估值健康（取代美元曝險）：dcfCache 裡 high/warn 的持股數
   const highList=holdingsData.filter(h=>{const d=dcfCache[h.ticker];return d&&d.valTier&&(d.valTier==='high'||d.valTier==='warn');});
   const lowList=holdingsData.filter(h=>{const d=dcfCache[h.ticker];return d&&d.valTier&&(d.valTier==='deep'||d.valTier==='low');});
