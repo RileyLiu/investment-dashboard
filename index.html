@@ -77,7 +77,7 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .index-52w-dot{position:absolute;top:-3px;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--bg-card);transform:translateX(-50%);}
 .index-52w-pct{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-top:3px;text-align:right;}
 /* ── HOVER TOOLTIP ── */
-.index-tooltip{position:absolute;top:calc(100% + 8px);left:0;z-index:600;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:240px;max-width:300px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
+.index-tooltip{position:absolute;top:calc(100% + 8px);left:0;z-index:600;background:var(--bg-surface);border:1px solid var(--border-bright);border-radius:8px;padding:14px 16px;min-width:300px;max-width:360px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:none;pointer-events:none;}
 .index-cell:hover .index-tooltip{display:block;animation:fadeIn 0.15s ease;}
 .index-cell:nth-child(3) .index-tooltip,.index-cell:nth-child(4) .index-tooltip{left:auto;right:0;}
 .tt-title{font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
@@ -85,7 +85,12 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 .tt-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-family:var(--font-mono);font-size:11px;}
 .tt-label{color:var(--text-muted);}
 .tt-val{font-weight:600;}
-.tt-holding-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-family:var(--font-mono);font-size:11px;}
+.tt-holding-row{display:grid;grid-template-columns:58px 1fr 52px 56px;align-items:center;column-gap:6px;padding:2px 0;font-family:var(--font-mono);font-size:11px;}
+.tt-holding-row.tt-head{font-size:9px;color:var(--text-muted);letter-spacing:0.06em;padding-bottom:4px;}
+.tt-holding-row .tt-price{text-align:right;}
+.tt-w{font-size:10px;text-align:right;color:var(--text-secondary);}
+.tt-group{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.08em;margin:6px 0 2px;}
+.tt-note{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:6px;line-height:1.5;}
 .tt-ticker{color:var(--text-secondary);font-weight:600;min-width:54px;}
 .tt-price{color:var(--text-primary);}
 .tt-pct{font-size:10px;min-width:52px;text-align:right;}
@@ -361,10 +366,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="index-52w-label"><span id="spx-52w-low">低</span><span id="spx-52w-pct">—</span><span id="spx-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="spx-dot" style="left:50%;background:var(--yellow)"></div></div>
       <div class="index-tooltip">
-        <div class="tt-title">NYSE 持倉</div>
+        <div class="tt-title">S&amp;P 500 相關持倉</div>
         <div id="spx-holdings-list"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">同步持股後顯示</div></div>
         <div class="tt-divider"></div>
-        <div class="tt-row"><span class="tt-label">NYSE 曝險</span><span class="tt-val" id="spx-exposure-amt">—</span></div>
+        <div class="tt-row"><span class="tt-label">SPX 曝險</span><span class="tt-val" id="spx-exposure-amt">—</span></div>
         <div class="tt-row"><span class="tt-label">佔組合比重</span><span class="tt-val" id="spx-exposure-pct">—</span></div>
         <div class="tt-row"><span class="tt-label">SPX 今日漲跌</span><span class="tt-val" id="spx-today">—</span></div>
       </div>
@@ -379,10 +384,10 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
       <div class="index-52w-label"><span id="ndx-52w-low">低</span><span id="ndx-52w-pct">—</span><span id="ndx-52w-high">高</span></div>
       <div class="index-52w-track"><div class="index-52w-fill"></div><div class="index-52w-dot" id="ndx-dot" style="left:50%;background:var(--yellow)"></div></div>
       <div class="index-tooltip">
-        <div class="tt-title">NASDAQ 持倉</div>
+        <div class="tt-title">NASDAQ-100 相關持倉</div>
         <div id="ndx-holdings-list"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">同步持股後顯示</div></div>
         <div class="tt-divider"></div>
-        <div class="tt-row"><span class="tt-label">NASDAQ 曝險</span><span class="tt-val" id="ndx-exposure-amt">—</span></div>
+        <div class="tt-row"><span class="tt-label">NDX 曝險</span><span class="tt-val" id="ndx-exposure-amt">—</span></div>
         <div class="tt-row"><span class="tt-label">佔組合比重</span><span class="tt-val" id="ndx-exposure-pct">—</span></div>
         <div class="tt-row"><span class="tt-label">NDX 今日漲跌</span><span class="tt-val" id="ndx-today">—</span></div>
       </div>
@@ -400,9 +405,11 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
         <div class="tt-title">半導體相關持倉</div>
         <div id="sox-holdings-list"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">同步持股後顯示</div></div>
         <div class="tt-divider"></div>
-        <div class="tt-row"><span class="tt-label">半導體曝險</span><span class="tt-val" id="sox-exposure-amt">—</span></div>
+        <div class="tt-row"><span class="tt-label">直接曝險（成分股＋ETF）</span><span class="tt-val" id="sox-direct-pct">—</span></div>
+        <div class="tt-row"><span class="tt-label">含相關曝險</span><span class="tt-val" id="sox-exposure-amt">—</span></div>
         <div class="tt-row"><span class="tt-label">佔組合比重</span><span class="tt-val" id="sox-exposure-pct">—</span></div>
         <div class="tt-row"><span class="tt-label">SOX 今日漲跌</span><span class="tt-val" id="sox-today">—</span></div>
+        <div class="tt-note" id="sox-tt-note"></div>
       </div>
     </div>
   </div>
@@ -992,7 +999,7 @@ const RESERVE_CASH=500000; // NT$50萬固定保留現金
 let githubPAT=null;
 let snapshotWritten=false;
 let lastMeta=null; // v4.2.0：暫存最新 meta 供 renderHealthPage 使用
-const COLS={ticker:5,fullCode:6,name:7,shares:10,cost:11,price:13,ma200pct:15,ma50pct:2,trend:3,kd:4,w52low:16,w52high:17,pe:19,peL:20,peH:21};
+const COLS={ticker:5,fullCode:6,name:7,shares:10,cost:11,price:13,ma200pct:15,ma50pct:2,trend:3,kd:4,w52low:16,w52high:17,pe:19,peL:20,peH:21,idx:22}; // v4.24.0 W=指數歸屬
 const ETF_TICKERS=['006208','SMH','QQQ','TQQQ','0050','JEPI','VTI','XLU','PHO','COPX'];
 const CASH_TICKERS=['SGOV'];
 const TW_TICKERS=['2330','6669','5871','006208','IX0001','00632R','00685L'];
@@ -1041,7 +1048,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.23.0';
+const VERSION='v4.24.0';
 const AI_MODEL='claude-sonnet-5-5'; // v4.22.1：所有 AI 呼叫統一用這個常數，之後換模型只改這行（Worker 白名單要同步放行）
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
@@ -1055,6 +1062,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.24.0',date:'2026-11-26',notes:'✦ 市場溫度計 SPX／NDX／SOX 懸停卡改依 Sheets 持股資訊 W 欄「指數歸屬」（SPX/NDX/SOX/SOX-相關/TW）分組，每檔只歸一張卡片，三張曝險可直接相加<br>✦ 修正：VTI 原本依交易所前綴（NYSEARCA）被算進 NDX，NDX 曝險灌到 64.8%；SKHY／AMKR／STX 改列 SOX「相關曝險」（依 Nasdaq 2026/11 成分股名單，三檔都不是 SOX 成分股）<br>✦ 卡片內分三層：成分股／追蹤 ETF／相關曝險，新增「佔組合 %」欄與欄位表頭<br>✦ 同代號合併（股數相加、成本加權平均），GOOG 定期／手動不再出現兩列<br>✦ SOX 卡片分列「直接曝險（成分股＋ETF）」與「含相關曝險」，並提示 006208 內含台積電未計入<br>✦ W 欄空白時前端依舊規則推斷（半導體白名單→SOX、台股→TW、NYSE→SPX、其餘→NDX），不寫回 Sheets'},
   {v:'4.23.0',date:'2026-11-25',notes:'✦ 核心／衛星架構：新增 Sheets「核心配置」分頁（A2:B10 核心代號與目標％，F2 衛星上限、F3/F4 C 規則門檻），預設核心 A＝VTI 45／QQQ 30／006208 25，讀不到時沿用預設<br>✦ 觀察清單「配置進度」：原「成長型股票／持有ETF」兩卡（65/35 舊目標）隱藏，改顯示「核心 ETF」佔持股比與下一筆該投的標的、「衛星比重」對上限（超出顯示金額）<br>✦ 持股頁新增「核心／衛星配置」面板：核心逐檔顯示目前／目標／還差（以目前核心規模計，⭐＝最低於目標）；衛星逐檔顯示佔比、MOS 與 C 規則訊號（MOS＜−20% 轉 1/3、＜−40% 再轉 1/3、論文失效全轉），並提示約略金額與轉入標的<br>✦ 配置健診第 6 格「配置達成率」改為「核心／衛星」：衛星超過上限紅燈、核心任一檔偏離 >5pp 黃燈<br>✦ 不在核心清單的持股一律視為衛星（含 SMH）；現金類不計入；無 DCF 分頁的衛星不判斷 MOS'},
   {v:'4.22.3',date:'2026-11-25',notes:'✦ 配置健診「集中度」改為先依代號合併再取前 3 大（GOOG 定期＋手動、MSFT 定期＋手動不再拆成兩筆而被低估）<br>✦ 「地區分布」目標改讀 Sheets 設定!B12（US 目標％，可填 70、70% 或 0.7）；空白或格式錯誤時沿用 70%，說明列顯示目前目標<br>✦ 成長曲線：讀取資產快照時自動排除離群值（與前後各 3 筆的中位數相差 >35% 不畫入，Sheets 原始資料不動，console 會列出被排除的日期）<br>✦ 成長曲線「實際總資產」改名「持股市值（不含現金）」，與快照 B 欄實際口徑一致'},
   {v:'4.22.2',date:'2026-11-23',notes:'✦ VIX／VXN 兩張卡新增「相較昨收」漲跌（▲/▼ 點數 (百分比)，漲紅跌綠，與 SPX／NDX／SOX 一致；紅綠只表示數字漲跌，恐慌等級仍看原本的區間色與標籤）<br>✦ 資料走 Worker /quote 的 prevClose（與上排指數同一路徑），取不到顯示 —，不用 0 冒充平盤；VIX 原本 /vix 回傳缺值被 || 0 蓋成 0 的問題一併修正'},
@@ -1488,15 +1496,58 @@ function renderIndexCell(id,data,isVix){
 
 function updateIndexHovers(){
   if(!holdingsData.length)return;
-  const totalTWD=holdingsData.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
+  const twd=h=>h.price*h.shares*(h.currency==='USD'?usdTwd:1);
+  const totalTWD=holdingsData.reduce((s,h)=>s+twd(h),0);
 
-  function renderHoldingRows(list){
-    return list.map(h=>{
-      const p=h.cost>0?((h.price-h.cost)/h.cost*100):0;
-      const pc=p>=0?'var(--red)':'var(--green)';
-      const priceStr=(h.currency==='USD'?'$':'NT$')+h.price.toLocaleString();
-      return '<div class="tt-holding-row"><span class="tt-ticker">'+esc(h.ticker)+'</span><span class="tt-price">'+priceStr+'</span><span class="tt-pct" style="color:'+pc+'">'+(p>=0?'+':'')+p.toFixed(1)+'%</span></div>';
-    }).join('');
+  // v4.24.0：同代號合併（股數相加、成本加權平均），避免 GOOG 定期／手動出現兩列
+  const merged={};
+  for(const h of holdingsData){
+    const k=h.ticker.toUpperCase();
+    if(!merged[k]){merged[k]={...h};continue;}
+    const m=merged[k];const sh=m.shares+h.shares;
+    m.cost=sh>0?(m.cost*m.shares+h.cost*h.shares)/sh:m.cost;
+    m.shares=sh;
+    if(!m.idxTag&&h.idxTag)m.idxTag=h.idxTag;
+  }
+  const list=Object.values(merged);
+
+  // v4.24.0：指數歸屬以 Sheets 持股資訊 W 欄為準；空白時依舊規則推斷（不寫回 Sheets）
+  function idxOf(h){
+    const t=(h.idxTag||'').replace(/\s/g,'');
+    if(t){const base=t.split('-')[0];return{idx:base,related:t.includes('相關')};}
+    const tk=h.ticker.toUpperCase();
+    if(SOX_TICKERS.includes(tk))return{idx:'SOX',related:false};
+    if(h.currency==='TWD')return{idx:'TW',related:false};
+    if(h.fullCode.startsWith('NYSE'))return{idx:'SPX',related:false};
+    return{idx:'NDX',related:false};
+  }
+  function tierOf(h,m){return m.related?2:(h.type==='etf'||h.type==='wave')?1:0;}
+  const TIER_LABEL=['成分股','追蹤 ETF','相關曝險（非成分股）'];
+
+  function renderRow(h){
+    const p=h.cost>0?((h.price-h.cost)/h.cost*100):0;
+    const pc=p>=0?'var(--red)':'var(--green)';
+    const priceStr=(h.currency==='USD'?'$':'NT$')+h.price.toLocaleString(undefined,{maximumFractionDigits:2});
+    const w=totalTWD>0?twd(h)/totalTWD*100:0;
+    return '<div class="tt-holding-row"><span class="tt-ticker">'+esc(h.ticker)+'</span><span class="tt-price">'+priceStr+'</span><span class="tt-w">'+w.toFixed(1)+'%</span><span class="tt-pct" style="color:'+pc+'">'+(p>=0?'+':'')+p.toFixed(1)+'%</span></div>';
+  }
+  function renderCard(idx,emptyMsg){
+    const items=list.map(h=>({h,m:idxOf(h)})).filter(x=>x.m.idx===idx);
+    const el=document.getElementById(idx.toLowerCase()+'-holdings-list');
+    const tiers=[[],[],[]];
+    for(const x of items)tiers[tierOf(x.h,x.m)].push(x.h);
+    tiers.forEach(t=>t.sort((a,b)=>twd(b)-twd(a)));
+    if(el){
+      if(!items.length)el.innerHTML='<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">'+emptyMsg+'</div>';
+      else{
+        let html='<div class="tt-holding-row tt-head"><span>代號</span><span style="text-align:right">現價</span><span style="text-align:right">佔組合</span><span style="text-align:right">損益</span></div>';
+        tiers.forEach((t,i)=>{if(t.length)html+='<div class="tt-group">── '+TIER_LABEL[i]+' ──</div>'+t.map(renderRow).join('');});
+        el.innerHTML=html;
+      }
+    }
+    const all=items.reduce((s,x)=>s+twd(x.h),0);
+    const direct=tiers[0].concat(tiers[1]).reduce((s,h)=>s+twd(h),0);
+    return{all,direct};
   }
   function renderExposure(amtId,pctId,val,total){
     const amtEl=document.getElementById(amtId);
@@ -1505,27 +1556,20 @@ function updateIndexHovers(){
     if(pctEl){const pct=total>0?(val/total*100):0;pctEl.textContent=pct.toFixed(1)+'%';pctEl.style.color=pct>35?'var(--red)':pct>25?'var(--yellow)':'var(--green)';}
   }
 
-  // v4.7.0 動態分類：依 fullCode prefix 判斷交易所歸屬
-  // SPX = NYSE: + NYSEARCA:（自動涵蓋所有 NYSE/NYSE Arca 新持倉）
-  const spxH=holdingsData.filter(h=>h.fullCode.startsWith('NYSE:'));
-  const spxTWD=spxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
-  const spxList=document.getElementById('spx-holdings-list');
-  if(spxList)spxList.innerHTML=spxH.length?renderHoldingRows(spxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無 NYSE 持倉</div>';
-  renderExposure('spx-exposure-amt','spx-exposure-pct',spxTWD,totalTWD);
-
-  // NDX = NASDAQ: + NYSEARCA:（自動涵蓋所有 Nasdaq/Arca 新持倉）
-  const ndxH=holdingsData.filter(h=>h.fullCode.startsWith('NASDAQ:')||h.fullCode.startsWith('NYSEARCA:'));
-  const ndxTWD=ndxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
-  const ndxList=document.getElementById('ndx-holdings-list');
-  if(ndxList)ndxList.innerHTML=ndxH.length?renderHoldingRows(ndxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無 NASDAQ 持倉</div>';
-  renderExposure('ndx-exposure-amt','ndx-exposure-pct',ndxTWD,totalTWD);
-
-  // SOX: 半導體相關（跨交易所，維持 ticker 白名單）
-  const soxH=holdingsData.filter(h=>SOX_TICKERS.includes(h.ticker.toUpperCase()));
-  const soxTWD=soxH.reduce((s,h)=>s+h.price*h.shares*(h.currency==='USD'?usdTwd:1),0);
-  const soxList=document.getElementById('sox-holdings-list');
-  if(soxList)soxList.innerHTML=soxH.length?renderHoldingRows(soxH):'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">無半導體持倉</div>';
-  renderExposure('sox-exposure-amt','sox-exposure-pct',soxTWD,totalTWD);
+  // 每檔只歸一張卡片 → 三張卡片曝險可相加，不重複計算
+  const spx=renderCard('SPX','無 SPX 歸屬持倉');
+  renderExposure('spx-exposure-amt','spx-exposure-pct',spx.all,totalTWD);
+  const ndx=renderCard('NDX','無 NDX 歸屬持倉');
+  renderExposure('ndx-exposure-amt','ndx-exposure-pct',ndx.all,totalTWD);
+  const sox=renderCard('SOX','無半導體持倉');
+  renderExposure('sox-exposure-amt','sox-exposure-pct',sox.all,totalTWD);
+  const sdEl=document.getElementById('sox-direct-pct');
+  if(sdEl){const dp=totalTWD>0?sox.direct/totalTWD*100:0;sdEl.textContent='NT$'+(sox.direct/10000).toFixed(1)+'萬 · '+dp.toFixed(1)+'%';}
+  const noteEl=document.getElementById('sox-tt-note');
+  if(noteEl){
+    const tw=list.filter(h=>idxOf(h).idx==='TW'&&h.type==='etf');
+    noteEl.innerHTML=tw.length?'ⓘ '+tw.map(h=>esc(h.ticker)+'（佔組合 '+(twd(h)/totalTWD*100).toFixed(1)+'%）').join('、')+' 內含台積電權重，未計入上方曝險':'';
+  }
 
   // 今日漲跌
   const spxTodayEl=document.getElementById('spx-today');
@@ -1676,7 +1720,7 @@ function updateGoogleBtn(){
 // === SHEETS ===
 async function fetchSheetRows(){
   if(!googleToken)return null;
-  const range=encodeURIComponent(`${SHEET_NAME}!A1:V150`);
+  const range=encodeURIComponent(`${SHEET_NAME}!A1:W150`);
   try{
     const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${range}`,{headers:{Authorization:`Bearer ${googleToken}`}});
     if(r.status===401){googleToken=null;ls('google_token',null);ls('google_token_exp',null);updateStatusBar();return null;}
@@ -1867,7 +1911,8 @@ function parseHoldings(rows){
     const pe=parseFloat((row[COLS.pe]||'').replace(/,/g,''))||null;
     const peL=parseFloat((row[COLS.peL]||'').replace(/,/g,''))||null;
     const peH=parseFloat((row[COLS.peH]||'').replace(/,/g,''))||null;
-    out.push({ticker,fullCode,name,shares,cost,price:price||cost,type,currency,ma200pct,ma50pct,trend,kd,w52low,w52high,pe,peL,peH});
+    const idxTag=(row[COLS.idx]||'').trim().toUpperCase(); // v4.24.0 SPX/NDX/SOX/SOX-相關/TW，空白則前端推斷
+    out.push({ticker,fullCode,name,shares,cost,price:price||cost,type,currency,ma200pct,ma50pct,trend,kd,w52low,w52high,pe,peL,peH,idxTag});
   }
   return out;
 }
