@@ -864,88 +864,105 @@ main{position:relative;z-index:1;padding:18px 24px;max-width:1400px;margin:0 aut
 <div class="page" id="page-monte" style="padding:16px 20px;max-width:1100px;margin:0 auto;">
 <style>
 .mc-sl{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.mc-sl label{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);min-width:140px;}
-.mc-sl input[type=range]{flex:1;accent-color:var(--accent);}
-.mc-sl .mc-val{font-family:var(--font-mono);font-size:12px;font-weight:600;min-width:58px;text-align:right;color:var(--text-primary);}
-.mc-sl .mc-tip{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);min-width:140px;text-align:right;white-space:nowrap;}
-.mc-sec{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin:1.5rem 0 0.75rem;display:flex;align-items:center;gap:12px;}
+.mc-sl label{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);min-width:150px;}
+.mc-sl input[type=range]{flex:1;accent-color:var(--accent);min-width:0;}
+.mc-sl .mc-val{font-family:var(--font-mono);font-size:12px;font-weight:600;min-width:86px;text-align:right;color:var(--text-primary);white-space:nowrap;}
+.mc-sl .mc-tip{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);min-width:150px;text-align:right;white-space:nowrap;}
+@media(max-width:700px){.mc-sl{flex-wrap:wrap}.mc-sl label{min-width:100%}.mc-sl .mc-tip{display:none}}
+.mc-sec{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:0.15em;color:var(--text-muted);margin:1.75rem 0 0.75rem;display:flex;align-items:center;gap:12px;}
 .mc-sec::after{content:'';flex:1;height:1px;background:var(--border);}
-.mc-tw{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:4px;}
-.mc-tw-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.mc-tw-row:last-child{margin-bottom:0;}
-.mc-tw-row label{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);min-width:140px;}
-.mc-tw-row input[type=number]{width:110px;padding:4px 8px;font-family:var(--font-mono);font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg-elevated);color:var(--text-primary);}
-.mc-tw-row .mc-unit{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
-.mc-dca-header{display:grid;grid-template-columns:72px 72px 88px 72px 24px;gap:8px;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:4px;}
-.mc-dca-stage{display:grid;grid-template-columns:72px 72px 88px 72px 24px;gap:8px;align-items:center;margin-bottom:8px;}
-.mc-dca-stage input[type=number]{width:100%;padding:4px 6px;font-family:var(--font-mono);font-size:11px;border:1px solid var(--border);border-radius:4px;background:var(--bg-elevated);color:var(--text-primary);}
-.mc-add-btn{font-family:var(--font-mono);font-size:10px;color:var(--accent);background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;margin-top:2px;}
-.mc-add-btn:hover{border-color:var(--accent);}
-.mc-del-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:0;}
-.mc-run-btn{margin-top:1.5rem;padding:10px 24px;font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:4px;cursor:pointer;color:var(--accent);width:100%;transition:all 0.2s;}
+.mc-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.mc-btns button,.mc-apply{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:6px 12px;cursor:pointer;}
+.mc-btns button:hover,.mc-apply:hover{border-color:var(--accent);color:var(--accent);}
+.mc-btns button.on{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+.mc-apply.arm{border-color:var(--yellow);color:var(--yellow);}
+.mc-wsum{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin:4px 0 10px;}
+.mc-wsum.bad{color:var(--yellow);}
+.mc-msg{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-left:10px;}
+.mc-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);}
+.mc-row select,.mc-row input[type=number]{font-family:var(--font-mono);font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-elevated);color:var(--text-primary);}
+.mc-row input[type=number]{width:80px;}
+.mc-chk{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-bottom:8px;}
+.mc-run-btn{margin-top:1rem;padding:10px 24px;font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:0.1em;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:4px;cursor:pointer;color:var(--accent);width:100%;transition:all 0.2s;}
 .mc-run-btn:hover{background:var(--accent-glow);border-color:var(--accent);}
-.mc-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:1.5rem 0 1rem;}
+.mc-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:1rem 0;}
+@media(max-width:700px){.mc-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .mc-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
 .mc-card .mc-mlabel{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:6px;letter-spacing:0.08em;}
-.mc-card .mc-mval{font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--text-primary);}
+.mc-card .mc-mval{font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--text-primary);white-space:nowrap;}
 .mc-card .mc-msub{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:3px;}
-.mc-chart-title{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;margin:1.25rem 0 0.5rem;}
+.mc-chart-title{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:0.1em;margin:1.25rem 0 0.5rem;}
 .mc-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;}
 .mc-legend span{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
 .mc-legend i{width:18px;height:2px;display:inline-block;border-radius:1px;}
 .mc-chart-wrap{position:relative;width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.mc-scroll{overflow-x:auto;}
+.mc-tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px;}
+.mc-tbl th,.mc-tbl td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;color:var(--text-secondary);}
+.mc-tbl th{color:var(--text-muted);font-weight:500;font-size:10px;}
+.mc-tbl th:first-child,.mc-tbl td:first-child{text-align:left;}
+.mc-tbl tr.me td{color:var(--accent);font-weight:600;}
+.mc-tbl small{color:var(--text-muted);font-weight:400;}
+.mc-note{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);line-height:1.7;margin-top:8px;}
 </style>
 
-<div class="mc-sec">起始條件</div>
-<div class="mc-sl"><label>當前資產（萬 TWD）</label><input type="range" id="mc-initAsset" min="100" max="1000" step="10" value="275"><span class="mc-val" id="mc-initAssetV">275 萬</span><span class="mc-tip"></span></div>
-<div class="mc-sl"><label>當前年齡</label><input type="range" id="mc-curAge" min="25" max="50" step="1" value="35"><span class="mc-val" id="mc-curAgeV">35 歲</span><span class="mc-tip"></span></div>
-<div class="mc-sl"><label>FIRE 目標（萬 TWD）</label><input type="range" id="mc-fireGoal" min="500" max="5000" step="50" value="1810"><span class="mc-val" id="mc-fireGoalV">1810 萬</span><span class="mc-tip">4% 提領 → 年支出 × 25</span></div>
+<div class="mc-sec">核心配置（拉霸 · 回測與模擬共用）</div>
+<div class="mc-btns" id="mc-presets"></div>
+<div id="mc-faders"></div>
+<div class="mc-wsum" id="mc-wsum"></div>
+<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px"><button class="mc-apply" id="mc-apply">套用為核心配置（寫入 Sheets）</button><span class="mc-msg" id="mc-apply-msg"></span></div>
 
-<div class="mc-sec">美股 DCA（USD/月）</div>
-<div class="mc-dca-header"><span>起始年齡</span><span>結束年齡</span><span>金額 USD</span><span>年增率 %</span><span></span></div>
-<div id="mc-dcaStages"></div>
-<button class="mc-add-btn" onclick="mcAddStage()">+ 新增區間</button>
+<div class="mc-sec">歷史回測（台幣含息 · 截至 2026/11/25）</div>
+<div class="mc-row"><div class="mc-btns" id="mc-periods" style="margin:0"></div>
+  <label>再平衡 <select id="mc-reb"><option value="annual">每年 12 月</option><option value="monthly">每月</option><option value="none">不再平衡</option></select></label>
+  <span>期初＝當前資產、每月＝每月投入（見下方模擬設定）</span></div>
+<div class="mc-metrics" id="mc-btKpis"></div>
+<div class="mc-legend"><span><i style="background:#38bdf8;height:3px"></i>你的配置</span><span><i style="background:#e2eaf4"></i>現行 A</span><span><i style="background:#a78bfa"></i>保守</span><span><i style="background:#34d399"></i>平衡</span></div>
+<div class="mc-chart-wrap" style="height:300px;"><canvas id="mc-btChart" role="img" aria-label="歷史回測金額曲線"></canvas></div>
+<div class="mc-chart-title">方案對照（期初 1 元）</div>
+<div class="mc-scroll"><table class="mc-tbl" id="mc-btTable"></table></div>
+<div class="mc-chart-title">從現在往後滾</div>
+<div class="mc-row"><label>報酬假設 <select id="mc-asm"><option value="match">同長度歷史年化</option><option value="h20">一律用 20 年歷史年化</option><option value="custom">自訂年化</option></select></label>
+  <label>自訂年化 % <input type="number" id="mc-cr" value="11" min="0" max="30" step="0.5"></label></div>
+<div class="mc-scroll"><table class="mc-tbl" id="mc-projTable"></table></div>
 
-<div class="mc-sec">台股 DCA</div>
-<div class="mc-tw">
-  <div class="mc-tw-row"><label>006208 月定額</label><input type="number" id="mc-tw006208" value="4800" min="0" step="100"><span class="mc-unit">TWD/月</span></div>
-  <div class="mc-tw-row"><label>2330 月定額</label><input type="number" id="mc-tw2330" value="25600" min="0" step="100"><span class="mc-unit">TWD/月</span></div>
-  <div class="mc-tw-row"><label>台股現有部位</label><input type="number" id="mc-twExisting" value="78" min="0" step="1"><span class="mc-unit">萬 TWD（006208+2330）</span></div>
-</div>
-
-<div class="mc-sec">報酬率假設 — 美股</div>
-<div class="mc-sl"><label>年化均值</label><input type="range" id="mc-retMean" min="3" max="18" step="0.5" value="9"><span class="mc-val" id="mc-retMeanV">9.0%</span><span class="mc-tip">S&P500 歷史均值 ~9%</span></div>
-<div class="mc-sl"><label>標準差</label><input type="range" id="mc-retStd" min="5" max="35" step="0.5" value="17"><span class="mc-val" id="mc-retStdV">17.0%</span><span class="mc-tip">S&P500 歷史 σ ~15–18%</span></div>
-
-<div class="mc-sec">報酬率假設 — 台股</div>
-<div class="mc-sl"><label>006208 均值</label><input type="range" id="mc-ret006208" min="3" max="25" step="0.5" value="12"><span class="mc-val" id="mc-ret006208V">12.0%</span><span class="mc-tip">歷史 15年實績 ~15–16%</span></div>
-<div class="mc-sl"><label>006208 標準差</label><input type="range" id="mc-std006208" min="10" max="45" step="0.5" value="27"><span class="mc-val" id="mc-std006208V">27.0%</span><span class="mc-tip">實測年化 σ ~27%</span></div>
-<div class="mc-sl"><label>2330 均值</label><input type="range" id="mc-ret2330" min="3" max="35" step="0.5" value="14"><span class="mc-val" id="mc-ret2330V">14.0%</span><span class="mc-tip">歷史 15年實績 ~25–27%</span></div>
-<div class="mc-sl"><label>2330 標準差</label><input type="range" id="mc-std2330" min="15" max="55" step="0.5" value="37"><span class="mc-val" id="mc-std2330V">37.0%</span><span class="mc-tip">單股估計 ~35–40%</span></div>
-
-<div class="mc-sec">其他假設</div>
-<div class="mc-sl"><label>崩跌機率（每年）</label><input type="range" id="mc-crashProb" min="0" max="20" step="1" value="5"><span class="mc-val" id="mc-crashProbV">5%</span><span class="mc-tip">歷史約 4–6%/年</span></div>
-<div class="mc-sl"><label>崩跌幅度（最深）</label><input type="range" id="mc-crashDepth" min="20" max="60" step="5" value="40"><span class="mc-val" id="mc-crashDepthV">-40%</span><span class="mc-tip">2008: -57%，2020: -34%</span></div>
-<div class="mc-sl"><label>USD/TWD 匯率</label><input type="range" id="mc-fxRate" min="28" max="36" step="0.5" value="32"><span class="mc-val" id="mc-fxRateV">32.0</span><span class="mc-tip">近年區間 29–33</span></div>
-<div class="mc-sl"><label>通膨率</label><input type="range" id="mc-inflation" min="1" max="5" step="0.5" value="2.5"><span class="mc-val" id="mc-inflationV">2.5%</span><span class="mc-tip">台灣近 10年 ~1.5–2.5%</span></div>
-<div class="mc-sl"><label>模擬次數</label><input type="range" id="mc-simN" min="1000" max="20000" step="1000" value="10000"><span class="mc-val" id="mc-simNV">10,000</span><span class="mc-tip"></span></div>
-
-<button class="mc-run-btn" onclick="mcRunSim()">執行模擬</button>
+<div class="mc-sec">蒙地卡羅（歷史重抽 × 退休提領）</div>
+<div class="mc-sl"><label>當前年齡</label><input type="range" id="mc-curAge" min="25" max="55" step="1" value="36"><span class="mc-val" id="mc-curAgeV">36 歲</span><span class="mc-tip"></span></div>
+<div class="mc-sl"><label>當前資產（萬 TWD）</label><input type="range" id="mc-initAsset" min="50" max="2000" step="5" value="280"><span class="mc-val" id="mc-initAssetV">280 萬</span><span class="mc-tip">同步持股後自動帶入</span></div>
+<div class="mc-sl"><label>每月投入（萬 TWD）</label><input type="range" id="mc-dca" min="0" max="20" step="0.5" value="4.5"><span class="mc-val" id="mc-dcaV">4.5 萬</span><span class="mc-tip"></span></div>
+<div class="mc-sl"><label>投入年增率</label><input type="range" id="mc-dcaGrow" min="0" max="8" step="0.5" value="0"><span class="mc-val" id="mc-dcaGrowV">0.0%</span><span class="mc-tip">加薪後提高投入</span></div>
+<div class="mc-sl"><label>退休年齡</label><input type="range" id="mc-retAge" min="40" max="65" step="1" value="52"><span class="mc-val" id="mc-retAgeV">52 歲</span><span class="mc-tip">停止投入、開始提領</span></div>
+<div class="mc-sl"><label>退休月支出（今日幣值）</label><input type="range" id="mc-spend" min="3" max="30" step="0.5" value="10"><span class="mc-val" id="mc-spendV">10.0 萬</span><span class="mc-tip">每年依通膨調升</span></div>
+<div class="mc-sl"><label>通膨率</label><input type="range" id="mc-inflation" min="0" max="5" step="0.5" value="2"><span class="mc-val" id="mc-inflationV">2.0%</span><span class="mc-tip">台灣近 10 年 ~1.5–2.5%</span></div>
+<div class="mc-sl"><label>報酬打折（每年）</label><input type="range" id="mc-haircut" min="0" max="6" step="0.5" value="2"><span class="mc-val" id="mc-haircutV">-2.0 pp</span><span class="mc-tip">未來不如過去 20 年</span></div>
+<div class="mc-sl"><label>衛星比例（45 歲前）</label><input type="range" id="mc-sat" min="0" max="70" step="5" value="30"><span class="mc-val" id="mc-satV">30%</span><span class="mc-tip">個股部位，上限規則 30%</span></div>
+<div class="mc-sl"><label>衛星個股額外波動</label><input type="range" id="mc-satNoise" min="0" max="40" step="5" value="15"><span class="mc-val" id="mc-satNoiseV">15%</span><span class="mc-tip">個股相對產業的分散不足</span></div>
+<div class="mc-sl"><label>現金緩衝（年支出）</label><input type="range" id="mc-buffer" min="0" max="5" step="0.5" value="2"><span class="mc-val" id="mc-bufferV">2.0 年</span><span class="mc-tip">股市跌年先用現金</span></div>
+<div class="mc-sl"><label>模擬次數</label><input type="range" id="mc-simN" min="1000" max="20000" step="1000" value="5000"><span class="mc-val" id="mc-simNV">5,000</span><span class="mc-tip"></span></div>
+<label class="mc-chk"><input type="checkbox" id="mc-glideSmh" checked>45 歲起 SMH 每年降 2 個百分點，轉入 VTI</label>
+<label class="mc-chk"><input type="checkbox" id="mc-glideSat" checked>衛星下滑：45 歲起最多 15%，退休後最多 10%</label>
+<button class="mc-run-btn" id="mc-run">執行模擬</button>
 
 <div id="mc-results" style="display:none;">
   <div class="mc-metrics" id="mc-metricsGrid"></div>
-  <div class="mc-chart-title">資產路徑分布</div>
+  <div class="mc-chart-title">各方案對照（相同亂數，<span id="mc-cmpN"></span> 次）</div>
+  <div class="mc-scroll"><table class="mc-tbl" id="mc-cmpTable"></table></div>
+  <div class="mc-chart-title">資產路徑分布（今日幣值）</div>
   <div class="mc-legend">
-    <span><i style="background:#f87171;"></i>P10（最差10%）</span>
+    <span><i style="background:#f87171;"></i>P10（最差 10%）</span>
     <span><i style="background:#34d399;height:3px;"></i>P50（中位數）</span>
-    <span><i style="background:#38bdf8;"></i>P90（最佳10%）</span>
-    <span><i style="background:#fbbf24;"></i>FIRE 目標</span>
+    <span><i style="background:#38bdf8;"></i>P90（最佳 10%）</span>
+    <span><i style="background:#fbbf24;"></i>FIRE 門檻（年支出 × 25）</span>
   </div>
   <div class="mc-chart-wrap" style="height:280px;"><canvas id="mc-pathChart" role="img" aria-label="蒙地卡羅資產路徑分布圖"></canvas></div>
-  <div class="mc-chart-title" style="margin-top:1.5rem;">FIRE 達成年齡分布（綠＝50歲前）</div>
+  <div class="mc-chart-title">FIRE 達成年齡分布（綠＝設定的退休年齡以前）</div>
   <div class="mc-chart-wrap" style="height:200px;"><canvas id="mc-ageChart" role="img" aria-label="FIRE 達成年齡直方圖"></canvas></div>
-  <div class="mc-chart-title" style="margin-top:1.5rem;">最差 5% 路徑（Sequence of Returns Risk）</div>
-  <div class="mc-chart-wrap" style="height:200px;"><canvas id="mc-worstChart" role="img" aria-label="最差5%路徑資產曲線"></canvas></div>
+  <div class="mc-chart-title">最差 5% 路徑（Sequence of Returns Risk）</div>
+  <div class="mc-chart-wrap" style="height:200px;"><canvas id="mc-worstChart" role="img" aria-label="最差 5% 路徑資產曲線"></canvas></div>
+</div>
+<div class="mc-note">
+資料：Yahoo Finance 月收盤含息調整價，美元 ETF 依當月 USD/TWD 換成台幣（含匯率變動）。006208 以 0050 代替，2009/1 前以加權指數＋年 3.5% 股息估算；SMH 2011/12 前為 HOLDRS 結構、配息未計。未計費用與美股股息 30% 預扣稅（約 -0.3~0.5 pp/年）。<br>
+模擬：每年隨機抽一段真實的連續 12 個月（四檔同一段，保留相關性與崩盤），再扣「報酬打折」。衛星以 QQQ 40% / SMH 30% / 台灣 50 30% 代理，加上個股額外波動。每年再平衡。退休後股市下跌的年份先用現金緩衝，上漲年份補回。成功＝資產撐到 90 歲。
 </div>
 </div>
 </main>
@@ -1048,7 +1065,7 @@ const FRED_SERIES={
 // ⚠️ async 函數必須定義在呼叫者之前（參見 v4.4.3 修正記錄）
 
 let WATCHLIST=[];
-const VERSION='v4.24.0';
+const VERSION='v4.25.0';
 const AI_MODEL='claude-sonnet-5-5'; // v4.22.1：所有 AI 呼叫統一用這個常數，之後換模型只改這行（Worker 白名單要同步放行）
 let _appToken=''; // Worker 共用密碼（Sheets 設定!H1），只存記憶體
 function proxyHeaders(){const h={'Content-Type':'application/json'};if(_appToken)h['X-App-Token']=_appToken;return h;}
@@ -1062,6 +1079,7 @@ let earningsData={}; // { ticker: { date, daysLeft } }
 
 // === CHANGELOG DATA ===
 const CHANGELOG_DATA=[
+  {v:'4.25.0',date:'2026-11-26',notes:'✦ 蒙地卡羅頁改版：頂部新增核心配置拉霸（VTI／QQQ／006208／SMH，預設讀 Sheets 核心配置，含現行 A／保守／平衡／積極預設），回測與模擬共用<br>✦ 歷史回測：台幣含息 5／10／15／20 年，年化、期末金額、最大回檔、波動對比現行 A；金額曲線懸停顯示各配置金額與相對現行 A 的差距；方案對照表與「往後滾 5～20 年」試算（同長度歷史／20 年歷史／自訂年化）<br>✦ 蒙地卡羅改為歷史 12 個月區塊重抽（四檔同一段，保留相關性與崩盤），可設報酬打折；新增退休提領階段（月支出依通膨調升、現金緩衝在跌年先用），指標改為「資產撐到 90 歲機率」，並以相同亂數比較各方案在退休年齡 ±2～3 年的成功率<br>✦ 下滑規則可選：45 歲起 SMH 每年降 2pp 轉 VTI；衛星 45 歲起 ≤15%、退休後 ≤10%<br>✦ 「套用為核心配置」兩段式確認後寫入 Sheets 核心配置!A2:C10（RAW，006208 保留前導 0）<br>✦ 修正：核心配置代號 6208 補回 006208，避免 006208 被誤算為衛星；舊版「50 歲前 FIRE 機率」實際計算 55 歲的標示錯誤隨舊模組移除'},
   {v:'4.24.0',date:'2026-11-26',notes:'✦ 市場溫度計 SPX／NDX／SOX 懸停卡改依 Sheets 持股資訊 W 欄「指數歸屬」（SPX/NDX/SOX/SOX-相關/TW）分組，每檔只歸一張卡片，三張曝險可直接相加<br>✦ 修正：VTI 原本依交易所前綴（NYSEARCA）被算進 NDX，NDX 曝險灌到 64.8%；SKHY／AMKR／STX 改列 SOX「相關曝險」（依 Nasdaq 2026/11 成分股名單，三檔都不是 SOX 成分股）<br>✦ 卡片內分三層：成分股／追蹤 ETF／相關曝險，新增「佔組合 %」欄與欄位表頭<br>✦ 同代號合併（股數相加、成本加權平均），GOOG 定期／手動不再出現兩列<br>✦ SOX 卡片分列「直接曝險（成分股＋ETF）」與「含相關曝險」，並提示 006208 內含台積電未計入<br>✦ W 欄空白時前端依舊規則推斷（半導體白名單→SOX、台股→TW、NYSE→SPX、其餘→NDX），不寫回 Sheets'},
   {v:'4.23.0',date:'2026-11-25',notes:'✦ 核心／衛星架構：新增 Sheets「核心配置」分頁（A2:B10 核心代號與目標％，F2 衛星上限、F3/F4 C 規則門檻），預設核心 A＝VTI 45／QQQ 30／006208 25，讀不到時沿用預設<br>✦ 觀察清單「配置進度」：原「成長型股票／持有ETF」兩卡（65/35 舊目標）隱藏，改顯示「核心 ETF」佔持股比與下一筆該投的標的、「衛星比重」對上限（超出顯示金額）<br>✦ 持股頁新增「核心／衛星配置」面板：核心逐檔顯示目前／目標／還差（以目前核心規模計，⭐＝最低於目標）；衛星逐檔顯示佔比、MOS 與 C 規則訊號（MOS＜−20% 轉 1/3、＜−40% 再轉 1/3、論文失效全轉），並提示約略金額與轉入標的<br>✦ 配置健診第 6 格「配置達成率」改為「核心／衛星」：衛星超過上限紅燈、核心任一檔偏離 >5pp 黃燈<br>✦ 不在核心清單的持股一律視為衛星（含 SMH）；現金類不計入；無 DCF 分頁的衛星不判斷 MOS'},
   {v:'4.22.3',date:'2026-11-25',notes:'✦ 配置健診「集中度」改為先依代號合併再取前 3 大（GOOG 定期＋手動、MSFT 定期＋手動不再拆成兩筆而被低估）<br>✦ 「地區分布」目標改讀 Sheets 設定!B12（US 目標％，可填 70、70% 或 0.7）；空白或格式錯誤時沿用 70%，說明列顯示目前目標<br>✦ 成長曲線：讀取資產快照時自動排除離群值（與前後各 3 筆的中位數相差 >35% 不畫入，Sheets 原始資料不動，console 會列出被排除的日期）<br>✦ 成長曲線「實際總資產」改名「持股市值（不含現金）」，與快照 B 欄實際口徑一致'},
@@ -1611,6 +1629,7 @@ function showPage(name,btn){
   if(name==='holdings')loadHoldings();
   if(name==='risk')initRiskPage();
   if(name==='health')renderHealthPage(lastMeta);
+  if(name==='monte'&&window.mcOnShow)window.mcOnShow();
 }
 
 // === SETTINGS ===
@@ -2136,7 +2155,8 @@ async function fetchCoreConfig(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();const vr=d.valueRanges||[];
     const num=s=>{const v=parseFloat(String(s==null?'':s).replace(/[%,\s]/g,''));return isNaN(v)?null:v;};
-    const tg=(vr[0]?.values||[]).map(row=>({ticker:String(row[0]||'').replace(/\s/g,''),pct:num(row[1])})).filter(x=>x.ticker&&x.pct!=null&&x.pct>0);
+    const normTk=t=>(!TW_TICKERS.includes(t)&&/^\d{1,5}$/.test(t)&&TW_TICKERS.includes(t.padStart(6,'0')))?t.padStart(6,'0'):t; // v4.25.0：Sheets 把 006208 存成 6208 時補回前導 0
+    const tg=(vr[0]?.values||[]).map(row=>({ticker:normTk(String(row[0]||'').replace(/\s/g,'')),pct:num(row[1])})).filter(x=>x.ticker&&x.pct!=null&&x.pct>0);
     if(tg.length){const sum=tg.reduce((s,x)=>s+x.pct,0);coreCfg.targets=tg.map(x=>({ticker:x.ticker,pct:x.pct/sum*100}));coreCfg.src='Sheets';}
     const pv=(vr[1]?.values||[]).map(row=>num(row[0]));
     let cap=pv[0];if(cap!=null){if(cap>0&&cap<=1)cap*=100;if(cap>0&&cap<=100)coreCfg.satCap=cap;}
@@ -4243,187 +4263,238 @@ if(document.getElementById('page-risk')&&document.getElementById('page-risk').cl
 init();
 </script>
 <script>
+// === v4.25.0 蒙地卡羅 × 核心配置回測 ===
 (function(){
-let mcStages=[{from:35,to:42,monthly:1500,growRate:0},{from:42,to:55,monthly:1500,growRate:0}];
-let mcCharts={};
+const H={"d":["2006-11","2006-12","2007-01","2007-02","2007-03","2007-04","2007-05","2007-06","2007-07","2007-08","2007-09","2007-10","2007-11","2007-12","2008-01","2008-02","2008-03","2008-04","2008-05","2008-06","2008-07","2008-08","2008-09","2008-10","2008-11","2008-12","2009-01","2009-02","2009-03","2009-04","2009-05","2009-06","2009-07","2009-08","2009-09","2009-10","2009-11","2009-12","2010-01","2010-02","2010-03","2010-04","2010-05","2010-06","2010-07","2010-08","2010-09","2010-10","2010-11","2010-12","2011-01","2011-02","2011-03","2011-04","2011-05","2011-06","2011-07","2011-08","2011-09","2011-10","2011-11","2011-12","2012-01","2012-02","2012-03","2012-04","2012-05","2012-06","2012-07","2012-08","2012-09","2012-10","2012-11","2012-12","2013-01","2013-02","2013-03","2013-04","2013-05","2013-06","2013-07","2013-08","2013-09","2013-10","2013-11","2013-12","2014-01","2014-02","2014-03","2014-04","2014-05","2014-06","2014-07","2014-08","2014-09","2014-10","2014-11","2014-12","2015-01","2015-02","2015-03","2015-04","2015-05","2015-06","2015-07","2015-08","2015-09","2015-10","2015-11","2015-12","2016-01","2016-02","2016-03","2016-04","2016-05","2016-06","2016-07","2016-08","2016-09","2016-10","2016-11","2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10","2026-11"],"r":{"VTI":[0.01968,0.03049,-0.01565,0.01412,0.0473,0.03008,-0.0255,-0.03299,0.0178,0.026,0.00896,-0.04661,-0.00171,-0.06832,-0.06402,-0.02482,0.05092,0.01765,-0.08308,0.00381,0.04589,-0.07129,-0.15716,-0.07123,0.00285,-0.05667,-0.07073,0.04777,0.08434,0.03742,0.01169,0.07704,0.04027,0.01158,-0.00681,0.04427,0.02033,-0.03656,0.03796,0.05432,0.00701,-0.05998,-0.04926,0.06157,-0.04592,0.06625,0.02425,-0.00144,0.01839,0.01767,0.06688,-0.00643,0.00086,-0.00906,-0.01389,-0.02436,-0.05371,-0.02825,0.08882,0.01364,0.00678,0.03403,0.03448,0.02824,-0.01547,-0.04588,0.04185,0.01757,0.0236,0.00333,-0.02175,0.0036,0.01153,0.07198,0.0159,0.02122,0.00243,0.04268,-0.00512,0.07565,-0.05418,0.02284,0.0405,0.03303,0.06651,-0.0204,0.04866,-0.01633,-0.00791,0.03863,0.02285,-0.01558,0.01512,-0.00613,0.02666,0.04081,0.04887,-0.03037,0.05729,-0.01561,-0.01585,0.01641,-0.00471,0.03101,-0.02629,-0.01382,0.05512,-0.01968,-0.01262,-0.03902,-0.00081,0.06548,-0.02919,0.06258,-0.007,-0.00822,0.03046,-0.00866,-0.01469,0.05162,0.03997,-0.01482,0.01299,-0.011,0.007,0.00707,0.01803,0.01508,-0.00201,0.03222,0.01554,0.02307,0.00081,0.03702,-0.03582,-0.02971,0.02415,0.03959,0.02971,0.03329,0.03808,-0.00529,-0.06204,0.01299,-0.0944,0.09144,0.03741,0.01621,0.04104,-0.04376,0.04745,0.01852,-0.013,0.01005,-0.00585,0.04866,0.01272,0.00374,-0.08246,-0.14154,0.11626,0.06567,0.00429,0.04839,0.07735,-0.0499,-0.03729,0.12404,0.03032,-0.0058,0.02603,0.05829,0.02543,-0.00072,0.03431,0.01917,0.02136,-0.04177,0.06704,-0.01712,0.03468,-0.05488,-0.02011,0.05338,-0.06238,-0.02295,-0.05577,0.10608,-0.0235,-0.0567,0.09765,0.01344,-0.06763,0.04997,-0.00771,0.01882,0.02389,-0.00176,0.0867,0.0445,-0.00538,-0.03507,-0.02597,0.05417,0.03983,0.02689,0.06951,0.04167,-0.02822,0.04508,0.03543,0.02705,-0.00255,0.00688,0.00161,0.08621,-0.02081,0.03594,-0.01998,-0.05042,-0.0332,-0.01701,0.02325,0.04867,0.04877,0.03062,0.03124,0.02374,-0.00451,0.02684,-0.01587,-0.02596,0.0898,0.0447,0.01055,0.01158,0.00262,-0.00081,0.01645,-0.03834],"QQQ":[-0.01135,0.03299,-0.0162,0.00814,0.06301,0.02442,-0.00326,0.00096,0.03132,0.03989,0.06099,-0.06896,0.00455,-0.12515,-0.08643,0.00241,0.08196,0.0567,-0.09799,0.0166,0.0458,-0.13612,-0.13667,-0.10604,0.00789,0.00242,-0.01611,0.06755,0.10457,0.01525,0.03775,0.08406,0.01779,0.0263,-0.01112,0.05075,0.04353,-0.06558,0.04964,0.06736,0.00761,-0.05498,-0.05063,0.06393,-0.05011,0.10238,0.04701,-0.00823,-0.00258,0.02544,0.06135,-0.01501,0.00064,-0.01064,-0.01616,0.01489,-0.04344,0.00415,0.07941,-0.00995,-0.00909,0.06698,0.05624,0.04804,-0.02075,-0.05417,0.03761,0.0188,0.04835,-0.01236,-0.05635,0.00892,-0.00604,0.04405,0.0065,0.01215,0.01162,0.05422,-0.01479,0.08143,-0.02848,0.03205,0.04738,0.04157,0.06852,-0.00777,0.05153,-0.04807,-0.01168,0.06288,0.02786,0.01633,0.02349,0.00747,0.02562,0.06179,0.02577,-0.02386,0.07207,-0.02753,-0.00306,0.02595,-0.0129,0.05997,-0.03389,-0.00655,0.08894,-0.01961,-0.00729,-0.05112,-0.01635,0.06292,-0.06628,0.09011,-0.03227,0.02206,0.03914,0.01127,-0.00729,0.01081,0.03125,0.01695,0.01963,0.00849,0.02357,0.03584,-0.0149,0.03681,0.01716,0.00466,0.03976,0.01256,-0.00471,0.07176,-0.0111,-0.05065,0.02473,0.06946,0.03422,0.02806,0.06165,-0.01003,-0.07404,-0.00963,-0.08926,0.09617,0.03172,0.04134,0.05681,-0.0619,0.05246,0.02779,-0.01115,0.0015,0.01629,0.05151,0.02338,0.03487,-0.06309,-0.07575,0.13442,0.07785,0.04344,0.06429,0.11597,-0.07197,-0.04805,0.11823,0.03254,0.00014,-0.00653,0.03857,0.03396,-0.01721,0.07247,0.03043,0.03487,-0.054,0.07881,0.01736,0.00835,-0.08192,-0.0401,0.06774,-0.10844,-0.03603,-0.06273,0.13849,-0.03774,-0.07026,0.0559,0.01706,-0.09891,0.08648,0.01305,0.08613,0.01812,0.07237,0.08238,0.04648,-0.00084,-0.03789,-0.02016,0.06769,0.04272,0.03402,0.06935,0.02165,-0.02852,0.05898,0.06949,-0.00893,-0.01259,0.01271,0.00047,0.07247,0.01448,0.0272,-0.02812,-0.06788,-0.01243,0.01005,0.03515,0.05004,0.03445,0.05011,0.05718,0.00509,-0.01092,0.0233,-0.03384,-0.02426,0.14201,0.09818,0.01294,-0.05023,0.01709,0.0405,-0.04445,-0.0712],"TW":[0.03684,-0.01299,0.02927,0.00069,0.00177,0.03724,0.09382,0.04853,-0.03003,0.05091,0.03482,-0.11326,-0.00644,-0.11324,0.12181,0.02197,0.04355,-0.03091,-0.12456,-0.06367,0.00607,-0.18594,-0.14589,-0.08154,0.03231,-0.07206,0.08361,0.10862,0.15038,0.13879,-0.07375,0.10256,-0.01163,0.1001,-0.03096,0.02033,0.07116,-0.06112,-0.02736,0.05238,0.01014,-0.08577,-0.01098,0.08779,-0.01113,0.08255,-0.02946,0.01964,0.07531,0.02606,0.01032,-0.06442,0.04114,0.0,-0.05081,0.01784,-0.08932,-0.05316,0.01065,-0.07893,0.03598,0.04296,0.07796,-0.01964,-0.05191,-0.0365,0.001,0.01793,0.03229,0.0455,-0.08613,0.0625,0.00467,0.01487,0.01099,-0.00181,0.02359,0.00975,-0.03248,0.02722,-0.01325,0.02328,0.03697,-0.00605,0.01998,-0.01874,0.01215,0.03087,0.01498,0.03443,0.04517,0.01213,0.0367,-0.05636,0.10535,0.03369,-0.00963,0.0172,0.03382,-0.01778,0.03476,-0.0049,-0.02391,-0.04683,-0.0582,0.00161,0.04452,-0.03164,-0.00735,-0.02881,0.03814,0.05551,-0.04718,0.02516,0.03642,0.0603,0.0124,0.02233,0.02326,-0.0124,0.00139,0.02089,0.02165,0.00752,0.01153,0.02616,0.05098,0.02052,0.01967,-0.02773,0.05642,-0.03462,-0.00122,0.05701,-0.02717,0.00729,-0.03556,0.00937,0.00867,0.0591,0.01637,-0.00057,-0.10759,-0.01032,-0.01629,0.01529,0.04439,0.01932,0.04612,-0.05254,0.03123,0.03222,-0.01147,0.0336,0.06501,0.01554,0.05956,-0.04206,-0.01445,-0.141,0.12278,-0.01228,0.06453,0.16301,-0.01927,0.01179,0.0,0.1,0.07899,0.07153,0.04056,0.01012,0.04341,-0.02489,0.01349,-0.01837,0.03161,-0.02351,-0.00912,0.0162,0.05435,-0.00581,-0.02155,-0.00289,-0.06771,0.00816,-0.10786,0.03513,-0.00144,-0.12032,-0.04253,0.17466,-0.05286,0.09767,0.00423,0.02357,-0.03454,0.07453,0.02338,0.01225,-0.02407,-0.02426,-0.01223,0.08419,0.03121,0.01501,0.06662,0.10119,0.00285,0.04897,0.12319,-0.02508,0.00277,0.01434,0.04267,-0.02372,0.04539,0.04257,-0.04372,-0.1026,-0.02402,0.06613,0.07616,0.07347,0.01843,0.10095,0.12024,-0.03707,0.05212,0.12233,0.11777,-0.10844,0.25086,0.16464,0.02277,-0.04011,0.03306,0.05459,-0.06337,-0.11529],"SMH":[-0.01867,0.01707,0.01835,-0.02741,0.10389,-0.00419,0.0282,-0.00494,0.00623,-0.00131,-0.10404,-0.06779,0.00962,-0.13893,-0.02642,-0.01016,0.06652,0.06541,-0.09374,-0.04916,0.05263,-0.11317,-0.14199,-0.19079,0.04352,-0.01432,0.01095,0.09874,0.06944,0.01396,0.02471,0.16282,0.02315,-0.02208,-0.03691,0.03991,0.08777,-0.11401,0.0691,0.04692,0.02511,-0.0348,-0.04552,0.04819,-0.1128,0.11213,0.04856,0.04567,-0.00281,0.05488,0.06979,-0.04348,0.03175,-0.02027,-0.04646,-0.0609,-0.0835,0.0254,0.09115,-0.01686,-0.01077,0.08407,0.02163,0.03522,-0.04265,-0.08608,0.03873,0.00905,0.01924,-0.06055,-0.02107,0.02632,0.02953,0.07885,0.02703,-0.0061,0.0288,0.05188,-0.00643,0.04068,-0.06053,0.05711,0.03019,0.00609,0.08668,-0.01838,0.06024,0.02263,-0.02895,0.05528,0.06448,-0.01036,0.03303,0.00357,0.00568,0.09719,0.04368,-0.0376,0.08027,-0.03323,-0.01904,0.08209,-0.07644,-0.03119,-0.01482,0.02264,0.06264,0.00304,-0.01587,-0.04879,0.01356,0.08647,-0.08142,0.13287,-0.00779,0.06244,0.07222,0.03809,-0.01001,0.04755,0.03631,0.00504,0.00248,0.03141,-0.00372,0.07567,-0.03996,0.04478,0.0283,0.06155,0.08227,-0.02031,-0.02099,0.07312,0.00213,-0.03128,-0.05004,0.11653,-0.02061,0.03146,0.03254,-0.02993,-0.11059,0.02796,-0.08323,0.11283,0.07166,0.03111,0.09517,-0.13627,0.09721,0.06733,-0.01499,0.03324,0.04197,0.05335,0.06383,-0.02292,-0.04328,-0.11514,0.12642,0.0663,0.06366,0.07852,0.06125,-0.02162,-0.01392,0.1988,0.03775,0.03494,0.05775,0.03206,-0.02594,0.02008,0.06212,0.00521,0.022,-0.05092,0.06795,0.11139,0.01499,-0.10271,-0.02157,0.02637,-0.12091,0.04229,-0.14292,0.17751,-0.0823,-0.10341,0.03777,0.15975,-0.10741,0.14726,0.02657,0.09054,-0.04838,0.16048,0.07407,0.06298,-0.01358,-0.05933,-0.04111,0.11274,0.08259,0.07943,0.1582,0.07085,-0.0333,0.12058,0.08896,-0.04503,-0.03732,-0.00509,-0.0063,0.01989,0.01454,0.01147,-0.0456,-0.08366,-0.02691,0.0498,0.13182,0.06159,0.03003,0.12036,0.12228,-0.00918,0.02111,0.13249,-0.00351,-0.03261,0.30463,0.17395,0.11093,-0.1622,0.00534,0.10183,-0.12168,-0.18201]}}; // d: 月份(YYYY-MM)，r: 各資產月報酬（台幣含息），r[k][i] = d[i]→d[i+1]
+const KEYS=['VTI','QQQ','TW','SMH'];
+const NAMES={VTI:'VTI',QQQ:'QQQ',TW:'006208',SMH:'SMH'};
+const DESC={VTI:'全美股市',QQQ:'那斯達克 100',TW:'台灣 50',SMH:'半導體'};
+const PRESETS=[{n:'現行 A',w:{VTI:45,QQQ:30,TW:25,SMH:0}},{n:'保守',w:{VTI:45,QQQ:25,TW:25,SMH:5}},{n:'平衡',w:{VTI:40,QQQ:25,TW:25,SMH:10}},{n:'積極',w:{VTI:35,QQQ:25,TW:25,SMH:15}}];
+const PERIODS=[{n:'5 年',s:'2021-11',y:5},{n:'10 年',s:'2016-11',y:10},{n:'15 年',s:'2011-11',y:15},{n:'20 年',s:'2006-11',y:20}];
+const LINE={me:'#38bdf8',A:'#e2eaf4',B:'#a78bfa',C:'#34d399'};
+let W={VTI:45,QQQ:30,TW:25,SMH:0},per=1,inited=false,charts={},applyArmed=false;
+const $=id=>document.getElementById(id);
+const pct=(x,d=1)=>(x*100).toFixed(d)+'%';
+const wan=x=>{const v=x/1e4;return Math.abs(v)>=1e4?(v/1e4).toFixed(2)+' 億':Math.round(v).toLocaleString()+' 萬';};
+const num=id=>+($(id)?.value||0);
 
-function mcRenderStages(){
-  const c=document.getElementById('mc-dcaStages');
-  if(!c)return;
-  c.innerHTML='';
-  mcStages.forEach((s,i)=>{
-    const d=document.createElement('div');
-    d.className='mc-dca-stage';
-    const mkInp=(val,field,min,max,step)=>{
-      const el=document.createElement('input');
-      el.type='number';el.value=val;el.min=min;el.max=max;
-      if(step!==undefined)el.step=step;
-      el.addEventListener('input',function(){mcStages[i][field]=+this.value;});
-      return el;
-    };
-    d.appendChild(mkInp(s.from,'from',20,70));
-    d.appendChild(mkInp(s.to,'to',20,70));
-    d.appendChild(mkInp(s.monthly,'monthly',0,10000));
-    d.appendChild(mkInp(s.growRate,'growRate',0,20,0.5));
-    const btn=document.createElement('button');
-    btn.className='mc-del-btn';btn.textContent='✕';
-    btn.addEventListener('click',function(){mcDelStage(i);});
-    d.appendChild(btn);
-    c.appendChild(d);
+// ── 歷史回測 ──
+function bt(w,start,reb,init,dca){
+  const i0=H.d.indexOf(start),tot=KEYS.reduce((s,k)=>s+(w[k]||0),0)||1;
+  let h={};KEYS.forEach(k=>h[k]=init*(w[k]||0)/tot);
+  const vals=[init],put=[init];let paid=init;
+  for(let i=i0;i<H.d.length-1;i++){
+    KEYS.forEach(k=>h[k]*=1+H.r[k][i]);
+    let v=KEYS.reduce((s,k)=>s+h[k],0);
+    if(dca>0){KEYS.forEach(k=>h[k]+=dca*(w[k]||0)/tot);v+=dca;paid+=dca;}
+    vals.push(v);put.push(paid);
+    const m=H.d[i+1].slice(5);
+    if(reb==='monthly'||(reb==='annual'&&m==='12'))KEYS.forEach(k=>h[k]=v*(w[k]||0)/tot);
+  }
+  let tw=1,mr=[];
+  for(let j=1;j<vals.length;j++){const c=put[j]-put[j-1];const r=vals[j-1]>0?(vals[j]-c)/vals[j-1]-1:0;mr.push(r);tw*=1+r;}
+  const yrs=(vals.length-1)/12,cagr=Math.pow(tw,1/yrs)-1;
+  const mean=mr.reduce((a,b)=>a+b,0)/mr.length,vol=Math.sqrt(mr.reduce((a,b)=>a+(b-mean)**2,0)/mr.length)*Math.sqrt(12);
+  let x=1,pk=1,mdd=0;mr.forEach(r=>{x*=1+r;pk=Math.max(pk,x);mdd=Math.min(mdd,x/pk-1);});
+  return{cagr,vol,mdd,mult:tw,vals,put,end:vals[vals.length-1],paid};
+}
+
+function renderControls(){
+  $('mc-presets').innerHTML=PRESETS.map((p,i)=>`<button data-p="${i}">${p.n}（${KEYS.map(k=>p.w[k]).join('/')}）</button>`).join('')+'<button data-p="sheet">Sheets 核心配置</button>';
+  $('mc-faders').innerHTML=KEYS.map(k=>`<div class="mc-sl"><label>${NAMES[k]} <span style="color:var(--text-muted)">${DESC[k]}</span></label><input type="range" id="mc-w-${k}" min="0" max="100" step="5"><span class="mc-val" id="mc-w-${k}V"></span><span class="mc-tip"></span></div>`).join('');
+  $('mc-periods').innerHTML=PERIODS.map((p,i)=>`<button data-i="${i}">${p.n}</button>`).join('');
+}
+function weightsFromSheets(){
+  const w={VTI:0,QQQ:0,TW:0,SMH:0};let other=[];
+  (typeof coreCfg!=='undefined'?coreCfg.targets:[]).forEach(t=>{
+    const tk=String(t.ticker).replace(/^0+/,'');
+    const k=tk==='6208'||tk==='50'?'TW':KEYS.includes(t.ticker)?t.ticker:null;
+    if(k)w[k]+=Math.round(t.pct);else other.push(t.ticker);
   });
+  return{w,other};
+}
+function syncFaders(){KEYS.forEach(k=>{$('mc-w-'+k).value=W[k];});refreshAll();}
+function wsum(){
+  const tot=KEYS.reduce((s,k)=>s+W[k],0);
+  KEYS.forEach(k=>{$('mc-w-'+k+'V').textContent=W[k]+'%'+(tot&&tot!==100?' → '+(W[k]/tot*100).toFixed(0)+'%':'');});
+  const el=$('mc-wsum');el.textContent=tot===100?'合計 100%':`合計 ${tot}%，計算時自動等比例換算成 100%`;el.className='mc-wsum'+(tot===100?'':' bad');
+  document.querySelectorAll('#mc-presets button').forEach(b=>{const p=PRESETS[+b.dataset.p];b.classList.toggle('on',!!p&&KEYS.every(k=>p.w[k]===W[k]));});
+}
+function refreshAll(){wsum();renderBacktest();renderProj();}
+
+function renderBacktest(){
+  document.querySelectorAll('#mc-periods button').forEach(b=>b.classList.toggle('on',+b.dataset.i===per));
+  const reb=$('mc-reb').value,init=Math.max(1,num('mc-initAsset'))*1e4,dca=num('mc-dca')*1e4,start=PERIODS[per].s;
+  const runs=[{n:'你的配置',c:LINE.me,r:bt(W,start,reb,init,dca)},{n:'現行 A',c:LINE.A,r:bt(PRESETS[0].w,start,reb,init,dca)},{n:'保守',c:LINE.B,r:bt(PRESETS[1].w,start,reb,init,dca)},{n:'平衡',c:LINE.C,r:bt(PRESETS[2].w,start,reb,init,dca)}];
+  const me=runs[0].r,A=runs[1].r;
+  const dd=(x,y)=>{const v=(x-y)*100;return(v>=0?'+':'')+v.toFixed(1)+' pp vs 現行 A';};
+  const de=me.end-A.end;
+  $('mc-btKpis').innerHTML=`
+    <div class="mc-card"><div class="mc-mlabel">年化報酬</div><div class="mc-mval" style="color:var(--accent)">${pct(me.cagr)}</div><div class="mc-msub">${dd(me.cagr,A.cagr)}</div></div>
+    <div class="mc-card"><div class="mc-mlabel">期末金額</div><div class="mc-mval">${wan(me.end)}</div><div class="mc-msub" style="color:${de>=0?'var(--red)':'var(--green)'}">${de>=0?'+':'−'}${wan(Math.abs(de))} vs 現行 A · 投入 ${wan(me.paid)}</div></div>
+    <div class="mc-card"><div class="mc-mlabel">最大回檔（月收）</div><div class="mc-mval">${pct(me.mdd)}</div><div class="mc-msub">${dd(me.mdd,A.mdd)}</div></div>
+    <div class="mc-card"><div class="mc-mlabel">年化波動</div><div class="mc-mval">${pct(me.vol)}</div><div class="mc-msub">${dd(me.vol,A.vol)}</div></div>`;
+  const i0=H.d.indexOf(start),labels=H.d.slice(i0);
+  if(charts.bt)charts.bt.destroy();
+  charts.bt=new Chart($('mc-btChart'),{type:'line',data:{labels,datasets:runs.map((x,i)=>({label:x.n,data:x.r.vals.map(v=>Math.round(v)),borderColor:x.c,borderWidth:i===0?2.5:1.4,pointRadius:0,tension:0,fill:false,order:i===0?0:1}))},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0d1526',borderColor:'#2a4570',borderWidth:1,titleFont:{family:'IBM Plex Mono',size:11},bodyFont:{family:'IBM Plex Mono',size:11},footerFont:{family:'IBM Plex Mono',size:10,weight:'normal'},footerColor:'#7a9abf',
+        callbacks:{label:ctx=>{const v=ctx.parsed.y,a=runs[1].r.vals[ctx.dataIndex];const d=v-a;return` ${ctx.dataset.label}  ${wan(v)}`+(ctx.datasetIndex===1?'  （基準）':`  ${d>=0?'+':'−'}${wan(Math.abs(d))}（${d>=0?'+':''}${(a?d/a*100:0).toFixed(1)}%）`);},
+          footer:items=>items.length?'累計投入 '+wan(runs[0].r.put[items[0].dataIndex]):''}}},
+      scales:{x:{ticks:{color:'#3d5875',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8,callback:function(v){return this.getLabelForValue(v).slice(0,4);}},grid:{color:'rgba(30,48,80,0.5)'}},
+        y:{type:'logarithmic',ticks:{color:'#3d5875',font:{size:10},callback:v=>{const s=String(v)[0];return(s==='1'||s==='2'||s==='5')?wan(v):'';}},grid:{color:'rgba(30,48,80,0.5)'}}}}});
+  // 方案對照表
+  const rows=[...PRESETS.map(p=>({n:p.n+'（'+KEYS.map(k=>p.w[k]).join('/')+'）',w:p.w})),{n:'你的配置（'+KEYS.map(k=>W[k]).join('/')+'）',w:W,me:1}];
+  $('mc-btTable').innerHTML='<thead><tr><th>方案 VTI/QQQ/006208/SMH</th>'+PERIODS.map(p=>`<th>${p.n}年化</th><th>倍數</th><th>回檔</th>`).join('')+'</tr></thead><tbody>'+
+    rows.map(r=>'<tr'+(r.me?' class="me"':'')+'><td>'+r.n+'</td>'+PERIODS.map(p=>{const x=bt(r.w,p.s,reb,1,0);return`<td>${pct(x.cagr)}</td><td>${x.mult.toFixed(2)}×</td><td>${pct(x.mdd)}</td>`;}).join('')+'</tr>').join('')+'</tbody>';
 }
 
-window.mcAddStage=function(){
-  const last=mcStages[mcStages.length-1];
-  mcStages.push({from:last?last.to:35,to:(last?last.to:35)+5,monthly:1500,growRate:0});
-  mcRenderStages();
-};
-
-window.mcDelStage=function(i){
-  if(mcStages.length>1){mcStages.splice(i,1);mcRenderStages();}
-};
-
-function mcBind(id,outId,fmt){
-  const el=document.getElementById(id);
-  if(!el)return;
-  el.addEventListener('input',function(){document.getElementById(outId).textContent=fmt(+this.value);});
+function renderProj(){
+  const reb=$('mc-reb').value,age=num('mc-curAge')||36,asm=$('mc-asm').value,cr=num('mc-cr')/100;
+  const init=Math.max(0,num('mc-initAsset'))*1e4,dca=num('mc-dca')*1e4;
+  const rows=[...PRESETS.slice(0,3).map(p=>({n:p.n,w:p.w})),{n:'你的配置',w:W,me:1}];
+  const fv=(g,m)=>{const r=Math.pow(1+g,1/12)-1;return r?init*Math.pow(1+r,m)+dca*(Math.pow(1+r,m)-1)/r:init+dca*m;};
+  $('mc-projTable').innerHTML='<thead><tr><th>方案</th>'+PERIODS.map(p=>`<th>${age+p.y} 歲（${p.y} 年）</th>`).join('')+'</tr></thead><tbody>'+
+    rows.map(r=>{const h=PERIODS.map(p=>bt(r.w,p.s,reb,1,0).cagr);return'<tr'+(r.me?' class="me"':'')+'><td>'+r.n+'</td>'+PERIODS.map((p,j)=>{const g=asm==='custom'?cr:asm==='h20'?h[3]:h[j];return`<td>${wan(fv(g,p.y*12))}<br><small>年化 ${pct(g)}</small></td>`;}).join('')+'</tr>';}).join('')+
+    '<tr><td>累計投入</td>'+PERIODS.map(p=>`<td>${wan(init+dca*p.y*12)}</td>`).join('')+'</tr></tbody>';
 }
 
-mcBind('mc-initAsset','mc-initAssetV',v=>v+' 萬');
-mcBind('mc-curAge','mc-curAgeV',v=>v+' 歲');
-mcBind('mc-fireGoal','mc-fireGoalV',v=>v+' 萬');
-mcBind('mc-retMean','mc-retMeanV',v=>v.toFixed(1)+'%');
-mcBind('mc-retStd','mc-retStdV',v=>v.toFixed(1)+'%');
-mcBind('mc-ret006208','mc-ret006208V',v=>v.toFixed(1)+'%');
-mcBind('mc-std006208','mc-std006208V',v=>v.toFixed(1)+'%');
-mcBind('mc-ret2330','mc-ret2330V',v=>v.toFixed(1)+'%');
-mcBind('mc-std2330','mc-std2330V',v=>v.toFixed(1)+'%');
-mcBind('mc-crashProb','mc-crashProbV',v=>v+'%');
-mcBind('mc-crashDepth','mc-crashDepthV',v=>'-'+v+'%');
-mcBind('mc-fxRate','mc-fxRateV',v=>v.toFixed(1));
-mcBind('mc-inflation','mc-inflationV',v=>v.toFixed(1)+'%');
-mcBind('mc-simN','mc-simNV',v=>v.toLocaleString());
-
-function mcRandn(){
-  let u=0,v=0;
-  while(u===0)u=Math.random();
-  while(v===0)v=Math.random();
-  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+// ── 寫回 Sheets 核心配置（兩段式確認）──
+async function applyToSheets(){
+  const btn=$('mc-apply'),msg=$('mc-apply-msg');
+  if(!applyArmed){applyArmed=true;btn.classList.add('arm');btn.textContent='再按一次確認寫入：'+KEYS.map(k=>NAMES[k]+' '+W[k]).join(' / ');msg.textContent='會覆寫 核心配置!A2:B10';setTimeout(()=>{if(applyArmed){applyArmed=false;btn.classList.remove('arm');btn.textContent='套用為核心配置（寫入 Sheets）';msg.textContent='';}},8000);return;}
+  applyArmed=false;btn.classList.remove('arm');btn.textContent='套用為核心配置（寫入 Sheets）';
+  if(typeof googleToken==='undefined'||!googleToken){msg.textContent='請先連結 Google 帳號';return;}
+  const label={VTI:'核心：分散美股',QQQ:'核心：科技成長',TW:'核心：台股大盤',SMH:'核心：半導體（45 歲起下滑）'};
+  const rows=KEYS.filter(k=>W[k]>0).map(k=>[NAMES[k],String(W[k]),label[k]]);
+  while(rows.length<9)rows.push(['','','']);
+  try{
+    msg.textContent='寫入中…';
+    const r=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${getSheetId()}/values/${encodeURIComponent('核心配置!A2:C10')}?valueInputOption=RAW`,{method:'PUT',headers:{Authorization:`Bearer ${googleToken}`,'Content-Type':'application/json'},body:JSON.stringify({values:rows})});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    if(typeof fetchCoreConfig==='function')await fetchCoreConfig();
+    if(typeof renderCorePanel==='function')renderCorePanel();
+    msg.textContent='已寫入 Sheets 核心配置';
+  }catch(e){console.warn('[蒙地卡羅] 寫入核心配置失敗',e);msg.textContent='寫入失敗：'+e.message;}
 }
 
-function mcGetDCA(age){
-  for(const s of mcStages){
-    if(age>=s.from&&age<s.to) return s.monthly*Math.pow(1+s.growRate/100,age-s.from);
-  }
-  return 0;
+// ── 蒙地卡羅：歷史 12 個月區塊重抽 ──
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function randn(rnd){let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+let BLOCKS=null;
+function blocks(){
+  if(BLOCKS)return BLOCKS;BLOCKS=[];const n=H.r.VTI.length;
+  for(let s=0;s+12<=n;s++){const b={};KEYS.forEach(k=>{let x=1;for(let i=s;i<s+12;i++)x*=1+H.r[k][i];b[k]=x-1;});b.SAT=0.4*b.QQQ+0.3*b.SMH+0.3*b.TW;BLOCKS.push(b);}
+  return BLOCKS;
 }
-
-window.mcRunSim=function(){
-  const initAsset=+document.getElementById('mc-initAsset').value*10000;
-  const curAge=+document.getElementById('mc-curAge').value;
-  const fireGoal=+document.getElementById('mc-fireGoal').value*10000;
-  const retMean=+document.getElementById('mc-retMean').value/100;
-  const retStd=+document.getElementById('mc-retStd').value/100;
-  const ret006208=+document.getElementById('mc-ret006208').value/100;
-  const std006208=+document.getElementById('mc-std006208').value/100;
-  const ret2330=+document.getElementById('mc-ret2330').value/100;
-  const std2330=+document.getElementById('mc-std2330').value/100;
-  const crashProb=+document.getElementById('mc-crashProb').value/100;
-  const crashDepth=+document.getElementById('mc-crashDepth').value/100;
-  const fxRate=+document.getElementById('mc-fxRate').value;
-  const inflation=+document.getElementById('mc-inflation').value/100;
-  const simN=+document.getElementById('mc-simN').value;
-  const tw006208M=+document.getElementById('mc-tw006208').value;
-  const tw2330M=+document.getElementById('mc-tw2330').value;
-  const twExisting=+document.getElementById('mc-twExisting').value*10000;
-  const twTotal=tw006208M+tw2330M;
-  const w6=twTotal>0?tw006208M/twTotal:0.5;
-  const w2=twTotal>0?tw2330M/twTotal:0.5;
-
-  const endAge=60;
-  const years=endAge-curAge;
-  const allPaths=[],fireAges=[],finalVals=[];
-
-  for(let sim=0;sim<simN;sim++){
-    let usA=Math.max(0,initAsset-twExisting);
-    let twA=twExisting;
-    const path=[usA+twA];
-    let fireAge=null;
+function simulate(w,P,N,seed,keepPaths){
+  const B=blocks(),rnd=mulberry32(seed),endAge=90,years=endAge-P.age;
+  const tot=KEYS.reduce((s,k)=>s+(w[k]||0),0)||1,spendY0=P.spend*12,fireNeed=spendY0*25;
+  const paths=keepPaths?[]:null,fireAges=[],retVals=[],finals=[];let ok=0;
+  for(let s=0;s<N;s++){
+    let port=P.init,cash=0,alive=true,fireAge=null;const path=keepPaths?[P.init]:null;
     for(let y=0;y<years;y++){
-      const age=curAge+y;
-      let usRet=retMean+retStd*mcRandn();
-      if(Math.random()<crashProb) usRet=-(crashDepth*0.5+crashDepth*0.5*Math.random());
-      usA=Math.max(0,usA*(1+usRet)+mcGetDCA(age)*12*fxRate);
-      const twRet=w6*(ret006208+std006208*mcRandn())+w2*(ret2330+std2330*mcRandn());
-      twA=Math.max(0,twA*(1+twRet)+twTotal*12);
-      const total=usA+twA;
-      path.push(total);
-      if(fireAge===null&&total/Math.pow(1+inflation,y+1)>=fireGoal) fireAge=age+1;
+      const age=P.age+y,b=B[Math.floor(rnd()*B.length)];
+      // 當年權重：SMH 下滑、衛星下滑
+      const cw={};KEYS.forEach(k=>cw[k]=(w[k]||0)/tot);
+      if(P.glideSmh&&age>=45){const cut=Math.min(cw.SMH,0.02*(age-44));cw.SMH-=cut;cw.VTI+=cut;}
+      let sat=P.sat;if(P.glideSat){if(age>=P.ret)sat=Math.min(sat,0.10);else if(age>=45)sat=Math.min(sat,0.15);}
+      const coreR=KEYS.reduce((a,k)=>a+cw[k]*b[k],0)-P.cut;
+      const satR=b.SAT-P.cut+P.noise*randn(rnd);
+      const R=Math.max(-0.95,(1-sat)*coreR+sat*satR);
+      const infl=Math.pow(1+P.infl,y);
+      if(age<P.ret){
+        const c=P.dca*12*Math.pow(1+P.grow,y);
+        port=port*(1+R)+c*(1+R/2);
+        if(fireAge===null&&port/Math.pow(1+P.infl,y+1)>=fireNeed)fireAge=age+1;
+        if(age+1===P.ret){const need=P.buf*spendY0*Math.pow(1+P.infl,y+1);cash=Math.min(port,need);port-=cash;retVals.push((port+cash)/Math.pow(1+P.infl,y+1));}
+      }else{
+        const spend=spendY0*infl;
+        port*=1+R;cash*=1.015;
+        if(R<0&&cash>=spend)cash-=spend;
+        else{port-=spend;if(port<0){cash+=port;port=0;}}
+        const target=P.buf*spend;
+        if(R>=0&&cash<target&&port>0){const mv=Math.min(target-cash,port);cash+=mv;port-=mv;}
+        if(port+cash<=0){alive=false;port=0;cash=0;}
+      }
+      if(keepPaths)path.push((port+cash)/Math.pow(1+P.infl,y+1));
+      if(!alive){if(keepPaths)for(let z=y+1;z<years;z++)path.push(0);break;}
     }
-    allPaths.push(path);
-    fireAges.push(fireAge);
-    finalVals.push(usA+twA);
+    if(P.ret<=P.age)retVals.push(P.init);
+    if(alive)ok++;
+    fireAges.push(fireAge);finals.push(keepPaths?path[path.length-1]:0);
+    if(keepPaths)paths.push(path);
   }
+  const sr=[...retVals].sort((a,b)=>a-b),q=p=>sr.length?sr[Math.min(sr.length-1,Math.floor(sr.length*p))]:0;
+  const fr=fireAges.filter(a=>a!==null).sort((a,b)=>a-b);
+  return{success:ok/N,retP10:q(0.1),retP50:q(0.5),medFire:fr.length?fr[Math.floor(fr.length/2)]:null,fireByRet:fireAges.filter(a=>a!==null&&a<=P.ret).length/N,fireAges,paths,finals,years,fireNeed};
+}
+function params(){
+  return{age:num('mc-curAge'),init:num('mc-initAsset')*1e4,dca:num('mc-dca')*1e4,grow:num('mc-dcaGrow')/100,ret:num('mc-retAge'),spend:num('mc-spend')*1e4,
+    infl:num('mc-inflation')/100,cut:num('mc-haircut')/100,sat:num('mc-sat')/100,noise:num('mc-satNoise')/100,buf:num('mc-buffer'),
+    glideSmh:$('mc-glideSmh').checked,glideSat:$('mc-glideSat').checked};
+}
+function runSim(){
+  const P=params(),N=num('mc-simN'),seed=20261126;
+  const me=simulate(W,P,N,seed,true);
+  $('mc-metricsGrid').innerHTML=`
+    <div class="mc-card"><div class="mc-mlabel">資產撐到 90 歲機率</div><div class="mc-mval" style="color:${me.success>=0.9?'var(--green)':me.success>=0.75?'var(--yellow)':'var(--red)'}">${pct(me.success)}</div><div class="mc-msub">${P.ret} 歲退休 · 月支出 ${(P.spend/1e4).toFixed(1)} 萬（今日幣值）</div></div>
+    <div class="mc-card"><div class="mc-mlabel">退休時資產 P50</div><div class="mc-mval">${wan(me.retP50)}</div><div class="mc-msub">P10 ${wan(me.retP10)} · 今日幣值</div></div>
+    <div class="mc-card"><div class="mc-mlabel">中位數 FIRE 年齡</div><div class="mc-mval">${me.medFire?me.medFire+' 歲':'N/A'}</div><div class="mc-msub">資產 ≥ 年支出 × 25（${wan(me.fireNeed)}）</div></div>
+    <div class="mc-card"><div class="mc-mlabel">${P.ret} 歲前達 FIRE 門檻</div><div class="mc-mval">${pct(me.fireByRet)}</div><div class="mc-msub">N=${N.toLocaleString()} · 報酬打折 ${(P.cut*100).toFixed(1)} pp</div></div>`;
+  // 方案對照：相同亂數
+  const cN=Math.min(N,3000);$('mc-cmpN').textContent=cN.toLocaleString();
+  const rows=[...PRESETS.map(p=>({n:p.n+'（'+KEYS.map(k=>p.w[k]).join('/')+'）',w:p.w})),{n:'你的配置（'+KEYS.map(k=>W[k]).join('/')+'）',w:W,me:1}];
+  const ages=[P.ret-2,P.ret,P.ret+3].filter(a=>a>P.age);
+  $('mc-cmpTable').innerHTML='<thead><tr><th>方案 VTI/QQQ/006208/SMH</th>'+ages.map(a=>`<th>${a} 歲退休・撐到 90</th>`).join('')+'<th>退休時資產 P50</th><th>中位數 FIRE</th></tr></thead><tbody>'+
+    rows.map(r=>{const main=simulate(r.w,P,cN,seed,false);return'<tr'+(r.me?' class="me"':'')+'><td>'+r.n+'</td>'+ages.map(a=>`<td>${pct(a===P.ret?main.success:simulate(r.w,Object.assign({},P,{ret:a}),cN,seed,false).success)}</td>`).join('')+`<td>${wan(main.retP50)}</td><td>${main.medFire?main.medFire+' 歲':'N/A'}</td></tr>`;}).join('')+'</tbody>';
+  // 圖表
+  const yrs=me.years,labels=Array.from({length:yrs+1},(_,i)=>(P.age+i)+'歲'),fg=Math.round(me.fireNeed/1e4);
+  const pctl=p=>labels.map((_,yi)=>{const v=me.paths.map(x=>x[yi]).sort((a,b)=>a-b);return Math.round(v[Math.floor(N*p)]/1e4);});
+  const base={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#3d5875',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{color:'rgba(30,48,80,0.5)'}},y:{ticks:{color:'#3d5875',font:{size:10},callback:v=>v.toLocaleString()+'萬'},grid:{color:'rgba(30,48,80,0.5)'}}}};
+  const step=Math.max(1,Math.floor(N/100)),samples=[];
+  for(let i=0;i<me.paths.length;i+=step)samples.push({data:me.paths[i].map(v=>Math.round(v/1e4)),borderColor:'rgba(56,189,248,0.05)',borderWidth:1,pointRadius:0,fill:false});
+  if(charts.path)charts.path.destroy();
+  charts.path=new Chart($('mc-pathChart'),{type:'line',data:{labels,datasets:[...samples,
+    {data:pctl(0.1),borderColor:'#f87171',borderWidth:2,pointRadius:0,fill:false},
+    {data:pctl(0.5),borderColor:'#34d399',borderWidth:2.5,pointRadius:0,fill:false},
+    {data:pctl(0.9),borderColor:'#38bdf8',borderWidth:2,pointRadius:0,fill:false},
+    {data:Array(yrs+1).fill(fg),borderColor:'#fbbf24',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false}]},options:base});
+  const bk={};for(let a=P.age+1;a<=Math.min(70,P.age+yrs);a++)bk[a]=0;
+  me.fireAges.forEach(a=>{if(a!==null&&bk[a]!==undefined)bk[a]++;});
+  if(charts.age)charts.age.destroy();
+  charts.age=new Chart($('mc-ageChart'),{type:'bar',data:{labels:Object.keys(bk).map(a=>a+'歲'),datasets:[{data:Object.values(bk),backgroundColor:Object.keys(bk).map(a=>+a<=P.ret?'rgba(52,211,153,0.7)':'rgba(61,88,117,0.4)'),borderWidth:0}]},options:base});
+  const worst=me.paths.map(p=>({p,f:p[p.length-1],m:Math.min(...p)})).sort((a,b)=>a.f-b.f||a.m-b.m).slice(0,Math.max(1,Math.floor(N*0.05)));
+  if(charts.worst)charts.worst.destroy();
+  charts.worst=new Chart($('mc-worstChart'),{type:'line',data:{labels,datasets:[...worst.slice(0,20).map(({p})=>({data:p.map(v=>Math.round(v/1e4)),borderColor:'rgba(248,113,113,0.4)',borderWidth:1.2,pointRadius:0,fill:false})),
+    {data:Array(yrs+1).fill(fg),borderColor:'#fbbf24',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false}]},options:base});
+  $('mc-results').style.display='block';
+}
 
-  const fireCount=fireAges.filter(a=>a!==null&&a<=55).length;
-  const sorted=[...finalVals].sort((a,b)=>a-b);
-  const p10=Math.round(sorted[Math.floor(simN*0.1)]/10000);
-  const p50=Math.round(sorted[Math.floor(simN*0.5)]/10000);
-  const p90=Math.round(sorted[Math.floor(simN*0.9)]/10000);
-  const fireReached=fireAges.filter(a=>a!==null).sort((a,b)=>a-b);
-  const medFire=fireReached.length>0?fireReached[Math.floor(fireReached.length/2)]:null;
-
-  document.getElementById('mc-metricsGrid').innerHTML=`
-    <div class="mc-card"><div class="mc-mlabel">50歲前 FIRE 機率</div><div class="mc-mval">${(fireCount/simN*100).toFixed(1)}%</div><div class="mc-msub">N=${simN.toLocaleString()}</div></div>
-    <div class="mc-card"><div class="mc-mlabel">中位數 FIRE 年齡</div><div class="mc-mval">${medFire?medFire+'歲':'N/A'}</div><div class="mc-msub">${fireReached.length.toLocaleString()} 條達標</div></div>
-    <div class="mc-card"><div class="mc-mlabel">P50 最終資產</div><div class="mc-mval">${p50.toLocaleString()} 萬</div><div class="mc-msub">60歲中位數</div></div>
-    <div class="mc-card"><div class="mc-mlabel">P10 最終資產</div><div class="mc-mval">${p10.toLocaleString()} 萬</div><div class="mc-msub">最差10%情境</div></div>
-  `;
-
-  const labels=Array.from({length:years+1},(_,i)=>(curAge+i)+'歲');
-  const fgMan=Math.round(fireGoal/10000);
-
-  function getPct(pct){
-    return labels.map((_,yi)=>{
-      const v=allPaths.map(p=>p[yi]).sort((a,b)=>a-b);
-      return Math.round(v[Math.floor(simN*pct)]/10000);
-    });
+// ── 綁定 ──
+const fmts={'mc-curAge':v=>v+' 歲','mc-initAsset':v=>v.toLocaleString()+' 萬','mc-dca':v=>v.toFixed(1)+' 萬','mc-dcaGrow':v=>v.toFixed(1)+'%','mc-retAge':v=>v+' 歲','mc-spend':v=>v.toFixed(1)+' 萬','mc-inflation':v=>v.toFixed(1)+'%','mc-haircut':v=>'-'+v.toFixed(1)+' pp','mc-sat':v=>v+'%','mc-satNoise':v=>v+'%','mc-buffer':v=>v.toFixed(1)+' 年','mc-simN':v=>v.toLocaleString()};
+function showVal(id){const el=$(id),o=$(id+'V');if(el&&o)o.textContent=fmts[id](+el.value);}
+function init(){
+  if(inited)return;inited=true;
+  renderControls();
+  Object.keys(fmts).forEach(id=>{showVal(id);$(id).addEventListener('input',()=>{showVal(id);if(['mc-curAge','mc-initAsset','mc-dca'].includes(id))refreshAll();});});
+  $('mc-faders').addEventListener('input',e=>{const t=e.target;if(t.id&&t.id.startsWith('mc-w-')){W[t.id.slice(5)]=+t.value;refreshAll();}});
+  $('mc-presets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.p==='sheet'){const s=weightsFromSheets();W=s.w;$('mc-apply-msg').textContent=s.other.length?'Sheets 另有 '+s.other.join('、')+'（無歷史資料，未納入）':'';}else W={...PRESETS[+b.dataset.p].w};syncFaders();});
+  $('mc-periods').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;per=+b.dataset.i;renderBacktest();});
+  $('mc-reb').addEventListener('change',refreshAll);
+  $('mc-asm').addEventListener('change',renderProj);$('mc-cr').addEventListener('input',renderProj);
+  $('mc-apply').addEventListener('click',applyToSheets);
+  $('mc-run').addEventListener('click',runSim);
+}
+window.mcOnShow=function(){
+  const first=!inited;init();
+  if(first){
+    const s=weightsFromSheets();if(KEYS.some(k=>s.w[k]>0))W=s.w;
+    try{if(typeof holdingsData!=='undefined'&&holdingsData.length){const t=holdingsData.reduce((a,h)=>a+(h.type==='cash'?0:h.price*h.shares*(h.currency==='USD'?usdTwd:1)),0);if(t>0){$('mc-initAsset').value=Math.round(t/1e4/5)*5;showVal('mc-initAsset');}}}catch(e){console.warn('[蒙地卡羅] 讀取持股總值失敗',e);}
+    syncFaders();
   }
-
-  const step=Math.max(1,Math.floor(simN/120));
-  const sampleDs=[];
-  for(let i=0;i<allPaths.length;i+=step){
-    sampleDs.push({data:allPaths[i].map(v=>Math.round(v/10000)),borderColor:'rgba(56,189,248,0.05)',borderWidth:1,pointRadius:0,tension:0.3,fill:false});
-  }
-
-  const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#3d5875',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8},grid:{color:'rgba(30,48,80,0.5)'}},y:{ticks:{color:'#3d5875',font:{size:10},callback:v=>v.toLocaleString()+'萬'},grid:{color:'rgba(30,48,80,0.5)'}}}};
-
-  if(mcCharts.path)mcCharts.path.destroy();
-  mcCharts.path=new Chart(document.getElementById('mc-pathChart'),{type:'line',data:{labels,datasets:[...sampleDs,
-    {data:getPct(0.1),borderColor:'#f87171',borderWidth:2,pointRadius:0,tension:0.3,fill:false},
-    {data:getPct(0.5),borderColor:'#34d399',borderWidth:2.5,pointRadius:0,tension:0.3,fill:false},
-    {data:getPct(0.9),borderColor:'#38bdf8',borderWidth:2,pointRadius:0,tension:0.3,fill:false},
-    {data:Array(years+1).fill(fgMan),borderColor:'#fbbf24',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false}
-  ]},options:baseOpts});
-
-  const fireBuckets={};
-  for(let a=curAge;a<=endAge;a++)fireBuckets[a]=0;
-  fireAges.forEach(a=>{if(a&&a<=endAge)fireBuckets[a]=(fireBuckets[a]||0)+1;});
-
-  if(mcCharts.age)mcCharts.age.destroy();
-  mcCharts.age=new Chart(document.getElementById('mc-ageChart'),{type:'bar',data:{labels:Object.keys(fireBuckets).map(a=>a+'歲'),datasets:[{data:Object.values(fireBuckets),backgroundColor:Object.keys(fireBuckets).map(a=>+a<=50?'rgba(52,211,153,0.7)':'rgba(61,88,117,0.4)'),borderWidth:0}]},options:{...baseOpts}});
-
-  const worst5=allPaths.map(p=>({path:p,final:p[p.length-1]})).sort((a,b)=>a.final-b.final).slice(0,Math.floor(simN*0.05));
-  if(mcCharts.worst)mcCharts.worst.destroy();
-  mcCharts.worst=new Chart(document.getElementById('mc-worstChart'),{type:'line',data:{labels,datasets:[
-    ...worst5.slice(0,20).map(({path})=>({data:path.map(v=>Math.round(v/10000)),borderColor:'rgba(248,113,113,0.4)',borderWidth:1.2,pointRadius:0,tension:0.3,fill:false})),
-    {data:Array(years+1).fill(fgMan),borderColor:'#fbbf24',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false}
-  ]},options:{...baseOpts}});
-
-  document.getElementById('mc-results').style.display='block';
 };
-
-document.addEventListener('DOMContentLoaded',function(){mcRenderStages();});
 })();
 </script>
 <div class="recovery-tooltip" id="recovery-tooltip"></div>
